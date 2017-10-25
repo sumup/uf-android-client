@@ -1,0 +1,76 @@
+<!--
+  ~ Copyright © 2017   LLC
+  ~
+  ~  All rights reserved. This program and the accompanying materials
+  ~  are made available under the terms of the Eclipse Public License v1.0
+  ~  which accompanies this distribution, and is available at
+  ~  http://www.eclipse.org/legal/epl-v10.html
+  -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.kynetics.ufclientexample.fragment.ConfigurationFragment">
+
+    <android.support.v7.widget.CardView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/card_view"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        card_view:cardElevation="4dp"
+        card_view:cardCornerRadius="4dp"
+        android:layout_margin="10dp"
+        >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/url_edittextview"
+                android:hint="@string/uf_server_url"
+                android:padding="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true" />
+            <EditText
+                android:id="@+id/tenant_edittextview"
+                android:hint="@string/tenant"
+                android:padding="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/url_edittextview" />
+            <EditText
+                android:id="@+id/controllerid_edittextview"
+                android:text="test"
+                android:hint="@string/controller_id"
+                android:padding="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tenant_edittextview"
+                android:layout_marginTop="5dp"/>
+            <Spinner
+                android:id="@+id/retry_time_spinner"
+                android:layout_marginTop="5dp"
+                android:padding="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/retry_time_entries_name"
+                android:layout_below="@id/controllerid_edittextview" />
+
+            <Button
+                android:id="@+id/configure_service_button"
+                android:layout_below="@+id/retry_time_spinner"
+                android:text="@string/configure"
+                android:layout_marginTop="5dp"
+                android:padding="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="true" />
+        </RelativeLayout>
+
+
+
+    </android.support.v7.widget.CardView>
+</FrameLayout>
