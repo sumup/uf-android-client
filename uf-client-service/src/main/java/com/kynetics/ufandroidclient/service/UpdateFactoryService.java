@@ -21,6 +21,7 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.widget.Toast;
 
+import com.kynetics.ufandroidclient.MainActivity;
 import com.kynetics.ufandroidclient.R;
 import com.kynetics.ufandroidclient.content.SharedPreferencesWithObject;
 import com.kynetics.ufclientserviceapi.UFServiceConfiguration;
@@ -55,27 +56,28 @@ import static com.kynetics.ufclientserviceapi.UFServiceMessage.Suspend.UPDATE;
 public class UpdateFactoryService extends Service {
     private static final String TAG = UpdateFactoryService.class.getSimpleName();
 
+    public static UFService getRunningService(){
+        return ufService;
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_FILE, MODE_PRIVATE);
-        final String username = sharedPreferences.getString(SHARED_PREFERENCES_USERNAME_KEY, "");
-        if(!username.isEmpty()){
-            final String password = sharedPreferences.getString(SHARED_PREFERENCES_USERNAME_KEY, "");
-            final String url = sharedPreferences.getString(SHARED_PREFERENCES_UF_URL_KEY, "");
+        final String url = sharedPreferences.getString(SHARED_PREFERENCES_UF_URL_KEY, "");
+        if(!url.isEmpty()){
             final String controllerId = sharedPreferences.getString(SHARED_PREFERENCES_CONTROLLER_ID_KEY, "");
             final String tenant = sharedPreferences.getString(SHARED_PREFERENCES_TENANT_KEY, "");
             final long delay = sharedPreferences.getLong(SHARED_PREFERENCES_RETRY_DELAY_KEY, 30000);
-            State initialState = sharedPreferences.getObject(SHARED_PREFERENCES_LAST_STATE_KEY, State.class);
+            final State initialState = sharedPreferences.getObject(SHARED_PREFERENCES_LAST_STATE_KEY, State.class);
+            final boolean apiMode = sharedPreferences.getBoolean(SHARED_PREFERENCES_API_MODE_KEY, true);
             ufService = UFService.builder()
                     .withUrl(url)
-                    .withPassword(password)
                     .withRetryDelayOnCommunicationError(delay)
-                    .withUsername(username)
                     .withTenant(tenant)
                     .withControllerId(controllerId)
                     .withInitialState(initialState)
                     .build();
-            ufService.addObserver(new ObserverState());
+            ufService.addObserver(new ObserverState(apiMode));
             ufService.start();
             if(initialState.getStateName() == State.StateName.UPDATE_STARTED){
                 ufService.setUpdateSucceffullyUpdate(UpdateSystem.successInstallation());
@@ -100,22 +102,19 @@ public class UpdateFactoryService extends Service {
 
                     ufService = UFService.builder()
                             .withUrl(configuration.getUrl())
-                            .withUsername(configuration.getUsername())
-                            .withPassword(configuration.getPassword())
                             .withRetryDelayOnCommunicationError(configuration.getRetryDelay())
                             .withControllerId(configuration.getControllerId())
                             .withTenant(configuration.getTenant())
                             .build();
                     sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_FILE, MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString(SHARED_PREFERENCES_USERNAME_KEY, configuration.getUsername());
-                    editor.putString(SHARED_PREFERENCES_PASSWORD_KEY, configuration.getPassword());
                     editor.putString(SHARED_PREFERENCES_CONTROLLER_ID_KEY, configuration.getControllerId());
                     editor.putString(SHARED_PREFERENCES_TENANT_KEY, configuration.getTenant());
                     editor.putString(SHARED_PREFERENCES_UF_URL_KEY, configuration.getUrl());
                     editor.putLong(SHARED_PREFERENCES_RETRY_DELAY_KEY, configuration.getRetryDelay());
+                    editor.putBoolean(SHARED_PREFERENCES_API_MODE_KEY, configuration.getApiMode());
                     editor.apply();
-                    final ObserverState ob = new ObserverState();
+                    final ObserverState ob = new ObserverState(configuration.getApiMode());
                     ufService.addObserver(ob);
                     ufService.start();
                     break;
@@ -195,6 +194,11 @@ public class UpdateFactoryService extends Service {
     }
 
     private class ObserverState implements Observer {
+        private final boolean apiMode;
+
+        public ObserverState(boolean apiMode) {
+            this.apiMode = apiMode;
+        }
 
         @Override
         public void update(Observable observable, Object o) {
@@ -223,7 +227,12 @@ public class UpdateFactoryService extends Service {
                 }
 
                 if (newState.getStateName() == State.StateName.AUTHORIZATION_WAITING) {
-                    sendMessage(((State.AuthorizationWaitingState) newState).getState().getStateName().name(), MSG_AUTHORIZATION_REQUEST);
+                    final State.StateName auth = ((State.AuthorizationWaitingState) newState).getState().getStateName();
+                    if(apiMode){
+                        sendMessage(auth.name(), MSG_AUTHORIZATION_REQUEST);
+                    }else {
+                        showAuthorizationDialog(auth);
+                    }
                 }
 
                 if (eventNotify.getNewState().getStateName() == State.StateName.UPDATE_STARTED) {
@@ -239,6 +248,13 @@ public class UpdateFactoryService extends Service {
                 }
             }
         }
+    }
+
+    private void showAuthorizationDialog(State.StateName auth) {
+        final Intent intent = new Intent(UpdateFactoryService.this, MainActivity.class);
+        intent.putExtra(MainActivity.INTENT_TYPE_EXTRA_VARIABLE, auth == State.StateName.UPDATE_DOWNLOAD ?
+            MainActivity.INTENT_TYPE_EXTRA_VALUE_DOWNLOAD : MainActivity.INTENT_TYPE_EXTRA_VALUE_REBOOT);
+        startActivity(intent);
     }
 
     private Suspend getSuspend(State state){
@@ -263,11 +279,10 @@ public class UpdateFactoryService extends Service {
         sharedPreferences.putAndCommitObject(key, obj);
     }
 
-    private UFService ufService;
+    private static UFService ufService;
     private static final String SHARED_PREFERENCES_LAST_STATE_KEY = "LAST_STATE_KEY";
     private static final String SHARED_PREFERENCES_UF_URL_KEY = "URL_KEY";
-    private static final String SHARED_PREFERENCES_USERNAME_KEY = "USERNAME_KEY";
-    private static final String SHARED_PREFERENCES_PASSWORD_KEY = "PASSWORD_KEY";
+    private static final String SHARED_PREFERENCES_API_MODE_KEY = "API_MODE_KEY";
     private static final String SHARED_PREFERENCES_TENANT_KEY = "TENANT_KEY";
     private static final String SHARED_PREFERENCES_CONTROLLER_ID_KEY = "CONTROLLER_ID_KEY";
     private static final String SHARED_PREFERENCES_RETRY_DELAY_KEY = "RETRY_DELAY_KEY";

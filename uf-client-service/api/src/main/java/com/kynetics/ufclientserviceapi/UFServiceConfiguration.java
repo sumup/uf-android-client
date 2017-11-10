@@ -18,54 +18,47 @@ import java.util.Objects;
 public class UFServiceConfiguration implements Serializable{
 
     public static class Builder {
-        public Builder setTenant(String tenant) {
+        public Builder withTenant(String tenant) {
             this.tenant = tenant;
             return this;
         }
 
-        public Builder setControllerId(String controllerId) {
+        public Builder withControllerId(String controllerId) {
             this.controllerId = controllerId;
             return this;
         }
 
-        public Builder setUsername(String username) {
-            this.username = username;
-            return this;
-        }
-
-        public Builder setPassword(String password) {
-            this.password = password;
-            return this;
-        }
-
-        public Builder setRetryDelay(long retryDelay) {
+        public Builder withRetryDelay(long retryDelay) {
             this.retryDelay = retryDelay;
             return this;
         }
 
-        public Builder setUrl(String url) {
+        public Builder withUrl(String url) {
             this.url = url;
             return this;
         }
 
+        public Builder withApiMode(boolean apiMode) {
+            this.apiMode = apiMode;
+            return this;
+        }
+
+
         public UFServiceConfiguration build() {
             Objects.requireNonNull(tenant);
             Objects.requireNonNull(controllerId);
-            Objects.requireNonNull(username);
-            Objects.requireNonNull(password);
             Objects.requireNonNull(url);
             if(retryDelay < 0 ){
                 throw new IllegalStateException("retryDelay must be grater than 0");
             }
-            return new UFServiceConfiguration(tenant, controllerId, username, password, retryDelay, url);
+            return new UFServiceConfiguration(tenant, controllerId, retryDelay, url, apiMode);
         }
 
         private String tenant;
         private String controllerId;
-        private String username;
-        private String password;
         private long retryDelay;
         private String url;
+        private boolean apiMode = true;
     }
 
     public static Builder builder(){
@@ -80,14 +73,6 @@ public class UFServiceConfiguration implements Serializable{
         return controllerId;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
     public long getRetryDelay() {
         return retryDelay;
     }
@@ -96,21 +81,23 @@ public class UFServiceConfiguration implements Serializable{
         return url;
     }
 
-    private UFServiceConfiguration(String tenant, String controllerId, String username, String password, long retryDelay, String url) {
+    public Boolean getApiMode() {
+        return apiMode;
+    }
+
+    public UFServiceConfiguration(String tenant, String controllerId, long retryDelay, String url, boolean apiMode) {
         this.tenant = tenant;
         this.controllerId = controllerId;
-        this.username = username;
-        this.password = password;
         this.retryDelay = retryDelay;
         this.url = url;
+        this.apiMode = apiMode;
     }
 
     private final String tenant;
     private final String controllerId;
-    private final String username;
-    private final String password;
     private final long retryDelay;
     private final String url;
+    private final Boolean apiMode;
 
-    private static final long serialVersionUID = -8946542404771818353L;
+    private static final long serialVersionUID = 661756725654074286L;
 }

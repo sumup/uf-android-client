@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.kynetics.ufandroidclient.fragment.AuthorizationDialogFragment;
 import com.kynetics.ufandroidclient.fragment.AuthorizationDialogFragment.OnAuthorization;
+import com.kynetics.ufandroidclient.service.UpdateFactoryService;
 
 /**
  * @author Daniele Sergio
@@ -76,11 +77,13 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization {
 
     @Override
     public void onAuthorizationGrant() {
+        UpdateFactoryService.getRunningService().setAuthorized(true);
         finishActivity();
     }
 
     @Override
     public void onAuthorizationDenied() {
+        UpdateFactoryService.getRunningService().setAuthorized(false);
         finishActivity();
     }
 

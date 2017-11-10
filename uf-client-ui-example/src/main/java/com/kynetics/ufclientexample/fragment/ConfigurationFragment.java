@@ -110,12 +110,10 @@ public class ConfigurationFragment extends Fragment implements UFServiceInteract
             final long retryDelay = getResources().getIntArray(R.array.retry_time_entries_value)[mSpinner
                     .getSelectedItemPosition()];
             data.putSerializable(SERVICE_DATA_KEY, UFServiceConfiguration.builder()
-                    .setControllerId(mControllerIdEditText.getText().toString())
-                    .setPassword("password")
-                    .setUsername("username")
-                    .setTenant(mTenantEditText.getText().toString())
-                    .setUrl(mUrlEditText.getText().toString())
-                    .setRetryDelay(retryDelay)
+                    .withControllerId(mControllerIdEditText.getText().toString())
+                    .withTenant(mTenantEditText.getText().toString())
+                    .withUrl(mUrlEditText.getText().toString())
+                    .withRetryDelay(retryDelay)
                     .build());
 
             InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
