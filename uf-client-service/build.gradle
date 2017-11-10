@@ -10,8 +10,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.github.dcendents.android-maven'
 
-group='com.github.YourUsername'
-
 android {
     compileSdkVersion 26
     buildToolsVersion "26.0.1"
@@ -38,6 +36,10 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "com.android.support:support-v4:$supportLibraryVersion"
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation 'com.android.support:design:26.1.0'
+    implementation 'com.android.support:support-v4:26.1.0'
     androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.1', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
@@ -45,5 +47,7 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
     compile 'com.github.Kynetics:uf-ddiclient:v0.1'
+//    compile 'com.kynetics.updatefactory:ddiclient-core:1.0-SNAPSHOT'
+
     compile project(":uf-client-service:api")
 }
