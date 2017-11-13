@@ -82,9 +82,12 @@ public class SharedPreferencesWithObject implements SharedPreferences{
     }
 
     public <T extends Serializable> T getObject(String objKey, Class<T> clazz){
-        byte[] bytes = sharedPreferences.getString(objKey, "{}").getBytes();
+        return getObject(objKey, clazz,null);
+    }
+    public <T extends Serializable> T getObject(String objKey, Class<T> clazz, T defaultObj){
+        byte[] bytes = sharedPreferences.getString(objKey, "").getBytes();
         if (bytes.length == 0) {
-            return null;
+            return defaultObj;
         }
         try {
             ByteArrayInputStream byteArray = new ByteArrayInputStream(bytes);
@@ -97,7 +100,7 @@ public class SharedPreferencesWithObject implements SharedPreferences{
         } catch (ClassNotFoundException ex){
             Log.e(TAG, ex.getMessage(), ex);
         }
-        return null;
+        return defaultObj;
     }
 
     public <T> void putAndCommitObject(String key, T obj){

@@ -43,6 +43,10 @@ public class UFServiceConfiguration implements Serializable{
             return this;
         }
 
+        public Builder witEnable(boolean enable) {
+            this.enable = enable;
+            return this;
+        }
 
         public UFServiceConfiguration build() {
             Objects.requireNonNull(tenant);
@@ -51,7 +55,7 @@ public class UFServiceConfiguration implements Serializable{
             if(retryDelay < 0 ){
                 throw new IllegalStateException("retryDelay must be grater than 0");
             }
-            return new UFServiceConfiguration(tenant, controllerId, retryDelay, url, apiMode);
+            return new UFServiceConfiguration(tenant, controllerId, retryDelay, url, apiMode, enable);
         }
 
         private String tenant;
@@ -59,6 +63,7 @@ public class UFServiceConfiguration implements Serializable{
         private long retryDelay;
         private String url;
         private boolean apiMode = true;
+        private boolean enable = true;
     }
 
     public static Builder builder(){
@@ -81,16 +86,21 @@ public class UFServiceConfiguration implements Serializable{
         return url;
     }
 
-    public Boolean getApiMode() {
+    public Boolean isApiMode() {
         return apiMode;
     }
 
-    public UFServiceConfiguration(String tenant, String controllerId, long retryDelay, String url, boolean apiMode) {
+    public Boolean isEnalbe() {
+        return enalbe;
+    }
+
+    public UFServiceConfiguration(String tenant, String controllerId, long retryDelay, String url, boolean apiMode, boolean isEnable) {
         this.tenant = tenant;
         this.controllerId = controllerId;
         this.retryDelay = retryDelay;
         this.url = url;
         this.apiMode = apiMode;
+        this.enalbe = isEnable;
     }
 
     private final String tenant;
@@ -98,6 +108,7 @@ public class UFServiceConfiguration implements Serializable{
     private final long retryDelay;
     private final String url;
     private final Boolean apiMode;
+    private final Boolean enalbe;
 
-    private static final long serialVersionUID = 661756725654074286L;
+    private static final long serialVersionUID = -7212858346341036166L;
 }

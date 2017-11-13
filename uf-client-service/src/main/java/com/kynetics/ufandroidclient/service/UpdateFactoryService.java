@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.kynetics.ufclientserviceapi.UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST;
 import static com.kynetics.ufclientserviceapi.UFServiceCommunicationConstants.MSG_AUTHORIZATION_RESPONSE;
 import static com.kynetics.ufclientserviceapi.UFServiceCommunicationConstants.MSG_CONFIGURE_SERVICE;
@@ -53,24 +54,57 @@ import static com.kynetics.ufclientserviceapi.UFServiceMessage.Suspend.UPDATE;
 /**
  * @author Daniele Sergio
  */
-public class UpdateFactoryService extends Service {
+public class UpdateFactoryService extends Service implements UpdateFactoryServiceCommand {
     private static final String TAG = UpdateFactoryService.class.getSimpleName();
 
-    public static UFService getRunningService(){
-        return ufService;
+    public static UpdateFactoryServiceCommand getUFServiceCommand(){
+        return ufServiceCommand;
+    }
+
+    @Override
+    public void authorizationGranted() {
+        ufService.setAuthorized(true);
+    }
+
+    @Override
+    public void authorizationDenied() {
+        ufService.setAuthorized(false);
+    }
+
+    @Override
+    public void configureService() {
+        if(ufService!=null){
+            ufService.stop();
+        }
+        buildServiceFromPreferences();
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        initSharedPreferencesKeys();
+        ufServiceCommand = this;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_FILE, MODE_PRIVATE);
-        final String url = sharedPreferences.getString(SHARED_PREFERENCES_UF_URL_KEY, "");
-        if(!url.isEmpty()){
-            final String controllerId = sharedPreferences.getString(SHARED_PREFERENCES_CONTROLLER_ID_KEY, "");
-            final String tenant = sharedPreferences.getString(SHARED_PREFERENCES_TENANT_KEY, "");
-            final long delay = sharedPreferences.getLong(SHARED_PREFERENCES_RETRY_DELAY_KEY, 30000);
-            final State initialState = sharedPreferences.getObject(SHARED_PREFERENCES_LAST_STATE_KEY, State.class);
-            final boolean apiMode = sharedPreferences.getBoolean(SHARED_PREFERENCES_API_MODE_KEY, true);
+        buildServiceFromPreferences();
+        return START_STICKY;
+    }
+
+    private void buildServiceFromPreferences() {
+        final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
+        final boolean serviceIsEnable = sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false);
+        if(serviceIsEnable){
+            final String url = sharedPreferences.getString(sharedPreferencesServerUrlKey, "");
+            final String controllerId = sharedPreferences.getString(sharedPreferencesControllerIdKey, "");
+            final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
+            final long delay = Long.parseLong(sharedPreferences.getString(sharedPreferencesRetryDelayKey, "30000"));
+            final State initialState = sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class, new State.WaitingState(0, null));
+            final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
             ufService = UFService.builder()
+                    .withUsername("")
+                    .withPassword("")
                     .withUrl(url)
                     .withRetryDelayOnCommunicationError(delay)
                     .withTenant(tenant)
@@ -78,12 +112,11 @@ public class UpdateFactoryService extends Service {
                     .withInitialState(initialState)
                     .build();
             ufService.addObserver(new ObserverState(apiMode));
-            ufService.start();
             if(initialState.getStateName() == State.StateName.UPDATE_STARTED){
                 ufService.setUpdateSucceffullyUpdate(UpdateSystem.successInstallation());
             }
         }
-        return START_STICKY;
+        startStopService(serviceIsEnable);
     }
 
     private ArrayList<Messenger> mClients = new ArrayList<Messenger>();
@@ -101,22 +134,26 @@ public class UpdateFactoryService extends Service {
                     final UFServiceConfiguration configuration = (UFServiceConfiguration) msg.getData().getSerializable(SERVICE_DATA_KEY);
 
                     ufService = UFService.builder()
+                            .withUsername("")
+                            .withPassword("")
                             .withUrl(configuration.getUrl())
                             .withRetryDelayOnCommunicationError(configuration.getRetryDelay())
                             .withControllerId(configuration.getControllerId())
                             .withTenant(configuration.getTenant())
                             .build();
-                    sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_FILE, MODE_PRIVATE);
+                    sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString(SHARED_PREFERENCES_CONTROLLER_ID_KEY, configuration.getControllerId());
-                    editor.putString(SHARED_PREFERENCES_TENANT_KEY, configuration.getTenant());
-                    editor.putString(SHARED_PREFERENCES_UF_URL_KEY, configuration.getUrl());
-                    editor.putLong(SHARED_PREFERENCES_RETRY_DELAY_KEY, configuration.getRetryDelay());
-                    editor.putBoolean(SHARED_PREFERENCES_API_MODE_KEY, configuration.getApiMode());
+                    editor.putString(sharedPreferencesControllerIdKey, configuration.getControllerId());
+                    editor.putString(sharedPreferencesTenantKey, configuration.getTenant());
+                    editor.putString(sharedPreferencesServerUrlKey, configuration.getUrl());
+                    editor.putLong(sharedPreferencesRetryDelayKey, configuration.getRetryDelay());
+                    editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode());
+                    final boolean serviceIsEnable = configuration.isEnalbe();
+                    editor.putBoolean(sharedPreferencesServiceEnableKey, serviceIsEnable);
                     editor.apply();
-                    final ObserverState ob = new ObserverState(configuration.getApiMode());
+                    final ObserverState ob = new ObserverState(configuration.isApiMode());
                     ufService.addObserver(ob);
-                    ufService.start();
+                    startStopService(serviceIsEnable);
                     break;
                 case MSG_REGISTER_CLIENT:
                     mClients.add(msg.replyTo);
@@ -137,12 +174,12 @@ public class UpdateFactoryService extends Service {
                     }
                     UpdateFactoryService.this.sendMessage(true, MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
 
-                    sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_FILE, MODE_PRIVATE);
+                    sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
                     final UFServiceMessage lastMessage = sharedPreferences.getObject(SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE, UFServiceMessage.class);
                     if(lastMessage != null){
                         UpdateFactoryService.this.sendMessage(lastMessage, MSG_SEND_STRING, msg.replyTo);
                     }
-                    State lastState = sharedPreferences.getObject(SHARED_PREFERENCES_LAST_STATE_KEY, State.class);
+                    State lastState = sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class);
                     if(lastState.getStateName() == State.StateName.AUTHORIZATION_WAITING){
                         UpdateFactoryService.this.sendMessage(((State.AuthorizationWaitingState)lastState).getState().getStateName().name(),
                                 MSG_AUTHORIZATION_REQUEST,
@@ -152,6 +189,17 @@ public class UpdateFactoryService extends Service {
                 default:
                     super.handleMessage(msg);
             }
+        }
+    }
+
+    private void startStopService(boolean serviceIsEnable) {
+        if(ufService == null){
+            return;
+        }
+        if(serviceIsEnable) {
+            ufService.start();
+        } else {
+            ufService.stop();
         }
     }
 
@@ -215,11 +263,11 @@ public class UpdateFactoryService extends Service {
                 );
                 writeObjectToSharedPreference(message, SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE);
                 sendMessage(message, MSG_SEND_STRING);
-                writeObjectToSharedPreference(eventNotify.getNewState(), SHARED_PREFERENCES_LAST_STATE_KEY);
+                writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
                 if (event.getEventName() == Event.EventName.FILE_DOWNLOADED) {
                     final Event.FileDownloadedEvent fileDownloadedEvent = (Event.FileDownloadedEvent) event;
                         UpdateSystem.copyFile(fileDownloadedEvent.getInputStream(), fileDownloadedEvent.getFileName());
-                        SharedPreferences.Editor editor = getSharedPreferences(SHARED_PREFERENCES_FILE, MODE_PRIVATE).edit();
+                        SharedPreferences.Editor editor = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE).edit();
                         editor.putString(SHARED_PREFERENCES_FILE_NAME_KEY, fileDownloadedEvent.getFileName());
                         editor.putString(SHARED_PREFERENCES_FILE_SHAE_KEY, fileDownloadedEvent.getShae1());
                         editor.putString(SHARED_PREFERENCES_FILE_MD5_KEY, fileDownloadedEvent.getMd5());
@@ -237,7 +285,7 @@ public class UpdateFactoryService extends Service {
 
                 if (eventNotify.getNewState().getStateName() == State.StateName.UPDATE_STARTED) {
                     final SharedPreferences sharedPreferences =
-                            getSharedPreferences(SHARED_PREFERENCES_FILE, MODE_PRIVATE);
+                            getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
                     final String fileName = sharedPreferences.getString(SHARED_PREFERENCES_FILE_NAME_KEY, "");
                     if(UpdateSystem.verify(fileName)){
                         UpdateSystem.install(fileName, getApplicationContext());
@@ -254,6 +302,7 @@ public class UpdateFactoryService extends Service {
         final Intent intent = new Intent(UpdateFactoryService.this, MainActivity.class);
         intent.putExtra(MainActivity.INTENT_TYPE_EXTRA_VARIABLE, auth == State.StateName.UPDATE_DOWNLOAD ?
             MainActivity.INTENT_TYPE_EXTRA_VALUE_DOWNLOAD : MainActivity.INTENT_TYPE_EXTRA_VALUE_REBOOT);
+        intent.addFlags(FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
 
@@ -275,18 +324,31 @@ public class UpdateFactoryService extends Service {
     }
 
     private void writeObjectToSharedPreference(Serializable obj, String key){
-        final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_FILE,MODE_PRIVATE);
+        final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile,MODE_PRIVATE);
         sharedPreferences.putAndCommitObject(key, obj);
     }
 
-    private static UFService ufService;
-    private static final String SHARED_PREFERENCES_LAST_STATE_KEY = "LAST_STATE_KEY";
-    private static final String SHARED_PREFERENCES_UF_URL_KEY = "URL_KEY";
-    private static final String SHARED_PREFERENCES_API_MODE_KEY = "API_MODE_KEY";
-    private static final String SHARED_PREFERENCES_TENANT_KEY = "TENANT_KEY";
-    private static final String SHARED_PREFERENCES_CONTROLLER_ID_KEY = "CONTROLLER_ID_KEY";
-    private static final String SHARED_PREFERENCES_RETRY_DELAY_KEY = "RETRY_DELAY_KEY";
-    private static final String SHARED_PREFERENCES_FILE = "UF_SHARED_FILE";
+    private void initSharedPreferencesKeys(){
+        sharedPreferencesFile = getString(R.string.shared_preferences_file);
+        sharedPreferencesCurrentStateKey = getString(R.string.shared_preferences_current_state_key);
+        sharedPreferencesServerUrlKey = getString(R.string.shared_preferences_server_url_key);
+        sharedPreferencesApiModeKey = getString(R.string.shared_preferences_api_mode_key);
+        sharedPreferencesTenantKey = getString(R.string.shared_preferences_tenant_key);
+        sharedPreferencesControllerIdKey = getString(R.string.shared_preferences_controller_id_key);
+        sharedPreferencesRetryDelayKey = getString(R.string.shared_preferences_retry_delay_key);
+        sharedPreferencesServiceEnableKey = getString(R.string.shared_preferences_is_enable_key);
+    }
+
+    private static UpdateFactoryServiceCommand ufServiceCommand;
+    private UFService ufService;
+    private String sharedPreferencesCurrentStateKey;
+    private String sharedPreferencesServerUrlKey;
+    private String sharedPreferencesApiModeKey;
+    private String sharedPreferencesServiceEnableKey;
+    private String sharedPreferencesTenantKey;
+    private String sharedPreferencesControllerIdKey;
+    private String sharedPreferencesRetryDelayKey;
+    private String sharedPreferencesFile;
     private static final String SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE";
 
     private static final String SHARED_PREFERENCES_FILE_NAME_KEY = "FILE_NAME_KEY";

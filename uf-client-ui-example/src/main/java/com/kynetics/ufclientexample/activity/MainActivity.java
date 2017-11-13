@@ -45,6 +45,7 @@ import com.kynetics.ufclientserviceapi.UFServiceCommunicationConstants;
 import com.kynetics.ufclientserviceapi.UFServiceMessage;
 
 import static android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES;
+import static com.kynetics.ufclientserviceapi.UFServiceCommunicationConstants.ACTION_SETTINGS;
 import static com.kynetics.ufclientserviceapi.UFServiceCommunicationConstants.MSG_AUTHORIZATION_RESPONSE;
 import static com.kynetics.ufclientserviceapi.UFServiceCommunicationConstants.MSG_SERVICE_CONFIGURATION_STATUS;
 import static com.kynetics.ufclientserviceapi.UFServiceCommunicationConstants.MSG_SYNCH_REQUEST;
@@ -118,6 +119,10 @@ public class MainActivity extends AppCompatActivity
         switch (id){
             case R.id.menu_settings:
                 changePage(ConfigurationFragment.newInstance());
+                break;
+            case R.id.menu_default_settings:
+                final Intent settingsIntent = new Intent(ACTION_SETTINGS);
+                startActivity(settingsIntent);
                 break;
             case R.id.menu_log:
                 changePage(LogFragment.newInstance());

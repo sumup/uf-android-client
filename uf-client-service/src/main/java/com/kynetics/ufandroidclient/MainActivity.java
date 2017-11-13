@@ -15,42 +15,61 @@ import android.os.Handler;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 
 import com.kynetics.ufandroidclient.fragment.AuthorizationDialogFragment;
 import com.kynetics.ufandroidclient.fragment.AuthorizationDialogFragment.OnAuthorization;
+import com.kynetics.ufandroidclient.fragment.ConfigurationFragment;
 import com.kynetics.ufandroidclient.service.UpdateFactoryService;
 
 /**
  * @author Daniele Sergio
  */
-public class MainActivity extends AppCompatActivity implements OnAuthorization {
+public class MainActivity extends AppCompatActivity implements OnAuthorization{
 
     public static final String INTENT_TYPE_EXTRA_VARIABLE = "EXTRA_TYPE";
     public static final int INTENT_TYPE_EXTRA_VALUE_SETTINGS = 0;
     public static final int INTENT_TYPE_EXTRA_VALUE_DOWNLOAD = 1;
     public static final int INTENT_TYPE_EXTRA_VALUE_REBOOT = 2;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
         final Intent intent =  getIntent();
         final int type = intent.getIntExtra(INTENT_TYPE_EXTRA_VARIABLE, 0);
         switch (type){
             case INTENT_TYPE_EXTRA_VALUE_SETTINGS:
+                setTheme(R.style.AppTheme);
+                setContentView(R.layout.activity_main);
+                ActionBar actionBar = getSupportActionBar();
+                actionBar.setDisplayHomeAsUpEnabled(true);
+                changePage(ConfigurationFragment.newInstance());
                 break;
             case INTENT_TYPE_EXTRA_VALUE_DOWNLOAD:
             case INTENT_TYPE_EXTRA_VALUE_REBOOT:
-                showAuthorizationDialog(intent, type);
+                setTheme(R.style.AppTransparentTheme);
+                showAuthorizationDialog(type);
                 break;
             default:
                 throw new IllegalArgumentException("");
 
         }
+
     }
 
-    private void showAuthorizationDialog(Intent intent, int type) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            UpdateFactoryService.getUFServiceCommand().configureService();
+            finish();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showAuthorizationDialog(int type) {
         DialogFragment newFragment = AuthorizationDialogFragment.newInstance(
                 getString(type == INTENT_TYPE_EXTRA_VALUE_DOWNLOAD ?
                         R.string.update_download_title :
@@ -77,13 +96,13 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization {
 
     @Override
     public void onAuthorizationGrant() {
-        UpdateFactoryService.getRunningService().setAuthorized(true);
+        UpdateFactoryService.getUFServiceCommand().authorizationGranted();
         finishActivity();
     }
 
     @Override
     public void onAuthorizationDenied() {
-        UpdateFactoryService.getRunningService().setAuthorized(false);
+        UpdateFactoryService.getUFServiceCommand().authorizationDenied();
         finishActivity();
     }
 

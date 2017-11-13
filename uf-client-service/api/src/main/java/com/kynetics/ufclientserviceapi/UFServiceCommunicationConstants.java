@@ -52,6 +52,13 @@ public class UFServiceCommunicationConstants {
 
     public static final String SERVICE_DATA_KEY = "DATA_KEY";
 
+    public static final String ACTION_SETTINGS = "com.kynetics.action.SETTINGS";
+
+    static final String ACTION_DOWNLOAD_AUTHORIZATION = "com.kynetics.action.DOWNLOAD_AUTHORIZATION";
+
+    static final String ACTION_RESTART_AUTHORIZATION = "com.kynetics.action.RESTART_AUTHORIZATION";
+
     private UFServiceCommunicationConstants() {
+        throw new AssertionError();
     }
 }
