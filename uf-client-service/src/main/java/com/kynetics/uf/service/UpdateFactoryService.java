@@ -74,12 +74,13 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         ufService.setAuthorized(false);
     }
 
+
     @Override
     public void configureService() {
         if(ufService!=null){
             ufService.stop();
         }
-        buildServiceFromPreferences();
+        buildServiceFromPreferences(true); // TODO: 11/14/17 fix workaround
     }
 
     @Override
@@ -91,7 +92,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        buildServiceFromPreferences();
+        buildServiceFromPreferences(false);
         return START_STICKY;
     }
 
@@ -99,7 +100,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         return new OkHttpClient.Builder();
     }
 
-    private void buildServiceFromPreferences() {
+    private void buildServiceFromPreferences(boolean startNewService) {
         final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
         final boolean serviceIsEnable = sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false);
         if(serviceIsEnable){
@@ -109,7 +110,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final String targetToken = sharedPreferences.getString(sharedPreferencesTargetToken, "");
             final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
             final long delay = Long.parseLong(sharedPreferences.getString(sharedPreferencesRetryDelayKey, "30000"));
-            final State initialState = sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class, new State.WaitingState(0, null));
+            final State initialState = startNewService ? new State.WaitingState(0, null) : sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class, new State.WaitingState(0, null));
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
             ufService = UFService.builder()
                     .withUrl(url)
@@ -123,11 +124,13 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     .withTargetData(this::getMap)
                     .build();
             ufService.addObserver(new ObserverState(apiMode));
+            startStopService(true);
             if(initialState.getStateName() == State.StateName.UPDATE_STARTED){
                 ufService.setUpdateSucceffullyUpdate(UpdateSystem.successInstallation());
             }
+        } else {
+            startStopService(false);
         }
-        startStopService(serviceIsEnable);
     }
 
     public Map<String, String> getMap(){
@@ -298,6 +301,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         editor.putString(SHARED_PREFERENCES_FILE_NAME_KEY, newFileName);
                         editor.apply();
                         UpdateSystem.copyFile(savingFileState.getInputStream(), newFileName);
+                        break;
                     case UPDATE_STARTED:
                         final SharedPreferences sharedPreferences =
                                 getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);

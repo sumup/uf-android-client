@@ -34,7 +34,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true">
         <service
-            android:name="com.kynetics.uf.service.UpdateFactoryService"
+            android:name=".UpdateFactoryService"
             android:enabled="true">
             <intent-filter>
                 <action android:name="com.kynetics.action.BIND_UF_SERVICE" />
@@ -50,7 +50,7 @@
         </receiver>
 
         <activity
-            android:name="com.kynetics.uf.service.ui.MainActivity"
+            android:name=".ui.MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTransparentTheme" >
             <intent-filter>
