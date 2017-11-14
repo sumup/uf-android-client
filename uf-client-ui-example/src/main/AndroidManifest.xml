@@ -9,7 +9,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kynetics.ufclientexample">
+    package="com.kynetics.uf.clientexample">
 
     <application
         android:allowBackup="true"
