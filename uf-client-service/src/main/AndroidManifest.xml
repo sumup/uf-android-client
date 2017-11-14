@@ -37,7 +37,7 @@
             android:name="com.kynetics.uf.service.UpdateFactoryService"
             android:enabled="true">
             <intent-filter>
-                <action android:name="com.kynetics.ufandroidcliet.service.intent.action.BIND" />
+                <action android:name="com.kynetics.action.BIND_UF_SERVICE" />
             </intent-filter>
         </service>
 

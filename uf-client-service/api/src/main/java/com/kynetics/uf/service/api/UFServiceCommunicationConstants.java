@@ -46,9 +46,9 @@ public class UFServiceCommunicationConstants {
 
     public static final int MSG_SERVICE_CONFIGURATION_STATUS = 9;
 
-    public static final String SERVICE_PACKAGE_NAME = "com.kynetics.ufandroidclient";
+    public static final String SERVICE_PACKAGE_NAME = "com.kynetics.uf.service";
 
-    public static final String SERVICE_ACTION = "com.kynetics.ufandroidcliet.service.intent.action.BIND";
+    public static final String SERVICE_ACTION = "com.kynetics.action.BIND_UF_SERVICE";
 
     public static final String SERVICE_DATA_KEY = "DATA_KEY";
 
