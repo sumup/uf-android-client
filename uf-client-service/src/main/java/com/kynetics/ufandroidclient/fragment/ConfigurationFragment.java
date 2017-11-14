@@ -23,7 +23,7 @@ import android.widget.Toast;
 
 import com.kynetics.ufandroidclient.R;
 import com.kynetics.ufandroidclient.content.SharedPreferencesWithObject;
-import com.kynetics.updatefactory.update.State;
+import com.kynetics.updatefactory.ddiclient.core.model.State;
 
 /**
  * A simple {@link PreferenceFragmentCompat} subclass.

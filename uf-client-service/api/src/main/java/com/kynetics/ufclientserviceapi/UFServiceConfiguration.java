@@ -28,6 +28,16 @@ public class UFServiceConfiguration implements Serializable{
             return this;
         }
 
+        public Builder withGetawayToken(String gatewayToken) {
+            this.gatewayToken = gatewayToken;
+            return this;
+        }
+
+        public Builder withTargetToken(String targetToken) {
+            this.targetToken = targetToken;
+            return this;
+        }
+
         public Builder withRetryDelay(long retryDelay) {
             this.retryDelay = retryDelay;
             return this;
@@ -48,6 +58,7 @@ public class UFServiceConfiguration implements Serializable{
             return this;
         }
 
+
         public UFServiceConfiguration build() {
             Objects.requireNonNull(tenant);
             Objects.requireNonNull(controllerId);
@@ -55,7 +66,10 @@ public class UFServiceConfiguration implements Serializable{
             if(retryDelay < 0 ){
                 throw new IllegalStateException("retryDelay must be grater than 0");
             }
-            return new UFServiceConfiguration(tenant, controllerId, retryDelay, url, apiMode, enable);
+            return new UFServiceConfiguration(tenant, controllerId, retryDelay, url,
+                    targetToken == null ? "" : targetToken,
+                    gatewayToken == null ? "" : gatewayToken,
+                    apiMode, enable);
         }
 
         private String tenant;
@@ -64,6 +78,8 @@ public class UFServiceConfiguration implements Serializable{
         private String url;
         private boolean apiMode = true;
         private boolean enable = true;
+        private String targetToken;
+        private String gatewayToken;
     }
 
     public static Builder builder(){
@@ -91,24 +107,43 @@ public class UFServiceConfiguration implements Serializable{
     }
 
     public Boolean isEnalbe() {
-        return enalbe;
+        return enable;
     }
 
-    public UFServiceConfiguration(String tenant, String controllerId, long retryDelay, String url, boolean apiMode, boolean isEnable) {
+    public String getTargetToken() {
+        return targetToken;
+    }
+
+    public String getGatewayToken() {
+        return gatewayToken;
+    }
+
+    public UFServiceConfiguration(String tenant,
+                                  String controllerId,
+                                  long retryDelay,
+                                  String url,
+                                  String targetToken,
+                                  String gatewayToken,
+                                  boolean apiMode,
+                                  boolean isEnable) {
         this.tenant = tenant;
         this.controllerId = controllerId;
         this.retryDelay = retryDelay;
         this.url = url;
+        this.targetToken = targetToken;
+        this.gatewayToken = gatewayToken;
         this.apiMode = apiMode;
-        this.enalbe = isEnable;
+        this.enable = isEnable;
     }
 
     private final String tenant;
     private final String controllerId;
     private final long retryDelay;
     private final String url;
+    private final String targetToken;
+    private final String gatewayToken;
     private final Boolean apiMode;
-    private final Boolean enalbe;
+    private final Boolean enable;
 
-    private static final long serialVersionUID = -7212858346341036166L;
+    private static final long serialVersionUID = -2015373437277468594L;
 }

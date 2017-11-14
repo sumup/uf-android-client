@@ -27,14 +27,16 @@ import com.kynetics.ufandroidclient.content.SharedPreferencesWithObject;
 import com.kynetics.ufclientserviceapi.UFServiceConfiguration;
 import com.kynetics.ufclientserviceapi.UFServiceMessage;
 import com.kynetics.ufclientserviceapi.UFServiceMessage.Suspend;
-import com.kynetics.updatefactory.update.Event;
-import com.kynetics.updatefactory.update.State;
-import com.kynetics.updatefactory.update.UFService;
+import com.kynetics.updatefactory.ddiclient.core.UFService;
+import com.kynetics.updatefactory.ddiclient.core.model.Event;
+import com.kynetics.updatefactory.ddiclient.core.model.State;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
+
+import okhttp3.OkHttpClient;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.kynetics.ufclientserviceapi.UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST;
@@ -92,6 +94,10 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         return START_STICKY;
     }
 
+    private OkHttpClient.Builder buildOkHttpClient() {
+        return new OkHttpClient.Builder();
+    }
+
     private void buildServiceFromPreferences() {
         final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
         final boolean serviceIsEnable = sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false);
@@ -103,13 +109,15 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final State initialState = sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class, new State.WaitingState(0, null));
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
             ufService = UFService.builder()
-                    .withUsername("")
-                    .withPassword("")
                     .withUrl(url)
                     .withRetryDelayOnCommunicationError(delay)
                     .withTenant(tenant)
                     .withControllerId(controllerId)
                     .withInitialState(initialState)
+                    .withOkHttClientBuilder(buildOkHttpClient())
+                    .withGatewayToken("") // TODO: 11/14/17 use real data
+                    .withTargetToken("")
+                    .withTargetData(()->null)
                     .build();
             ufService.addObserver(new ObserverState(apiMode));
             if(initialState.getStateName() == State.StateName.UPDATE_STARTED){
@@ -134,12 +142,14 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     final UFServiceConfiguration configuration = (UFServiceConfiguration) msg.getData().getSerializable(SERVICE_DATA_KEY);
 
                     ufService = UFService.builder()
-                            .withUsername("")
-                            .withPassword("")
                             .withUrl(configuration.getUrl())
                             .withRetryDelayOnCommunicationError(configuration.getRetryDelay())
                             .withControllerId(configuration.getControllerId())
                             .withTenant(configuration.getTenant())
+                            .withOkHttClientBuilder(buildOkHttpClient())
+                            .withGatewayToken(configuration.getGatewayToken())
+                            .withTargetToken(configuration.getTargetToken())
+                            .withTargetData(() -> null)
                             .build();
                     sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -264,35 +274,33 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 writeObjectToSharedPreference(message, SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE);
                 sendMessage(message, MSG_SEND_STRING);
                 writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
-                if (event.getEventName() == Event.EventName.FILE_DOWNLOADED) {
-                    final Event.FileDownloadedEvent fileDownloadedEvent = (Event.FileDownloadedEvent) event;
-                        UpdateSystem.copyFile(fileDownloadedEvent.getInputStream(), fileDownloadedEvent.getFileName());
+                switch (newState.getStateName()){
+                    case AUTHORIZATION_WAITING:
+                        final State.StateName auth = ((State.AuthorizationWaitingState) newState).getState().getStateName();
+                        if(apiMode){
+                            sendMessage(auth.name(), MSG_AUTHORIZATION_REQUEST);
+                        }else {
+                            showAuthorizationDialog(auth);
+                        }
+                        break;
+                    case SAVING_FILE:
+                        final State.SavingFileState savingFileState = ((State.SavingFileState) newState);
+                        final String newFileName = savingFileState.getFileInfo().getLinkInfo().getFileName();
                         SharedPreferences.Editor editor = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE).edit();
-                        editor.putString(SHARED_PREFERENCES_FILE_NAME_KEY, fileDownloadedEvent.getFileName());
-                        editor.putString(SHARED_PREFERENCES_FILE_SHAE_KEY, fileDownloadedEvent.getShae1());
-                        editor.putString(SHARED_PREFERENCES_FILE_MD5_KEY, fileDownloadedEvent.getMd5());
+                        editor.putString(SHARED_PREFERENCES_FILE_NAME_KEY, newFileName);
                         editor.apply();
-                }
-
-                if (newState.getStateName() == State.StateName.AUTHORIZATION_WAITING) {
-                    final State.StateName auth = ((State.AuthorizationWaitingState) newState).getState().getStateName();
-                    if(apiMode){
-                        sendMessage(auth.name(), MSG_AUTHORIZATION_REQUEST);
-                    }else {
-                        showAuthorizationDialog(auth);
-                    }
-                }
-
-                if (eventNotify.getNewState().getStateName() == State.StateName.UPDATE_STARTED) {
-                    final SharedPreferences sharedPreferences =
-                            getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
-                    final String fileName = sharedPreferences.getString(SHARED_PREFERENCES_FILE_NAME_KEY, "");
-                    if(UpdateSystem.verify(fileName)){
-                        UpdateSystem.install(fileName, getApplicationContext());
-                    } else {
-                        ufService.setUpdateSucceffullyUpdate(false);
-                        Toast.makeText(getApplicationContext(),getString(R.string.invalid_update), Toast.LENGTH_LONG).show();
-                    }
+                        UpdateSystem.copyFile(savingFileState.getInputStream(), newFileName);
+                    case UPDATE_STARTED:
+                        final SharedPreferences sharedPreferences =
+                                getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
+                        final String fileName = sharedPreferences.getString(SHARED_PREFERENCES_FILE_NAME_KEY, "");
+                        if(UpdateSystem.verify(fileName)){
+                            UpdateSystem.install(fileName, getApplicationContext());
+                        } else {
+                            ufService.setUpdateSucceffullyUpdate(false);
+                            Toast.makeText(getApplicationContext(),getString(R.string.invalid_update), Toast.LENGTH_LONG).show();
+                        }
+                        break;
                 }
             }
         }
@@ -301,7 +309,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private void showAuthorizationDialog(State.StateName auth) {
         final Intent intent = new Intent(UpdateFactoryService.this, MainActivity.class);
         intent.putExtra(MainActivity.INTENT_TYPE_EXTRA_VARIABLE, auth == State.StateName.UPDATE_DOWNLOAD ?
-            MainActivity.INTENT_TYPE_EXTRA_VALUE_DOWNLOAD : MainActivity.INTENT_TYPE_EXTRA_VALUE_REBOOT);
+                MainActivity.INTENT_TYPE_EXTRA_VALUE_DOWNLOAD : MainActivity.INTENT_TYPE_EXTRA_VALUE_REBOOT);
         intent.addFlags(FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
