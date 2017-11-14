@@ -32,6 +32,22 @@
         android:selectAllOnFocus="true"
         android:singleLine="true" />
 
+    <EditTextPreference
+        android:inputType="textCapWords"
+        android:key="@string/shared_preferences_target_token_key"
+        android:title="@string/shared_preferences_target_token_title"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true" />
+
+    <EditTextPreference
+        android:inputType="textCapWords"
+        android:key="@string/shared_preferences_gateway_token_key"
+        android:title="@string/shared_preferences_gateway_token_title"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true" />
+
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="@string/shared_preferences_api_mode_key"

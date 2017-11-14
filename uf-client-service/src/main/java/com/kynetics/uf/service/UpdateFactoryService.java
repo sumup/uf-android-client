@@ -103,6 +103,8 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         if(serviceIsEnable){
             final String url = sharedPreferences.getString(sharedPreferencesServerUrlKey, "");
             final String controllerId = sharedPreferences.getString(sharedPreferencesControllerIdKey, "");
+            final String gatewayToken = sharedPreferences.getString(sharedPreferencesGatewayToken, "");
+            final String targetToken = sharedPreferences.getString(sharedPreferencesTargetToken, "");
             final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
             final long delay = Long.parseLong(sharedPreferences.getString(sharedPreferencesRetryDelayKey, "30000"));
             final State initialState = sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class, new State.WaitingState(0, null));
@@ -114,8 +116,8 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     .withControllerId(controllerId)
                     .withInitialState(initialState)
                     .withOkHttClientBuilder(buildOkHttpClient())
-                    .withGatewayToken("") // TODO: 11/14/17 use real data
-                    .withTargetToken("")
+                    .withGatewayToken(gatewayToken)
+                    .withTargetToken(targetToken)
                     .withTargetData(()->null)
                     .build();
             ufService.addObserver(new ObserverState(apiMode));
@@ -344,6 +346,8 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         sharedPreferencesControllerIdKey = getString(R.string.shared_preferences_controller_id_key);
         sharedPreferencesRetryDelayKey = getString(R.string.shared_preferences_retry_delay_key);
         sharedPreferencesServiceEnableKey = getString(R.string.shared_preferences_is_enable_key);
+        sharedPreferencesGatewayToken = getString(R.string.shared_preferences_target_token_key);
+        sharedPreferencesTargetToken = getString(R.string.shared_preferences_gateway_token_key);
     }
 
     private static UpdateFactoryServiceCommand ufServiceCommand;
@@ -355,11 +359,12 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private String sharedPreferencesTenantKey;
     private String sharedPreferencesControllerIdKey;
     private String sharedPreferencesRetryDelayKey;
+    private String sharedPreferencesGatewayToken;
+    private String sharedPreferencesTargetToken;
     private String sharedPreferencesFile;
+
     private static final String SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE";
 
     private static final String SHARED_PREFERENCES_FILE_NAME_KEY = "FILE_NAME_KEY";
-    private static final String SHARED_PREFERENCES_FILE_SHAE_KEY = "FILE_SHAE_KEY";
-    private static final String SHARED_PREFERENCES_FILE_MD5_KEY = "FILE_MD5_KEY";
 
 }
