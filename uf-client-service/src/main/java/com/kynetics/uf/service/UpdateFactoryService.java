@@ -32,6 +32,8 @@ import com.kynetics.updatefactory.ddiclient.core.model.State;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -118,7 +120,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     .withOkHttClientBuilder(buildOkHttpClient())
                     .withGatewayToken(gatewayToken)
                     .withTargetToken(targetToken)
-                    .withTargetData(()->null)
+                    .withTargetData(this::getMap)
                     .build();
             ufService.addObserver(new ObserverState(apiMode));
             if(initialState.getStateName() == State.StateName.UPDATE_STARTED){
@@ -128,6 +130,11 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         startStopService(serviceIsEnable);
     }
 
+    public Map<String, String> getMap(){
+        final Map<String, String> map = new HashMap<>();
+        map.put("test", "test");
+        return map;
+    }
     private ArrayList<Messenger> mClients = new ArrayList<Messenger>();
 
     private class IncomingHandler extends Handler {
@@ -150,7 +157,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                             .withOkHttClientBuilder(buildOkHttpClient())
                             .withGatewayToken(configuration.getGatewayToken())
                             .withTargetToken(configuration.getTargetToken())
-                            .withTargetData(() -> null)
+                            .withTargetData(UpdateFactoryService.this::getMap)
                             .build();
                     sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
