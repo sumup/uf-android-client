@@ -9,7 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/uf-client-service" />
-            <option value="$PROJECT_DIR$/uf-client-service/api" />
+            <option value="$PROJECT_DIR$/uf-client-service/uf-client-service-api" />
             <option value="$PROJECT_DIR$/uf-client-ui-example" />
           </set>
         </option>
