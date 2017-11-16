@@ -7,7 +7,7 @@
  *  http://www.eclipse.org/legal/epl-v10.html
  */
 
-package com.kynetics.uf.service;
+package com.kynetics.uf.android;
 
 /**
  * @author Daniele Sergio

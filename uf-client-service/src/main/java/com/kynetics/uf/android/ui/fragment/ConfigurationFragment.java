@@ -7,7 +7,7 @@
  *  http://www.eclipse.org/legal/epl-v10.html
  */
 
-package com.kynetics.uf.service.ui.fragment;
+package com.kynetics.uf.android.ui.fragment;
 
 
 import android.content.SharedPreferences;
@@ -21,8 +21,8 @@ import android.support.v7.preference.PreferenceGroup;
 import android.support.v7.preference.SwitchPreferenceCompat;
 import android.widget.Toast;
 
-import com.kynetics.uf.service.R;
-import com.kynetics.uf.service.content.SharedPreferencesWithObject;
+import com.kynetics.uf.android.R;
+import com.kynetics.uf.android.content.SharedPreferencesWithObject;
 import com.kynetics.updatefactory.ddiclient.core.model.State;
 
 /**

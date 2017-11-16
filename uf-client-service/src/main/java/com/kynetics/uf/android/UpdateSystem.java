@@ -7,7 +7,7 @@
  *  http://www.eclipse.org/legal/epl-v10.html
  */
 
-package com.kynetics.uf.service;
+package com.kynetics.uf.android;
 
 import android.content.Context;
 import android.os.Environment;

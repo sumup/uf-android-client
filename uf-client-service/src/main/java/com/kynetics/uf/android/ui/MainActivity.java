@@ -7,7 +7,7 @@
  *  http://www.eclipse.org/legal/epl-v10.html
  */
 
-package com.kynetics.uf.service.ui;
+package com.kynetics.uf.android.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,11 +19,11 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
-import com.kynetics.uf.service.R;
-import com.kynetics.uf.service.UpdateFactoryService;
-import com.kynetics.uf.service.ui.fragment.AuthorizationDialogFragment;
-import com.kynetics.uf.service.ui.fragment.AuthorizationDialogFragment.OnAuthorization;
-import com.kynetics.uf.service.ui.fragment.ConfigurationFragment;
+import com.kynetics.uf.android.ui.fragment.ConfigurationFragment;
+import com.kynetics.uf.android.R;
+import com.kynetics.uf.android.UpdateFactoryService;
+import com.kynetics.uf.android.ui.fragment.AuthorizationDialogFragment;
+import com.kynetics.uf.android.ui.fragment.AuthorizationDialogFragment.OnAuthorization;
 
 /**
  * @author Daniele Sergio

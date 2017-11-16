@@ -7,7 +7,7 @@
  *  http://www.eclipse.org/legal/epl-v10.html
  */
 
-package com.kynetics.uf.service.ui.fragment;
+package com.kynetics.uf.android.ui.fragment;
 
 import android.app.Dialog;
 import android.content.Context;

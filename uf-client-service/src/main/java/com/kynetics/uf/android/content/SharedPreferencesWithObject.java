@@ -7,7 +7,7 @@
  *  http://www.eclipse.org/legal/epl-v10.html
  */
 
-package com.kynetics.uf.service.content;
+package com.kynetics.uf.android.content;
 
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;

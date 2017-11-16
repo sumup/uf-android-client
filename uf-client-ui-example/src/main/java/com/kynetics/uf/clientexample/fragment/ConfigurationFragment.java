@@ -28,9 +28,9 @@ import android.widget.Spinner;
 
 import com.kynetics.uf.clientexample.R;
 import com.kynetics.uf.clientexample.activity.UFActivity;
-import com.kynetics.uf.service.api.UFServiceConfiguration;
+import com.kynetics.uf.android.api.UFServiceConfiguration;
 
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY;
 
 /**
  * @author Daniele Sergio

@@ -7,7 +7,7 @@
  *  http://www.eclipse.org/legal/epl-v10.html
  */
 
-package com.kynetics.uf.service.api;
+package com.kynetics.uf.android.api;
 
 import java.io.Serializable;
 import java.util.Objects;

@@ -8,7 +8,7 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.kynetics.uf.service">
+    package="com.kynetics.uf.android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -42,7 +42,7 @@
         </service>
 
         <receiver
-            android:name=".receiver.BootCompletedReceiver"
+            android:name="com.kynetics.uf.android.receiver.BootCompletedReceiver"
             android:enabled="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -50,7 +50,7 @@
         </receiver>
 
         <activity
-            android:name=".ui.MainActivity"
+            android:name="com.kynetics.uf.android.ui.MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTransparentTheme" >
             <intent-filter>

@@ -7,13 +7,13 @@
  *  http://www.eclipse.org/legal/epl-v10.html
  */
 
-package com.kynetics.uf.service.receiver;
+package com.kynetics.uf.android.receiver;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.kynetics.uf.service.UpdateFactoryService;
+import com.kynetics.uf.android.UpdateFactoryService;
 
 /**
  * @author Daniele Sergio

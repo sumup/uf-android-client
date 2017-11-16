@@ -7,7 +7,7 @@
  *  http://www.eclipse.org/legal/epl-v10.html
  */
 
-package com.kynetics.uf.service;
+package com.kynetics.uf.android;
 
 import android.app.Service;
 import android.content.Intent;
@@ -21,11 +21,11 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.widget.Toast;
 
-import com.kynetics.uf.service.api.UFServiceConfiguration;
-import com.kynetics.uf.service.api.UFServiceMessage;
-import com.kynetics.uf.service.api.UFServiceMessage.Suspend;
-import com.kynetics.uf.service.content.SharedPreferencesWithObject;
-import com.kynetics.uf.service.ui.MainActivity;
+import com.kynetics.uf.android.ui.MainActivity;
+import com.kynetics.uf.android.api.UFServiceConfiguration;
+import com.kynetics.uf.android.api.UFServiceMessage;
+import com.kynetics.uf.android.api.UFServiceMessage.Suspend;
+import com.kynetics.uf.android.content.SharedPreferencesWithObject;
 import com.kynetics.updatefactory.ddiclient.core.UFService;
 import com.kynetics.updatefactory.ddiclient.core.model.Event;
 import com.kynetics.updatefactory.ddiclient.core.model.State;
@@ -40,19 +40,19 @@ import java.util.Observer;
 import okhttp3.OkHttpClient;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST;
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_RESPONSE;
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.MSG_CONFIGURE_SERVICE;
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.MSG_REGISTER_CLIENT;
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.MSG_RESUME_SUSPEND_UPGRADE;
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.MSG_SEND_STRING;
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.MSG_SERVICE_CONFIGURATION_STATUS;
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.MSG_SYNCH_REQUEST;
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.MSG_UNREGISTER_CLIENT;
-import static com.kynetics.uf.service.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY;
-import static com.kynetics.uf.service.api.UFServiceMessage.Suspend.DOWNLOAD;
-import static com.kynetics.uf.service.api.UFServiceMessage.Suspend.NONE;
-import static com.kynetics.uf.service.api.UFServiceMessage.Suspend.UPDATE;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_RESPONSE;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_CONFIGURE_SERVICE;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_REGISTER_CLIENT;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_RESUME_SUSPEND_UPGRADE;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SEND_STRING;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_CONFIGURATION_STATUS;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNCH_REQUEST;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_UNREGISTER_CLIENT;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY;
+import static com.kynetics.uf.android.api.UFServiceMessage.Suspend.DOWNLOAD;
+import static com.kynetics.uf.android.api.UFServiceMessage.Suspend.NONE;
+import static com.kynetics.uf.android.api.UFServiceMessage.Suspend.UPDATE;
 
 /**
  * @author Daniele Sergio
