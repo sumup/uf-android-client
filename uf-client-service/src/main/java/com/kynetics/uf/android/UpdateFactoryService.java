@@ -92,7 +92,14 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        buildServiceFromPreferences(false);
+        final Serializable serializable = intent.getSerializableExtra(SERVICE_DATA_KEY);
+        boolean startNewService = false;
+        if(serializable instanceof UFServiceConfiguration){
+            final UFServiceConfiguration serviceConfiguration = (UFServiceConfiguration) serializable;
+            saveServiceConfigurationToSharedPreferences(serviceConfiguration);
+            startNewService = true;
+        }
+        buildServiceFromPreferences(startNewService);
         return START_STICKY;
     }
 
@@ -101,6 +108,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     }
 
     private void buildServiceFromPreferences(boolean startNewService) {
+        startStopService(false);
         final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
         final boolean serviceIsEnable = sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false);
         if(serviceIsEnable){
@@ -128,8 +136,6 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             if(initialState.getStateName() == State.StateName.UPDATE_STARTED){
                 ufService.setUpdateSucceffullyUpdate(UpdateSystem.successInstallation());
             }
-        } else {
-            startStopService(false);
         }
     }
 
@@ -146,35 +152,9 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             SharedPreferencesWithObject sharedPreferences;
             switch (msg.what) {
                 case MSG_CONFIGURE_SERVICE:
-                    if(ufService != null){
-                        ufService.stop();
-                    }
-
                     final UFServiceConfiguration configuration = (UFServiceConfiguration) msg.getData().getSerializable(SERVICE_DATA_KEY);
-
-                    ufService = UFService.builder()
-                            .withUrl(configuration.getUrl())
-                            .withRetryDelayOnCommunicationError(configuration.getRetryDelay())
-                            .withControllerId(configuration.getControllerId())
-                            .withTenant(configuration.getTenant())
-                            .withOkHttClientBuilder(buildOkHttpClient())
-                            .withGatewayToken(configuration.getGatewayToken())
-                            .withTargetToken(configuration.getTargetToken())
-                            .withTargetData(UpdateFactoryService.this::getMap)
-                            .build();
-                    sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString(sharedPreferencesControllerIdKey, configuration.getControllerId());
-                    editor.putString(sharedPreferencesTenantKey, configuration.getTenant());
-                    editor.putString(sharedPreferencesServerUrlKey, configuration.getUrl());
-                    editor.putLong(sharedPreferencesRetryDelayKey, configuration.getRetryDelay());
-                    editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode());
-                    final boolean serviceIsEnable = configuration.isEnalbe();
-                    editor.putBoolean(sharedPreferencesServiceEnableKey, serviceIsEnable);
-                    editor.apply();
-                    final ObserverState ob = new ObserverState(configuration.isApiMode());
-                    ufService.addObserver(ob);
-                    startStopService(serviceIsEnable);
+                    saveServiceConfigurationToSharedPreferences(configuration);
+                    buildServiceFromPreferences(true);
                     break;
                 case MSG_REGISTER_CLIENT:
                     mClients.add(msg.replyTo);
@@ -211,6 +191,19 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     super.handleMessage(msg);
             }
         }
+    }
+
+    private void saveServiceConfigurationToSharedPreferences(UFServiceConfiguration configuration) {
+        SharedPreferencesWithObject sharedPreferences;
+        sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(sharedPreferencesControllerIdKey, configuration.getControllerId());
+        editor.putString(sharedPreferencesTenantKey, configuration.getTenant());
+        editor.putString(sharedPreferencesServerUrlKey, configuration.getUrl());
+        editor.putLong(sharedPreferencesRetryDelayKey, configuration.getRetryDelay());
+        editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode());
+        editor.putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnalbe());
+        editor.apply();
     }
 
     private void startStopService(boolean serviceIsEnable) {
@@ -331,10 +324,10 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             return NONE;
         }
         State.WaitingState waitingState = (State.WaitingState) state;
-        if(!waitingState.hasSuspendState()){
+        if(!waitingState.hasInnerState()){
             return NONE;
         }
-        return waitingState.getSuspendState().getStateName() == State.StateName.UPDATE_DOWNLOAD ?
+        return waitingState.getState().getStateName() == State.StateName.UPDATE_DOWNLOAD ?
                 DOWNLOAD : UPDATE;
     }
 
