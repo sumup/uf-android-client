@@ -111,7 +111,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         startStopService(false);
         final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
         final boolean serviceIsEnable = sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false);
-        if(serviceIsEnable){
+        if(serviceIsEnable) {
             final String url = sharedPreferences.getString(sharedPreferencesServerUrlKey, "");
             final String controllerId = sharedPreferences.getString(sharedPreferencesControllerIdKey, "");
             final String gatewayToken = sharedPreferences.getString(sharedPreferencesGatewayToken, "");
@@ -120,21 +120,28 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final long delay = Long.parseLong(sharedPreferences.getString(sharedPreferencesRetryDelayKey, "30000"));
             final State initialState = startNewService ? new State.WaitingState(0, null) : sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class, new State.WaitingState(0, null));
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
-            ufService = UFService.builder()
-                    .withUrl(url)
-                    .withRetryDelayOnCommunicationError(delay)
-                    .withTenant(tenant)
-                    .withControllerId(controllerId)
-                    .withInitialState(initialState)
-                    .withOkHttClientBuilder(buildOkHttpClient())
-                    .withGatewayToken(gatewayToken)
-                    .withTargetToken(targetToken)
-                    .withTargetData(this::getMap)
-                    .build();
-            ufService.addObserver(new ObserverState(apiMode));
-            startStopService(true);
-            if(initialState.getStateName() == State.StateName.UPDATE_STARTED){
-                ufService.setUpdateSucceffullyUpdate(UpdateSystem.successInstallation());
+            try {
+                ufService = UFService.builder()
+                        .withUrl(url)
+                        .withRetryDelayOnCommunicationError(delay)
+                        .withTenant(tenant)
+                        .withControllerId(controllerId)
+                        .withInitialState(initialState)
+                        .withOkHttClientBuilder(buildOkHttpClient())
+                        .withGatewayToken(gatewayToken)
+                        .withTargetToken(targetToken)
+                        .withTargetData(this::getMap)
+                        .build();
+
+                ufService.addObserver(new ObserverState(apiMode));
+                startStopService(true);
+                if (initialState.getStateName() == State.StateName.UPDATE_STARTED) {
+                    ufService.setUpdateSucceffullyUpdate(UpdateSystem.successInstallation());
+                }
+            }catch (IllegalStateException | IllegalArgumentException e){
+                sharedPreferences.edit().putBoolean(sharedPreferencesServiceEnableKey, false).apply();
+                Toast.makeText(this,"Update Factory configuration error",Toast.LENGTH_LONG)
+                        .show();
             }
         }
     }
