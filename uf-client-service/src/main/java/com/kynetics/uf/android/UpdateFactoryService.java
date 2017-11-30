@@ -213,6 +213,8 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         editor.putString(sharedPreferencesControllerIdKey, configuration.getControllerId());
         editor.putString(sharedPreferencesTenantKey, configuration.getTenant());
         editor.putString(sharedPreferencesServerUrlKey, configuration.getUrl());
+        editor.putString(sharedPreferencesGatewayToken, configuration.getGatewayToken());
+        editor.putString(sharedPreferencesTargetToken, configuration.getTargetToken());
         editor.putLong(sharedPreferencesRetryDelayKey, configuration.getRetryDelay());
         editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode());
         editor.putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnalbe());
