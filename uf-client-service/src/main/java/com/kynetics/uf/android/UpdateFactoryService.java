@@ -21,11 +21,13 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.widget.Toast;
 
-import com.kynetics.uf.android.ui.MainActivity;
 import com.kynetics.uf.android.api.UFServiceConfiguration;
 import com.kynetics.uf.android.api.UFServiceMessage;
 import com.kynetics.uf.android.api.UFServiceMessage.Suspend;
 import com.kynetics.uf.android.content.SharedPreferencesWithObject;
+import com.kynetics.uf.android.ui.MainActivity;
+import com.kynetics.updatefactory.ddiclient.api.ClientBuilder;
+import com.kynetics.updatefactory.ddiclient.api.api.DdiRestApi;
 import com.kynetics.updatefactory.ddiclient.core.UFService;
 import com.kynetics.updatefactory.ddiclient.core.model.Event;
 import com.kynetics.updatefactory.ddiclient.core.model.State;
@@ -121,15 +123,18 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final State initialState = startNewService ? new State.WaitingState(0, null) : sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class, new State.WaitingState(0, null));
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
             try {
+                final DdiRestApi client = new ClientBuilder()
+                        .withBaseUrl(url)
+                        .withGatewayToken(gatewayToken)
+                        .withTargetToken(targetToken)
+                        .withHttpBuilder(buildOkHttpClient())
+                        .build();
                 ufService = UFService.builder()
-                        .withUrl(url)
+                        .withClient(client)
                         .withRetryDelayOnCommunicationError(delay)
                         .withTenant(tenant)
                         .withControllerId(controllerId)
                         .withInitialState(initialState)
-                        .withOkHttClientBuilder(buildOkHttpClient())
-                        .withGatewayToken(gatewayToken)
-                        .withTargetToken(targetToken)
                         .withTargetData(this::getMap)
                         .build();
 
@@ -151,6 +156,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         map.put("test", "test");
         return map;
     }
+
     private ArrayList<Messenger> mClients = new ArrayList<Messenger>();
 
     private class IncomingHandler extends Handler {
