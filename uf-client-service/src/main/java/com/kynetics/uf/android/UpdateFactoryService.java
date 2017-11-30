@@ -363,8 +363,8 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         sharedPreferencesControllerIdKey = getString(R.string.shared_preferences_controller_id_key);
         sharedPreferencesRetryDelayKey = getString(R.string.shared_preferences_retry_delay_key);
         sharedPreferencesServiceEnableKey = getString(R.string.shared_preferences_is_enable_key);
-        sharedPreferencesGatewayToken = getString(R.string.shared_preferences_target_token_key);
-        sharedPreferencesTargetToken = getString(R.string.shared_preferences_gateway_token_key);
+        sharedPreferencesGatewayToken = getString(R.string.shared_preferences_gateway_token_key);
+        sharedPreferencesTargetToken = getString(R.string.shared_preferences_target_token_key);
     }
 
     private static UpdateFactoryServiceCommand ufServiceCommand;
