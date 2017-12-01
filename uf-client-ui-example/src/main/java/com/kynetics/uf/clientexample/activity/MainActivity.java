@@ -37,12 +37,15 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants;
+import com.kynetics.uf.android.api.UFServiceConfiguration;
+import com.kynetics.uf.android.api.UFServiceMessage;
 import com.kynetics.uf.clientexample.R;
 import com.kynetics.uf.clientexample.fragment.ConfigurationFragment;
 import com.kynetics.uf.clientexample.fragment.LogFragment;
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment;
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants;
-import com.kynetics.uf.android.api.UFServiceMessage;
+
+import java.io.Serializable;
 
 import static android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.ACTION_SETTINGS;
@@ -193,7 +196,9 @@ public class MainActivity extends AppCompatActivity
                     newFragment.show(getSupportFragmentManager(), null);
                     break;
                 case MSG_SERVICE_CONFIGURATION_STATUS:
-                    if(!msg.getData().getBoolean(SERVICE_DATA_KEY)) {
+                    final Serializable serializable = msg.getData().getSerializable(SERVICE_DATA_KEY);
+                    if(!(serializable instanceof UFServiceConfiguration) ||
+                            !((UFServiceConfiguration)serializable).isEnalbe()) {
                         mNavigationView.setCheckedItem(R.id.menu_settings);
                         changePage(ConfigurationFragment.newInstance());
                     }

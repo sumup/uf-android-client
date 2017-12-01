@@ -159,6 +159,24 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
 
     private ArrayList<Messenger> mClients = new ArrayList<Messenger>();
 
+    private UFServiceConfiguration getCurrentConfiguration(SharedPreferences sharedPreferences){
+        final boolean serviceIsEnable = ufService != null && sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false);
+        final String url = sharedPreferences.getString(sharedPreferencesServerUrlKey, "");
+        final String controllerId = sharedPreferences.getString(sharedPreferencesControllerIdKey, "");
+        final String gatewayToken = sharedPreferences.getString(sharedPreferencesGatewayToken, "");
+        final String targetToken = sharedPreferences.getString(sharedPreferencesTargetToken, "");
+        final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
+        final long delay = Long.parseLong(sharedPreferences.getString(sharedPreferencesRetryDelayKey, "30000"));
+        final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
+        return new UFServiceConfiguration(tenant,
+                controllerId,
+                delay,
+                url,
+                targetToken,
+                gatewayToken,
+                apiMode,
+                serviceIsEnable);
+    }
     private class IncomingHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
@@ -182,13 +200,11 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     ufService.restartSuspendState();
                     break;
                 case MSG_SYNCH_REQUEST:
+                    sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
+                    UpdateFactoryService.this.sendMessage(getCurrentConfiguration(sharedPreferences), MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
                     if(ufService == null){
-                        UpdateFactoryService.this.sendMessage(false, MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
                         return;
                     }
-                    UpdateFactoryService.this.sendMessage(true, MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
-
-                    sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
                     final UFServiceMessage lastMessage = sharedPreferences.getObject(SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE, UFServiceMessage.class);
                     if(lastMessage != null){
                         UpdateFactoryService.this.sendMessage(lastMessage, MSG_SEND_STRING, msg.replyTo);
