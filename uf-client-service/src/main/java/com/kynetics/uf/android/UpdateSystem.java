@@ -31,8 +31,10 @@ import java.nio.channels.ReadableByteChannel;
 public class UpdateSystem {
     private static final String TAG = UpdateSystem.class.getSimpleName();
 
-    public static boolean copyFile(InputStream inputStream, String name){
-        File packageFile = new File(getOtaPath(name));
+    private static String OTA_FILE_NAME = "update.zip";
+
+    public static boolean copyFile(InputStream inputStream){
+        final File packageFile = new File(getOtaPath());
         if (packageFile.exists()) {
             packageFile.delete();
         }
@@ -59,9 +61,9 @@ public class UpdateSystem {
         return true;
     }
 
-    public static boolean verify(String fileName){
+    public static boolean verify(){
         try {
-            File packageFile = new File(getOtaPath(fileName));
+            File packageFile = new File(getOtaPath());
             RecoverySystem.verifyPackage(packageFile, null, null);
             return true;
         }
@@ -71,9 +73,9 @@ public class UpdateSystem {
         }
     }
 
-    public static void install(String fileName, Context context){
+    public static void install(Context context){
         try {
-            File packageFile = new File(getOtaPath(fileName));
+            File packageFile = new File(getOtaPath());
             RecoverySystem.installPackage(context, packageFile);
         }
         catch (Exception e) {
@@ -91,8 +93,8 @@ public class UpdateSystem {
         }
     }
 
-    private static String getOtaPath(String fileName){
-        return String.format("%s/%s",Environment.getDownloadCacheDirectory(), fileName);
+    private static String getOtaPath(){
+        return String.format("%s/%s",Environment.getDownloadCacheDirectory(), OTA_FILE_NAME);
     }
 
 

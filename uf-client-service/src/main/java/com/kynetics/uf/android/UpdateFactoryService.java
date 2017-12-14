@@ -320,18 +320,11 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         break;
                     case SAVING_FILE:
                         final State.SavingFileState savingFileState = ((State.SavingFileState) newState);
-                        final String newFileName = savingFileState.getFileInfo().getLinkInfo().getFileName();
-                        SharedPreferences.Editor editor = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE).edit();
-                        editor.putString(SHARED_PREFERENCES_FILE_NAME_KEY, newFileName);
-                        editor.apply();
-                        UpdateSystem.copyFile(savingFileState.getInputStream(), newFileName);
+                        UpdateSystem.copyFile(savingFileState.getInputStream());
                         break;
                     case UPDATE_STARTED:
-                        final SharedPreferences sharedPreferences =
-                                getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
-                        final String fileName = sharedPreferences.getString(SHARED_PREFERENCES_FILE_NAME_KEY, "");
-                        if(UpdateSystem.verify(fileName)){
-                            UpdateSystem.install(fileName, getApplicationContext());
+                        if(UpdateSystem.verify()){
+                            UpdateSystem.install(getApplicationContext());
                         } else {
                             ufService.setUpdateSucceffullyUpdate(false);
                             Toast.makeText(getApplicationContext(),getString(R.string.invalid_update), Toast.LENGTH_LONG).show();
@@ -399,7 +392,5 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private String sharedPreferencesFile;
 
     private static final String SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE";
-
-    private static final String SHARED_PREFERENCES_FILE_NAME_KEY = "FILE_NAME_KEY";
 
 }
