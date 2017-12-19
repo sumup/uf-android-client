@@ -15,7 +15,9 @@ import android.os.RecoverySystem;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -24,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.util.Scanner;
 
 /**
  * @author Daniele Sergio
@@ -32,15 +35,21 @@ public class UpdateSystem {
     private static final String TAG = UpdateSystem.class.getSimpleName();
 
     private static String OTA_FILE_NAME = "update.zip";
+    private static String UPDATE_PENDING_FILE_NAME = "update_pending";
 
     public static boolean copyFile(InputStream inputStream){
-        final File packageFile = new File(getOtaPath());
+        final File packageFile = new File(getPath(OTA_FILE_NAME));
         if (packageFile.exists()) {
             packageFile.delete();
         }
 
+        if (write(inputStream, packageFile)) return false;
+        return true;
+    }
+
+    private static boolean write(InputStream inputStream, File outputStream) {
         final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
-        try (FileChannel dest = (new FileOutputStream(packageFile)).getChannel();
+        try (FileChannel dest = (new FileOutputStream(outputStream)).getChannel();
              InputStream src = inputStream;
              ReadableByteChannel source = Channels.newChannel(src)
         ){
@@ -56,14 +65,32 @@ public class UpdateSystem {
         }
         catch (Exception e) {
             Log.e(TAG, "Failed to copy update file into internal storage: " + e);
-            return false;
+            return true;
         }
-        return true;
+        return false;
+    }
+
+    public static Long getUpdatePendingId(){
+        final File file = new File(getPath(UPDATE_PENDING_FILE_NAME));
+        if(!file.exists()){
+            return null;
+        }
+        Long updatePendingId = null;
+        try (final Scanner scan = new Scanner(file)) {
+            if(scan.hasNextLine()){
+                final String line = scan.nextLine();
+                updatePendingId = Long.decode(line);
+            }
+        } catch (FileNotFoundException | NumberFormatException e) {
+            e.printStackTrace();
+        }
+        file.delete();
+        return updatePendingId;
     }
 
     public static boolean verify(){
         try {
-            File packageFile = new File(getOtaPath());
+            File packageFile = new File(getPath(OTA_FILE_NAME));
             RecoverySystem.verifyPackage(packageFile, null, null);
             return true;
         }
@@ -73,9 +100,11 @@ public class UpdateSystem {
         }
     }
 
-    public static void install(Context context){
+    public static void install(Context context, long updateId){
         try {
-            File packageFile = new File(getOtaPath());
+            File packageFile = new File(getPath(OTA_FILE_NAME));
+            File updatePendingFile = new File(getPath(UPDATE_PENDING_FILE_NAME));
+            write(new ByteArrayInputStream(String.valueOf(updateId).getBytes()),updatePendingFile);
             RecoverySystem.installPackage(context, packageFile);
         }
         catch (Exception e) {
@@ -93,8 +122,8 @@ public class UpdateSystem {
         }
     }
 
-    private static String getOtaPath(){
-        return String.format("%s/%s",Environment.getDownloadCacheDirectory(), OTA_FILE_NAME);
+    private static String getPath(String fileName){
+        return String.format("%s/%s",Environment.getDownloadCacheDirectory(), fileName);
     }
 
 

@@ -19,6 +19,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.kynetics.uf.android.api.UFServiceConfiguration;
@@ -109,6 +110,16 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         return new OkHttpClient.Builder();
     }
 
+    private State getInitialState(boolean startNewService,
+                                  SharedPreferencesWithObject sharedPreferences) {
+        final Long updatePendingId = UpdateSystem.getUpdatePendingId();
+        if(updatePendingId != null){
+            Log.e(TAG, "updatePendingId found: " + updatePendingId);
+            return new State.UpdateStartedState(updatePendingId);
+        }
+        return startNewService ? new State.WaitingState(0, null) : sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class, new State.WaitingState(0, null));
+    }
+
     private void buildServiceFromPreferences(boolean startNewService) {
         startStopService(false);
         final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
@@ -120,7 +131,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final String targetToken = sharedPreferences.getString(sharedPreferencesTargetToken, "");
             final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
             final long delay = Long.parseLong(sharedPreferences.getString(sharedPreferencesRetryDelayKey, "30000"));
-            final State initialState = startNewService ? new State.WaitingState(0, null) : sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class, new State.WaitingState(0, null));
+            final State initialState = getInitialState(startNewService, sharedPreferences);
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
             try {
                 final DdiRestApi client = new ClientBuilder()
@@ -324,7 +335,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         break;
                     case UPDATE_STARTED:
                         if(UpdateSystem.verify()){
-                            UpdateSystem.install(getApplicationContext());
+                            UpdateSystem.install(getApplicationContext(), ((State.StateWithAction)newState).getActionId());
                         } else {
                             ufService.setUpdateSucceffullyUpdate(false);
                             Toast.makeText(getApplicationContext(),getString(R.string.invalid_update), Toast.LENGTH_LONG).show();
