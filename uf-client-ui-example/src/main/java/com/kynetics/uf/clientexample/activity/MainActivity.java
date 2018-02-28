@@ -232,7 +232,7 @@ public class MainActivity extends AppCompatActivity
                                        IBinder service) {
             mService = new Messenger(service);
 
-            Toast.makeText(MainActivity.this, "connected",
+            Toast.makeText(MainActivity.this, R.string.connected,
                     Toast.LENGTH_SHORT).show();
             try {
                 Message msg = Message.obtain(null,
@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity
 
         public void onServiceDisconnected(ComponentName className) {
             mService = null;
-            Toast.makeText(MainActivity.this, "disconenct",
+            Toast.makeText(MainActivity.this, R.string.disconnected,
                     Toast.LENGTH_SHORT).show();
         }
     };

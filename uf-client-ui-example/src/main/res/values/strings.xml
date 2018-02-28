@@ -30,4 +30,6 @@
     <string name="configure">Configure</string>
     <string name="uf_server_url">Update Factory server url</string>
     <string name="invalid_url">Invalid url</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="connected">Connected</string>
 </resources>
