@@ -130,7 +130,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final String gatewayToken = sharedPreferences.getString(sharedPreferencesGatewayToken, "");
             final String targetToken = sharedPreferences.getString(sharedPreferencesTargetToken, "");
             final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
-            final long delay = Long.parseLong(sharedPreferences.getString(sharedPreferencesRetryDelayKey, "30000"));
+            final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
             final State initialState = getInitialState(startNewService, sharedPreferences);
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
             try {
@@ -177,7 +177,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         final String gatewayToken = sharedPreferences.getString(sharedPreferencesGatewayToken, "");
         final String targetToken = sharedPreferences.getString(sharedPreferencesTargetToken, "");
         final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
-        final long delay = Long.parseLong(sharedPreferences.getString(sharedPreferencesRetryDelayKey, "30000"));
+        final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
         final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
         return new UFServiceConfiguration(tenant,
                 controllerId,
