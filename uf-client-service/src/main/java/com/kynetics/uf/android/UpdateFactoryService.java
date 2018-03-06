@@ -133,6 +133,8 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
             final State initialState = getInitialState(startNewService, sharedPreferences);
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
+            final HashMap<String,String> defaultArgs = new HashMap<>();
+            final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs, defaultArgs.getClass());
             try {
                 final DdiRestApi client = new ClientBuilder()
                         .withBaseUrl(url)
@@ -146,7 +148,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .withTenant(tenant)
                         .withControllerId(controllerId)
                         .withInitialState(initialState)
-                        .withTargetData(this::getMap)
+                        .withTargetData(()->args)
                         .build();
 
                 ufService.addObserver(new ObserverState(apiMode));
@@ -162,15 +164,9 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         }
     }
 
-    public Map<String, String> getMap(){
-        final Map<String, String> map = new HashMap<>();
-        map.put("test", "test");
-        return map;
-    }
-
     private ArrayList<Messenger> mClients = new ArrayList<Messenger>();
 
-    private UFServiceConfiguration getCurrentConfiguration(SharedPreferences sharedPreferences){
+    private UFServiceConfiguration getCurrentConfiguration(SharedPreferencesWithObject sharedPreferences){
         final boolean serviceIsEnable = ufService != null && sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false);
         final String url = sharedPreferences.getString(sharedPreferencesServerUrlKey, "");
         final String controllerId = sharedPreferences.getString(sharedPreferencesControllerIdKey, "");
@@ -179,19 +175,22 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
         final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
         final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
-        return new UFServiceConfiguration(tenant,
-                controllerId,
-                delay,
-                url,
-                targetToken,
-                gatewayToken,
-                apiMode,
-                serviceIsEnable);
+        final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs, new HashMap<String,String>().getClass());
+        return UFServiceConfiguration.builder()
+                .witArgs(args)
+                .witEnable(serviceIsEnable)
+                .withApiMode(apiMode)
+                .withControllerId(controllerId)
+                .withGetawayToken(gatewayToken)
+                .withRetryDelay(delay)
+                .withTargetToken(targetToken)
+                .withTenant(tenant)
+                .withUrl(url)
+                .build();
     }
     private class IncomingHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
-            SharedPreferencesWithObject sharedPreferences;
             switch (msg.what) {
                 case MSG_CONFIGURE_SERVICE:
                     final UFServiceConfiguration configuration = (UFServiceConfiguration) msg.getData().getSerializable(SERVICE_DATA_KEY);
@@ -211,7 +210,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     ufService.restartSuspendState();
                     break;
                 case MSG_SYNCH_REQUEST:
-                    sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
+                    final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
                     UpdateFactoryService.this.sendMessage(getCurrentConfiguration(sharedPreferences), MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
                     if(ufService == null){
                         return;
@@ -246,6 +245,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode());
         editor.putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnalbe());
         editor.apply();
+        sharedPreferences.putAndCommitObject(sharedPreferencesArgs,configuration.getArgs());
     }
 
     private void startStopService(boolean serviceIsEnable) {
@@ -387,6 +387,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         sharedPreferencesServiceEnableKey = getString(R.string.shared_preferences_is_enable_key);
         sharedPreferencesGatewayToken = getString(R.string.shared_preferences_gateway_token_key);
         sharedPreferencesTargetToken = getString(R.string.shared_preferences_target_token_key);
+        sharedPreferencesArgs = getString(R.string.shared_preferences_args_key);
     }
 
     private static UpdateFactoryServiceCommand ufServiceCommand;
@@ -401,6 +402,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private String sharedPreferencesGatewayToken;
     private String sharedPreferencesTargetToken;
     private String sharedPreferencesFile;
+    private String sharedPreferencesArgs;
 
     private static final String SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE";
 

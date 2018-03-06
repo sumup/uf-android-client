@@ -10,6 +10,8 @@
 package com.kynetics.uf.android.api;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -58,6 +60,11 @@ public class UFServiceConfiguration implements Serializable{
             return this;
         }
 
+        public Builder witArgs(Map<String,String> args) {
+            this.args = args;
+            return this;
+        }
+
 
         public UFServiceConfiguration build() {
             Objects.requireNonNull(tenant);
@@ -69,7 +76,7 @@ public class UFServiceConfiguration implements Serializable{
             return new UFServiceConfiguration(tenant, controllerId, retryDelay, url,
                     targetToken == null ? "" : targetToken,
                     gatewayToken == null ? "" : gatewayToken,
-                    apiMode, enable);
+                    apiMode, enable, args != null ? args : new HashMap<>(0));
         }
 
         private String tenant;
@@ -80,6 +87,7 @@ public class UFServiceConfiguration implements Serializable{
         private boolean enable = true;
         private String targetToken;
         private String gatewayToken;
+        private Map<String,String> args;
     }
 
     public static Builder builder(){
@@ -118,14 +126,19 @@ public class UFServiceConfiguration implements Serializable{
         return gatewayToken;
     }
 
-    public UFServiceConfiguration(String tenant,
-                                  String controllerId,
-                                  long retryDelay,
-                                  String url,
-                                  String targetToken,
-                                  String gatewayToken,
-                                  boolean apiMode,
-                                  boolean isEnable) {
+    public Map<String, String> getArgs() {
+        return args;
+    }
+
+    private UFServiceConfiguration(String tenant,
+                                   String controllerId,
+                                   long retryDelay,
+                                   String url,
+                                   String targetToken,
+                                   String gatewayToken,
+                                   boolean apiMode,
+                                   boolean isEnable,
+                                   Map<String,String> args) {
         this.tenant = tenant;
         this.controllerId = controllerId;
         this.retryDelay = retryDelay;
@@ -134,6 +147,7 @@ public class UFServiceConfiguration implements Serializable{
         this.gatewayToken = gatewayToken;
         this.apiMode = apiMode;
         this.enable = isEnable;
+        this.args = args;
     }
 
     private final String tenant;
@@ -144,6 +158,7 @@ public class UFServiceConfiguration implements Serializable{
     private final String gatewayToken;
     private final Boolean apiMode;
     private final Boolean enable;
+    private final Map<String,String> args;
 
     private static final long serialVersionUID = -2015373437277468594L;
 }
