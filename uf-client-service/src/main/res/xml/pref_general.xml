@@ -62,13 +62,9 @@
         android:key="@string/shared_preferences_api_mode_key"
         android:title="@string/shared_preferences_api_mode_title" />
 
-    <ListPreference
+    <Preference
         android:defaultValue="@string/retry_time_default"
-        android:entries="@array/retry_time_entries_name"
-        android:entryValues="@array/retry_time_entries_value"
         android:key="@string/shared_preferences_retry_delay_key"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
         android:title="@string/shared_preferences_retry_delay_title" />
 
     <Preference

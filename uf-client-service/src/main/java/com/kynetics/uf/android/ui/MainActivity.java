@@ -19,7 +19,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
-import com.kynetics.uf.android.ui.fragment.ConfigurationFragment;
+import com.kynetics.uf.android.ui.fragment.UFPreferenceFragment;
 import com.kynetics.uf.android.R;
 import com.kynetics.uf.android.UpdateFactoryService;
 import com.kynetics.uf.android.ui.fragment.AuthorizationDialogFragment;
@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization{
                 setContentView(R.layout.activity_main);
                 ActionBar actionBar = getSupportActionBar();
                 actionBar.setDisplayHomeAsUpEnabled(true);
-                changePage(ConfigurationFragment.newInstance());
+                changePage(UFPreferenceFragment.newInstance());
                 break;
             case INTENT_TYPE_EXTRA_VALUE_DOWNLOAD:
             case INTENT_TYPE_EXTRA_VALUE_REBOOT:

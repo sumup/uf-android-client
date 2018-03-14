@@ -28,14 +28,14 @@ import com.kynetics.updatefactory.ddiclient.core.model.State;
 /**
  * A simple {@link PreferenceFragmentCompat} subclass.
  */
-public class ConfigurationFragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class UFPreferenceFragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    public ConfigurationFragment() {
+    public UFPreferenceFragment() {
     }
 
 
-    public static ConfigurationFragment newInstance(){
-        return new ConfigurationFragment();
+    public static UFPreferenceFragment newInstance(){
+        return new UFPreferenceFragment();
     }
 
     @Override
@@ -122,14 +122,25 @@ public class ConfigurationFragment extends PreferenceFragmentCompat implements S
         }
 
         if (preference instanceof ListPreference) {
-            ListPreference listPreference = (ListPreference) preference;
+            final ListPreference listPreference = (ListPreference) preference;
             listPreference.setSummary(listPreference.getEntry());
             return;
         }
 
-        preference.setSummary(key.equals(getString(R.string.shared_preferences_current_state_key)) ?
-                getStateName(key, sharedPrefs) :
-                sharedPrefs.getString(key, ""));
+        if (preference instanceof EditTextPreference){
+            final EditTextPreference editTextPreference = (EditTextPreference) preference;
+            editTextPreference.setSummary(editTextPreference.getText());
+        }
+
+        if(key.equals(getString(R.string.shared_preferences_current_state_key))){
+            preference.setSummary(getStateName(key, sharedPrefs));
+            return;
+        }
+
+        if(key.equals(getString(R.string.shared_preferences_retry_delay_key))){
+            preference.setSummary(String.valueOf(sharedPrefs.getLong(key, 12_000)));
+            return;
+        }
 
     }
 
