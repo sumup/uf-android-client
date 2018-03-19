@@ -30,9 +30,6 @@ import com.kynetics.uf.android.api.UFServiceConfiguration;
 import com.kynetics.uf.clientexample.R;
 import com.kynetics.uf.clientexample.activity.UFActivity;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY;
 
 /**
@@ -117,7 +114,6 @@ public class ConfigurationFragment extends Fragment implements UFServiceInteract
                     .withTenant(mTenantEditText.getText().toString())
                     .withUrl(mUrlEditText.getText().toString())
                     .withRetryDelay(retryDelay)
-                    .witArgs(getMap())
                     .build());
 
             InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -128,13 +124,6 @@ public class ConfigurationFragment extends Fragment implements UFServiceInteract
 
         return mRootView;
     }
-
-    private Map<String,String> getMap(){
-        final Map<String,String> map = new HashMap<>(1);
-        map.put("default_key","default_value");
-        return map;
-    }
-
     @Override
     public void onMessageReceived(String message) {
         Snackbar.make(mRootView, message, Snackbar.LENGTH_LONG).show();

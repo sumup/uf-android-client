@@ -10,7 +10,10 @@
 package com.kynetics.uf.android.api;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -20,6 +23,13 @@ import java.util.Objects;
 public class UFServiceConfiguration implements Serializable{
 
     public static class Builder {
+        private Builder(){
+            args = new HashMap<>(2);
+            args.put("client","Android");
+            final SimpleDateFormat sm = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z", Locale.getDefault());
+            args.put("date", sm.format(new Date()));
+
+        }
         public Builder withTenant(String tenant) {
             this.tenant = tenant;
             return this;
@@ -70,7 +80,7 @@ public class UFServiceConfiguration implements Serializable{
             Objects.requireNonNull(tenant);
             Objects.requireNonNull(controllerId);
             Objects.requireNonNull(url);
-            if(retryDelay < 0 ){
+            if(retryDelay <= 0 ){
                 throw new IllegalStateException("retryDelay must be grater than 0");
             }
             return new UFServiceConfiguration(tenant, controllerId, retryDelay, url,
@@ -79,6 +89,16 @@ public class UFServiceConfiguration implements Serializable{
                     apiMode, enable, args != null ? args : new HashMap<>(0));
         }
 
+        public boolean configurationIsValid(){
+            return notEmptyString(tenant)
+                    && notEmptyString(controllerId)
+                    && notEmptyString(url)
+                    && retryDelay > 0;
+        }
+
+        private boolean notEmptyString(String stringToTest){
+            return stringToTest != null && !stringToTest.isEmpty();
+        }
         private String tenant;
         private String controllerId;
         private long retryDelay;
