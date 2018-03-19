@@ -13,6 +13,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -25,9 +26,11 @@ import android.widget.Toast;
 import com.kynetics.uf.android.api.UFServiceConfiguration;
 import com.kynetics.uf.android.api.UFServiceMessage;
 import com.kynetics.uf.android.api.UFServiceMessage.Suspend;
+import com.kynetics.uf.android.configuration.ConfigurationFileLoader;
 import com.kynetics.uf.android.content.SharedPreferencesWithObject;
 import com.kynetics.uf.android.ui.MainActivity;
 import com.kynetics.updatefactory.ddiclient.api.ClientBuilder;
+import com.kynetics.updatefactory.ddiclient.api.ServerType;
 import com.kynetics.updatefactory.ddiclient.api.api.DdiRestApi;
 import com.kynetics.updatefactory.ddiclient.core.UFService;
 import com.kynetics.updatefactory.ddiclient.core.model.Event;
@@ -61,7 +64,6 @@ import static com.kynetics.uf.android.api.UFServiceMessage.Suspend.UPDATE;
  * @author Daniele Sergio
  */
 public class UpdateFactoryService extends Service implements UpdateFactoryServiceCommand {
-    private static final String TAG = UpdateFactoryService.class.getSimpleName();
 
     public static UpdateFactoryServiceCommand getUFServiceCommand(){
         return ufServiceCommand;
@@ -95,16 +97,20 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        final Serializable serializable = intent.getSerializableExtra(SERVICE_DATA_KEY);
-        boolean startNewService = false;
-        if(serializable instanceof UFServiceConfiguration){
-            final UFServiceConfiguration serviceConfiguration = (UFServiceConfiguration) serializable;
-            saveServiceConfigurationToSharedPreferences(serviceConfiguration);
-            startNewService = true;
+        final ConfigurationFileLoader configurationFile =
+                new ConfigurationFileLoader(super.getSharedPreferences(sharedPreferencesFile,MODE_PRIVATE), UF_CONF_FILE);
+        UFServiceConfiguration serviceConfiguration = configurationFile.getNewFileConfiguration();
+        if(serviceConfiguration == null){
+            final Serializable serializable = intent.getSerializableExtra(SERVICE_DATA_KEY);
+            if(serializable instanceof UFServiceConfiguration){
+                serviceConfiguration = (UFServiceConfiguration) serializable;
+            }
         }
-        buildServiceFromPreferences(startNewService);
+        saveServiceConfigurationToSharedPreferences(serviceConfiguration);
+        buildServiceFromPreferences(serviceConfiguration!=null);
         return START_STICKY;
     }
+
 
     private OkHttpClient.Builder buildOkHttpClient() {
         return new OkHttpClient.Builder();
@@ -135,12 +141,14 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
             final HashMap<String,String> defaultArgs = new HashMap<>();
             final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs, defaultArgs.getClass());
+            final ServerType serverType = sharedPreferences.getObject(sharedPreferencesServerType, ServerType.class, ServerType.UPDATE_FACTORY);
             try {
                 final DdiRestApi client = new ClientBuilder()
                         .withBaseUrl(url)
                         .withGatewayToken(gatewayToken)
                         .withTargetToken(targetToken)
                         .withHttpBuilder(buildOkHttpClient())
+                        .withServerType(serverType)
                         .build();
                 ufService = UFService.builder()
                         .withClient(client)
@@ -176,6 +184,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
         final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
         final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs, new HashMap<String,String>().getClass());
+        final ServerType serverType = sharedPreferences.getObject(sharedPreferencesServerType, ServerType.class, ServerType.UPDATE_FACTORY);
         return UFServiceConfiguration.builder()
                 .witArgs(args)
                 .witEnable(serviceIsEnable)
@@ -185,9 +194,11 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 .withRetryDelay(delay)
                 .withTargetToken(targetToken)
                 .withTenant(tenant)
+                .withIsUpdateFactoryServer(serverType == ServerType.UPDATE_FACTORY)
                 .withUrl(url)
                 .build();
     }
+
     private class IncomingHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
@@ -233,8 +244,10 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     }
 
     private void saveServiceConfigurationToSharedPreferences(UFServiceConfiguration configuration) {
-        SharedPreferencesWithObject sharedPreferences;
-        sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
+        if(configuration == null){
+            return;
+        }
+        final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(sharedPreferencesControllerIdKey, configuration.getControllerId());
         editor.putString(sharedPreferencesTenantKey, configuration.getTenant());
@@ -243,9 +256,11 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         editor.putString(sharedPreferencesTargetToken, configuration.getTargetToken());
         editor.putLong(sharedPreferencesRetryDelayKey, configuration.getRetryDelay());
         editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode());
-        editor.putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnalbe());
+        editor.putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnable());
         editor.apply();
         sharedPreferences.putAndCommitObject(sharedPreferencesArgs,configuration.getArgs());
+        sharedPreferences.putAndCommitObject(sharedPreferencesServerType,
+                configuration.isUpdateFactoryServe() ? ServerType.UPDATE_FACTORY : ServerType.HAWKBIT);
     }
 
     private void startStopService(boolean serviceIsEnable) {
@@ -294,6 +309,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
 
     @Override
     public IBinder onBind(Intent intent) {
+
         return mMessenger.getBinder();
     }
 
@@ -388,6 +404,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         sharedPreferencesGatewayToken = getString(R.string.shared_preferences_gateway_token_key);
         sharedPreferencesTargetToken = getString(R.string.shared_preferences_target_token_key);
         sharedPreferencesArgs = getString(R.string.shared_preferences_args_key);
+        sharedPreferencesServerType = getString(R.string.shared_preferences_server_type_key);
     }
 
     private static UpdateFactoryServiceCommand ufServiceCommand;
@@ -402,8 +419,12 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private String sharedPreferencesGatewayToken;
     private String sharedPreferencesTargetToken;
     private String sharedPreferencesFile;
+    private String sharedPreferencesServerType;
     private String sharedPreferencesArgs;
 
     private static final String SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE";
+    private static final String EXTERNAL_STORAGE_DIR = Environment.getExternalStorageDirectory().getPath();
+    private static final String UF_CONF_FILE = EXTERNAL_STORAGE_DIR + "/UpdateFactoryConfiguration/ufConf.conf" ;
+    private static final String TAG = UpdateFactoryService.class.getSimpleName();
 
 }

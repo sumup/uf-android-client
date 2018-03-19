@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity
                 case MSG_SERVICE_CONFIGURATION_STATUS:
                     final Serializable serializable = msg.getData().getSerializable(SERVICE_DATA_KEY);
                     if(!(serializable instanceof UFServiceConfiguration) ||
-                            !((UFServiceConfiguration)serializable).isEnalbe()) {
+                            !((UFServiceConfiguration)serializable).isEnable()) {
                         mNavigationView.setCheckedItem(R.id.menu_settings);
                         changePage(ConfigurationFragment.newInstance());
                     }

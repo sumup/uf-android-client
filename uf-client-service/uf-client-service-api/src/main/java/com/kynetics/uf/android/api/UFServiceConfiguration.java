@@ -75,6 +75,10 @@ public class UFServiceConfiguration implements Serializable{
             return this;
         }
 
+        public Builder withIsUpdateFactoryServer(boolean isUpdateFactoryServer){
+            this.isUpdateFactoryServer = isUpdateFactoryServer;
+            return this;
+        }
 
         public UFServiceConfiguration build() {
             Objects.requireNonNull(tenant);
@@ -86,7 +90,8 @@ public class UFServiceConfiguration implements Serializable{
             return new UFServiceConfiguration(tenant, controllerId, retryDelay, url,
                     targetToken == null ? "" : targetToken,
                     gatewayToken == null ? "" : gatewayToken,
-                    apiMode, enable, args != null ? args : new HashMap<>(0));
+                    apiMode, enable, isUpdateFactoryServer,
+                    args != null ? args : new HashMap<>(0));
         }
 
         public boolean configurationIsValid(){
@@ -105,6 +110,7 @@ public class UFServiceConfiguration implements Serializable{
         private String url;
         private boolean apiMode = true;
         private boolean enable = true;
+        private boolean isUpdateFactoryServer = true;
         private String targetToken;
         private String gatewayToken;
         private Map<String,String> args;
@@ -134,7 +140,7 @@ public class UFServiceConfiguration implements Serializable{
         return apiMode;
     }
 
-    public Boolean isEnalbe() {
+    public Boolean isEnable() {
         return enable;
     }
 
@@ -150,6 +156,10 @@ public class UFServiceConfiguration implements Serializable{
         return args;
     }
 
+    public boolean isUpdateFactoryServe() {
+        return isUpdateFactoryServe;
+    }
+
     private UFServiceConfiguration(String tenant,
                                    String controllerId,
                                    long retryDelay,
@@ -158,6 +168,7 @@ public class UFServiceConfiguration implements Serializable{
                                    String gatewayToken,
                                    boolean apiMode,
                                    boolean isEnable,
+                                   boolean isUpdateFactoryServe,
                                    Map<String,String> args) {
         this.tenant = tenant;
         this.controllerId = controllerId;
@@ -167,6 +178,7 @@ public class UFServiceConfiguration implements Serializable{
         this.gatewayToken = gatewayToken;
         this.apiMode = apiMode;
         this.enable = isEnable;
+        this.isUpdateFactoryServe = isUpdateFactoryServe;
         this.args = args;
     }
 
@@ -176,9 +188,10 @@ public class UFServiceConfiguration implements Serializable{
     private final String url;
     private final String targetToken;
     private final String gatewayToken;
-    private final Boolean apiMode;
-    private final Boolean enable;
+    private final boolean apiMode;
+    private final boolean enable;
     private final Map<String,String> args;
+    private final boolean isUpdateFactoryServe;
 
-    private static final long serialVersionUID = -2015373437277468594L;
+    private static final long serialVersionUID = -6025361892414738765L;
 }
