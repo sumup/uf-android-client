@@ -85,6 +85,9 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if(!isAdded()){
+            return;
+        }
         final SharedPreferences sharedPrefs = getPreferenceManager().getSharedPreferences();
         final Preference preference = findPreference(key);
         updatePreference(preference, key, sharedPrefs);
@@ -116,6 +119,7 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
             activePreference.setEnabled(true);
         }
     }
+
     private void updatePreference(Preference preference, String key, SharedPreferences sharedPrefs) {
         if (preference == null || preference instanceof SwitchPreferenceCompat) {
             return;
