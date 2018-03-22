@@ -71,7 +71,9 @@ public class UFServiceConfiguration implements Serializable{
         }
 
         public Builder witArgs(Map<String,String> args) {
-            this.args = args;
+            if(args != null && args.size() > 0) {
+                this.args = args;
+            }
             return this;
         }
 
@@ -91,7 +93,7 @@ public class UFServiceConfiguration implements Serializable{
                     targetToken == null ? "" : targetToken,
                     gatewayToken == null ? "" : gatewayToken,
                     apiMode, enable, isUpdateFactoryServer,
-                    args != null ? args : new HashMap<>(0));
+                    args);
         }
 
         public boolean configurationIsValid(){
