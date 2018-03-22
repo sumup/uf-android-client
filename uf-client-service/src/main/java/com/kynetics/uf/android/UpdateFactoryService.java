@@ -100,7 +100,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         final ConfigurationFileLoader configurationFile =
                 new ConfigurationFileLoader(super.getSharedPreferences(sharedPreferencesFile,MODE_PRIVATE), UF_CONF_FILE);
         UFServiceConfiguration serviceConfiguration = configurationFile.getNewFileConfiguration();
-        if(serviceConfiguration == null){
+        if(serviceConfiguration == null && intent != null){
             final Serializable serializable = intent.getSerializableExtra(SERVICE_DATA_KEY);
             if(serializable instanceof UFServiceConfiguration){
                 serviceConfiguration = (UFServiceConfiguration) serializable;
