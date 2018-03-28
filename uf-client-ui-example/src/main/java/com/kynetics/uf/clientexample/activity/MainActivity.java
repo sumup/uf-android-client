@@ -246,13 +246,14 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(MainActivity.this, "service communication error",
                         Toast.LENGTH_SHORT).show();
             }
-
+            mIsBound = true;
         }
 
         public void onServiceDisconnected(ComponentName className) {
             mService = null;
             Toast.makeText(MainActivity.this, R.string.disconnected,
                     Toast.LENGTH_SHORT).show();
+            mIsBound = false;
         }
     };
 
@@ -288,8 +289,12 @@ public class MainActivity extends AppCompatActivity
         final Intent intent = new Intent(UFServiceCommunicationConstants.SERVICE_ACTION);
         intent.setPackage(UFServiceCommunicationConstants.SERVICE_PACKAGE_NAME);
         intent.setFlags(FLAG_INCLUDE_STOPPED_PACKAGES);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-        mIsBound = true;
+        final boolean serviceExist = bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        if(!serviceExist){
+            Toast.makeText(getApplicationContext(), "UpdateFactoryService not found",Toast.LENGTH_LONG).show();
+            unbindService(mConnection);
+            this.finish();
+        }
     }
 
     void doUnbindService() {
