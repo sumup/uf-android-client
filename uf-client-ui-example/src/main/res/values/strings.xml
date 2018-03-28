@@ -32,4 +32,7 @@
     <string name="invalid_url">Invalid url</string>
     <string name="disconnected">Disconnected</string>
     <string name="connected">Connected</string>
+    <string name="ui_version">UI version: %s</string>
+    <string name="service_version">Service version: %s</string>
+
 </resources>

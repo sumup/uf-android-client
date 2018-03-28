@@ -15,6 +15,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,17 +37,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants;
 import com.kynetics.uf.android.api.UFServiceConfiguration;
 import com.kynetics.uf.android.api.UFServiceMessage;
+import com.kynetics.uf.clientexample.BuildConfig;
 import com.kynetics.uf.clientexample.R;
 import com.kynetics.uf.clientexample.fragment.ConfigurationFragment;
 import com.kynetics.uf.clientexample.fragment.LogFragment;
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment;
 
 import java.io.Serializable;
+import java.util.List;
 
 import static android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.ACTION_SETTINGS;
@@ -89,6 +94,16 @@ public class MainActivity extends AppCompatActivity
         changePage(LogFragment.newInstance());
         mNavigationView.setCheckedItem(R.id.menu_log);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        final TextView textViewUiVersion = mNavigationView.findViewById(R.id.ui_version);
+        final TextView textViewServiceVersion = mNavigationView.findViewById(R.id.service_version);
+        textViewUiVersion.setText(String.format(getString(R.string.ui_version), BuildConfig.VERSION_NAME));
+        try{
+            final PackageInfo pinfo =
+                    getPackageManager().getPackageInfo("com.kynetics.uf.service", 0);
+            textViewServiceVersion.setText(String.format(getString(R.string.service_version), pinfo.versionName));
+        }catch (PackageManager.NameNotFoundException e) {
+            textViewServiceVersion.setVisibility(View.GONE);
+        }
     }
 
     @Override

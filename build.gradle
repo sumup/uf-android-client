@@ -23,6 +23,9 @@ buildscript {
         // in the individual module build.gradle files
     }
 }
+
+apply from: 'gradle/grgit.gradle'
+
 ext{
     //dependencies
     supportLibraryVersion = '27.1.0'

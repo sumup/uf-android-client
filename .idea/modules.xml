@@ -3,9 +3,13 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/UFAndroidClient.iml" filepath="$PROJECT_DIR$/UFAndroidClient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/UfAndroidClient.iml" filepath="$PROJECT_DIR$/UfAndroidClient.iml" />
       <module fileurl="file://$PROJECT_DIR$/uf-client-service/uf-client-service-api/api.iml" filepath="$PROJECT_DIR$/uf-client-service/uf-client-service-api/api.iml" />
       <module fileurl="file://$PROJECT_DIR$/uf-client-service/uf-client-service.iml" filepath="$PROJECT_DIR$/uf-client-service/uf-client-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/uf-client-service/uf-client-service.iml" filepath="$PROJECT_DIR$/uf-client-service/uf-client-service.iml" />
       <module fileurl="file://$PROJECT_DIR$/uf-client-service/uf-client-service-api/uf-client-service-api.iml" filepath="$PROJECT_DIR$/uf-client-service/uf-client-service-api/uf-client-service-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/uf-client-service/uf-client-service-api/uf-client-service-api.iml" filepath="$PROJECT_DIR$/uf-client-service/uf-client-service-api/uf-client-service-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/uf-client-ui-example/uf-client-ui-example.iml" filepath="$PROJECT_DIR$/uf-client-ui-example/uf-client-ui-example.iml" />
       <module fileurl="file://$PROJECT_DIR$/uf-client-ui-example/uf-client-ui-example.iml" filepath="$PROJECT_DIR$/uf-client-ui-example/uf-client-ui-example.iml" />
     </modules>
   </component>
