@@ -14,6 +14,8 @@ import android.os.Environment;
 import android.os.RecoverySystem;
 import android.util.Log;
 
+import com.kynetics.updatefactory.ddiclient.core.servicecallback.SystemOperation;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -43,8 +45,7 @@ public class UpdateSystem {
             packageFile.delete();
         }
 
-        if (write(inputStream, packageFile)) return false;
-        return true;
+        return write(inputStream, packageFile);
     }
 
     private static boolean write(InputStream inputStream, File outputStream) {
@@ -62,10 +63,9 @@ public class UpdateSystem {
             while (buffer.hasRemaining()) {
                 dest.write(buffer);
             }
-        }
-        catch (Exception e) {
-            Log.e(TAG, "Failed to copy update file into internal storage: " + e);
             return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to copy update file into internal storage ", e);
         }
         return false;
     }
@@ -112,13 +112,15 @@ public class UpdateSystem {
         }
     }
 
-    public static boolean successInstallation() {
+    public static SystemOperation.UpdateStatus successInstallation() {
         try (BufferedReader fileInputStream = new BufferedReader(new FileReader(new File("/cache/recovery", "last_install")))) {
             fileInputStream.readLine();
-            return Integer.parseInt(fileInputStream.readLine()) == 1;
+            return Integer.parseInt(fileInputStream.readLine()) == 1 ?
+                    SystemOperation.UpdateStatus.SUCCESSFULLY_APPLIED :
+                    SystemOperation.UpdateStatus.APPLIED_WITH_ERROR;
         }catch (IOException exception){
             Log.e(TAG, "installation error", exception);
-            return false;
+            return SystemOperation.UpdateStatus.APPLIED_WITH_ERROR;
         }
     }
 

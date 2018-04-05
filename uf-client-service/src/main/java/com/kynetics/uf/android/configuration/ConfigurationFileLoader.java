@@ -10,6 +10,8 @@
 package com.kynetics.uf.android.configuration;
 
 import android.content.SharedPreferences;
+import android.os.Debug;
+import android.util.Log;
 
 import com.kynetics.uf.android.api.UFServiceConfiguration;
 
@@ -51,11 +53,9 @@ public class ConfigurationFileLoader {
     }
 
     public UFServiceConfiguration getNewFileConfiguration(){
-
         if(!configurationFileFound() || !parseFile()){
             return null;
         }
-
         UFServiceConfiguration.Builder builder =  UFServiceConfiguration.builder()
                 .witEnable(getBooleanConfiguration(ENABLE_CONFIGURATION_KEY, true))
                 .withApiMode(getBooleanConfiguration(API_MODE_CONFIGURATION_KEY, true))

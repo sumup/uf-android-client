@@ -9,10 +9,10 @@
 
 <resources>
     <string name="app_name">Update Factory ui client</string>
-    <string name="update_download_title">New update available</string>
-    <string name="update_download_content">New update is available to download.\nDownloading the latest update you will get the latest features, improvements and bug fixes.\nClick OK to download the upgrade now</string>
-    <string name="update_started_title">Update Authorization</string>
-    <string name="update_started_content">The upgrade is ready, click OK to upgrade now.\nThe device will be restarted during the upgrade process.</string>
+    <string name="download_title">New update available</string>
+    <string name="download_content">New update is available to download.\nDownloading the latest update you will get the latest features, improvements and bug fixes.\nClick OK to download the upgrade now</string>
+    <string name="update_title">Update Authorization</string>
+    <string name="update_content">The upgrade is ready, click OK to upgrade now.\nThe device will be restarted during the upgrade process.</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

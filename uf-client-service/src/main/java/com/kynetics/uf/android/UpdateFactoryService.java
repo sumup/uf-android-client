@@ -33,8 +33,14 @@ import com.kynetics.updatefactory.ddiclient.api.ClientBuilder;
 import com.kynetics.updatefactory.ddiclient.api.ServerType;
 import com.kynetics.updatefactory.ddiclient.api.api.DdiRestApi;
 import com.kynetics.updatefactory.ddiclient.core.UFService;
-import com.kynetics.updatefactory.ddiclient.core.model.Event;
-import com.kynetics.updatefactory.ddiclient.core.model.State;
+import com.kynetics.updatefactory.ddiclient.core.model.event.AbstractEvent;
+import com.kynetics.updatefactory.ddiclient.core.model.state.AbstractState;
+import com.kynetics.updatefactory.ddiclient.core.model.state.AbstractStateWithAction;
+import com.kynetics.updatefactory.ddiclient.core.model.state.AuthorizationWaitingState;
+import com.kynetics.updatefactory.ddiclient.core.model.state.SavingFileState;
+import com.kynetics.updatefactory.ddiclient.core.model.state.UpdateStartedState;
+import com.kynetics.updatefactory.ddiclient.core.model.state.WaitingState;
+import com.kynetics.updatefactory.ddiclient.core.servicecallback.UserInteraction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -71,12 +77,12 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
 
     @Override
     public void authorizationGranted() {
-        ufService.setAuthorized(true);
+        userInteraction.setAuthorization(Boolean.TRUE);
     }
 
     @Override
     public void authorizationDenied() {
-        ufService.setAuthorized(false);
+        userInteraction.setAuthorization(Boolean.FALSE);
     }
 
 
@@ -116,14 +122,14 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         return new OkHttpClient.Builder();
     }
 
-    private State getInitialState(boolean startNewService,
-                                  SharedPreferencesWithObject sharedPreferences) {
+    private AbstractState getInitialState(boolean startNewService,
+                                          SharedPreferencesWithObject sharedPreferences) {
         final Long updatePendingId = UpdateSystem.getUpdatePendingId();
         if(updatePendingId != null){
             Log.e(TAG, "updatePendingId found: " + updatePendingId);
-            return new State.UpdateStartedState(updatePendingId);
+            return new UpdateStartedState(updatePendingId);
         }
-        return startNewService ? new State.WaitingState(0, null) : sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class, new State.WaitingState(0, null));
+        return startNewService ? new WaitingState(0, null) : sharedPreferences.getObject(sharedPreferencesCurrentStateKey, AbstractState.class, new WaitingState(0, null));
     }
 
     private void buildServiceFromPreferences(boolean startNewService) {
@@ -137,11 +143,21 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final String targetToken = sharedPreferences.getString(sharedPreferencesTargetToken, "");
             final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
             final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
-            final State initialState = getInitialState(startNewService, sharedPreferences);
+            final AbstractState initialState = getInitialState(startNewService, sharedPreferences);
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
             final HashMap<String,String> defaultArgs = new HashMap<>();
             final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs, defaultArgs.getClass());
             final ServerType serverType = sharedPreferences.getObject(sharedPreferencesServerType, ServerType.class, ServerType.UPDATE_FACTORY);
+            userInteraction = new AndroidUserInteraction() {
+                @Override
+                protected void onAuthorizationAsked(Authorization authorization) {
+                    if(apiMode){
+                        sendMessage(authorization.name(), MSG_AUTHORIZATION_REQUEST);
+                    }else {
+                        showAuthorizationDialog(authorization);
+                    }
+                }
+            };
             try {
                 final DdiRestApi client = new ClientBuilder()
                         .withBaseUrl(url)
@@ -156,14 +172,12 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .withTenant(tenant)
                         .withControllerId(controllerId)
                         .withInitialState(initialState)
+                        .withSystemOperation(new AndroidSystemOperation(getApplicationContext(), initialState.getStateName() == AbstractState.StateName.UPDATE_STARTED))
                         .withTargetData(()->args)
+                        .withUserInteraction(userInteraction)
                         .build();
-
                 ufService.addObserver(new ObserverState(apiMode));
                 startStopService(true);
-                if (initialState.getStateName() == State.StateName.UPDATE_STARTED) {
-                    ufService.setUpdateSucceffullyUpdate(UpdateSystem.successInstallation());
-                }
             }catch (IllegalStateException | IllegalArgumentException e){
                 sharedPreferences.edit().putBoolean(sharedPreferencesServiceEnableKey, false).apply();
                 Toast.makeText(this,"Update Factory configuration error",Toast.LENGTH_LONG)
@@ -215,7 +229,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     mClients.remove(msg.replyTo);
                     break;
                 case MSG_AUTHORIZATION_RESPONSE:
-                    ufService.setAuthorized(msg.getData().getBoolean(SERVICE_DATA_KEY));
+                    userInteraction.setAuthorization(msg.getData().getBoolean(SERVICE_DATA_KEY));
                     break;
                 case MSG_RESUME_SUSPEND_UPGRADE:
                     ufService.restartSuspendState();
@@ -230,9 +244,9 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     if(lastMessage != null){
                         UpdateFactoryService.this.sendMessage(lastMessage, MSG_SEND_STRING, msg.replyTo);
                     }
-                    State lastState = sharedPreferences.getObject(sharedPreferencesCurrentStateKey, State.class);
-                    if(lastState.getStateName() == State.StateName.AUTHORIZATION_WAITING){
-                        UpdateFactoryService.this.sendMessage(((State.AuthorizationWaitingState)lastState).getState().getStateName().name(),
+                    AbstractState lastState = sharedPreferences.getObject(sharedPreferencesCurrentStateKey, AbstractState.class);
+                    if(lastState.getStateName() == AbstractState.StateName.AUTHORIZATION_WAITING){
+                        UpdateFactoryService.this.sendMessage(userInteraction.getAuthRequest().name(),
                                 MSG_AUTHORIZATION_REQUEST,
                                 msg.replyTo);
                     }
@@ -324,61 +338,41 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         public void update(Observable observable, Object o) {
             if(o instanceof UFService.SharedEvent) {
                 final UFService.SharedEvent eventNotify = (UFService.SharedEvent) o;
-                final Event event = eventNotify.getEvent();
-                final State newState = eventNotify.getNewState();
-
+                final AbstractEvent event = eventNotify.getEvent();
+                final AbstractState newState = eventNotify.getNewState();
+                final String newStateString = newState.getStateName() == AbstractState.StateName.SAVING_FILE ?
+                      String.format("%s (%s%%)", newState.getStateName().name(), (int) Math.floor(((SavingFileState)newState).getPercent() * 100))
+                        :  newState.getStateName().name();
                 final UFServiceMessage message = new UFServiceMessage(
                         event.getEventName().name(),
                         eventNotify.getOldState().getStateName().name(),
-                        newState.getStateName().name(),
+                        newStateString,
                         getSuspend(newState)
                 );
                 writeObjectToSharedPreference(message, SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE);
                 sendMessage(message, MSG_SEND_STRING);
                 writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
-                switch (newState.getStateName()){
-                    case AUTHORIZATION_WAITING:
-                        final State.StateName auth = ((State.AuthorizationWaitingState) newState).getState().getStateName();
-                        if(apiMode){
-                            sendMessage(auth.name(), MSG_AUTHORIZATION_REQUEST);
-                        }else {
-                            showAuthorizationDialog(auth);
-                        }
-                        break;
-                    case SAVING_FILE:
-                        final State.SavingFileState savingFileState = ((State.SavingFileState) newState);
-                        UpdateSystem.copyFile(savingFileState.getInputStream());
-                        break;
-                    case UPDATE_STARTED:
-                        if(UpdateSystem.verify()){
-                            UpdateSystem.install(getApplicationContext(), ((State.StateWithAction)newState).getActionId());
-                        } else {
-                            ufService.setUpdateSucceffullyUpdate(false);
-                            Toast.makeText(getApplicationContext(),getString(R.string.invalid_update), Toast.LENGTH_LONG).show();
-                        }
-                        break;
-                }
             }
         }
     }
 
-    private void showAuthorizationDialog(State.StateName auth) {
+    private void showAuthorizationDialog(UserInteraction.Authorization auth) {
         final Intent intent = new Intent(UpdateFactoryService.this, MainActivity.class);
-        intent.putExtra(MainActivity.INTENT_TYPE_EXTRA_VARIABLE, auth == State.StateName.UPDATE_DOWNLOAD ?
+        intent.putExtra(MainActivity.INTENT_TYPE_EXTRA_VARIABLE, auth == UserInteraction.Authorization.DOWNLOAD ?
                 MainActivity.INTENT_TYPE_EXTRA_VALUE_DOWNLOAD : MainActivity.INTENT_TYPE_EXTRA_VALUE_REBOOT);
         intent.addFlags(FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
 
-    private Suspend getSuspend(State state){
-        if(state.getStateName() != State.StateName.WAITING){
+    private Suspend getSuspend(AbstractState state){
+        if(state.getStateName() != AbstractState.StateName.WAITING){
             return NONE;
         }
-        State.WaitingState waitingState = (State.WaitingState) state;
+        WaitingState waitingState = (WaitingState) state;
         if(!waitingState.hasInnerState()){
             return NONE;
         }
-        return waitingState.getState().getStateName() == State.StateName.UPDATE_DOWNLOAD ?
+        return waitingState.getState().getStateName() == AbstractState.StateName.UPDATE_DOWNLOAD ?
                 DOWNLOAD : UPDATE;
     }
 
@@ -421,6 +415,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private String sharedPreferencesFile;
     private String sharedPreferencesServerType;
     private String sharedPreferencesArgs;
+    private AndroidUserInteraction userInteraction;
 
     private static final String SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE";
     private static final String EXTERNAL_STORAGE_DIR = Environment.getExternalStorageDirectory().getPath();

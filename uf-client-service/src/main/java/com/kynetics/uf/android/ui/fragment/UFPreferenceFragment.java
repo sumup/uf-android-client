@@ -23,7 +23,7 @@ import android.widget.Toast;
 
 import com.kynetics.uf.android.R;
 import com.kynetics.uf.android.content.SharedPreferencesWithObject;
-import com.kynetics.updatefactory.ddiclient.core.model.State;
+import com.kynetics.updatefactory.ddiclient.core.model.state.AbstractState;
 
 /**
  * A simple {@link PreferenceFragmentCompat} subclass.
@@ -150,7 +150,7 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
 
     private String getStateName(String key, SharedPreferences sharedPreferences){
         final SharedPreferencesWithObject sharedPrefs = new SharedPreferencesWithObject(sharedPreferences);
-        State state = sharedPrefs.getObject(key, State.class);
+        AbstractState state = sharedPrefs.getObject(key, AbstractState.class);
         if(state != null){
             return state.getStateName().name();
         }
