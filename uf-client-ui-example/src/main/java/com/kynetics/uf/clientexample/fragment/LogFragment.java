@@ -45,7 +45,7 @@ public class LogFragment extends Fragment implements UFServiceInteractionFragmen
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_log, container, false);
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.my_recycler_view);
+        mRecyclerView = view.findViewById(R.id.my_recycler_view);
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -68,6 +68,7 @@ public class LogFragment extends Fragment implements UFServiceInteractionFragmen
     @Override
     public void onMessageReceived(String message){
         mAdapter.addItem(message);
+        mRecyclerView.post(() -> mRecyclerView.smoothScrollToPosition(mAdapter.getItemCount()));
     }
 
 }
