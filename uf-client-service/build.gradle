@@ -46,7 +46,7 @@ dependencies {
     implementation "com.android.support:preference-v7:$supportLibraryVersion"
 
     testImplementation 'junit:junit:4.12'
-    implementation 'com.github.Kynetics.uf-ddiclient:ddiclient-core:a67990eba0'
+    implementation 'com.github.Kynetics.uf-ddiclient:ddiclient-core:v0.4.1'
 
     implementation project(':uf-client-service:uf-client-service-api')
 }
