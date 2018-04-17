@@ -147,6 +147,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
             final HashMap<String,String> defaultArgs = new HashMap<>();
             final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs, defaultArgs.getClass());
+            args.put(CLIENT_VERSION_ARG_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
             final ServerType serverType = sharedPreferences.getObject(sharedPreferencesServerType, ServerType.class, ServerType.UPDATE_FACTORY);
             userInteraction = new AndroidUserInteraction() {
                 @Override
@@ -417,6 +418,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private String sharedPreferencesArgs;
     private AndroidUserInteraction userInteraction;
 
+    private static final String CLIENT_VERSION_ARG_KEY = "client_version";
     private static final String SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE";
     private static final String EXTERNAL_STORAGE_DIR = Environment.getExternalStorageDirectory().getPath();
     private static final String UF_CONF_FILE = EXTERNAL_STORAGE_DIR + "/UpdateFactoryConfiguration/ufConf.conf" ;
