@@ -34,6 +34,7 @@ public class AndroidSystemOperation implements SystemOperation {
 
     @Override
     public boolean savingFile(InputStream inputStream, FileInfo fileInfo) {
+        updateExecuted = false;
         return UpdateSystem.copyFile(inputStream);
     }
 
