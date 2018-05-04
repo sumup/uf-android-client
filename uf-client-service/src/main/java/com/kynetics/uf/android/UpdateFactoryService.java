@@ -103,14 +103,18 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG, "service's starting");
         final ConfigurationFileLoader configurationFile =
                 new ConfigurationFileLoader(super.getSharedPreferences(sharedPreferencesFile,MODE_PRIVATE), UF_CONF_FILE);
         UFServiceConfiguration serviceConfiguration = configurationFile.getNewFileConfiguration();
         if(serviceConfiguration == null && intent != null){
+            Log.i(TAG, "Loaded new configuration from intent");
             final Serializable serializable = intent.getSerializableExtra(SERVICE_DATA_KEY);
             if(serializable instanceof UFServiceConfiguration){
                 serviceConfiguration = (UFServiceConfiguration) serializable;
             }
+        } else if (serviceConfiguration != null){
+            Log.i(TAG, "Loaded new configuration from file");
         }
         saveServiceConfigurationToSharedPreferences(serviceConfiguration);
         buildServiceFromPreferences(serviceConfiguration!=null);
@@ -126,7 +130,6 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                                           SharedPreferencesWithObject sharedPreferences) {
         final Long updatePendingId = UpdateSystem.getUpdatePendingId();
         if(updatePendingId != null){
-            Log.e(TAG, "updatePendingId found: " + updatePendingId);
             return new UpdateStartedState(updatePendingId);
         }
         return startNewService ? new WaitingState(0, null) : sharedPreferences.getObject(sharedPreferencesCurrentStateKey, AbstractState.class, new WaitingState(0, null));
@@ -324,7 +327,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
 
     @Override
     public IBinder onBind(Intent intent) {
-
+        Log.i(TAG, "onBind called");
         return mMessenger.getBinder();
     }
 
@@ -350,6 +353,13 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         newStateString,
                         getSuspend(newState)
                 );
+
+                String messageString = String.format( "Update state changed at %s: (%s,%s) -> %s",
+                        message.getDateTime(),
+                        message.getOldState(),
+                        message.getEventName(),
+                        message.getCurrentState());
+                Log.i(TAG, messageString);
                 writeObjectToSharedPreference(message, SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE);
                 sendMessage(message, MSG_SEND_STRING);
                 writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
