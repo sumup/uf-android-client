@@ -13,5 +13,5 @@ package com.kynetics.uf.clientexample.fragment;
  * @author Daniele Sergio
  */
 public interface UFServiceInteractionFragment {
-    public void onMessageReceived(String message);
+    void onMessageReceived(String message);
 }

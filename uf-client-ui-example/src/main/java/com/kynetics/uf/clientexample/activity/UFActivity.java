@@ -15,5 +15,5 @@ import android.os.Bundle;
  * @author Daniele Sergio
  */
 public interface UFActivity {
-    public void registerToService(Bundle data);
+    void registerToService(Bundle data);
 }
