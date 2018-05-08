@@ -17,6 +17,7 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -49,24 +50,23 @@ public class ConfigurationFragment extends Fragment implements UFServiceInteract
         mSpinner = mRootView.findViewById(R.id.retry_time_spinner);
         mSpinner.setSelection(1);
 
-        final InputFilter filter = new InputFilter() {
-            public CharSequence filter(CharSequence source, int start, int end,
-                                       Spanned dest, int dstart, int dend) {
-                for (int i = start; i < end; i++) {
-                    if (Character.isWhitespace(source.charAt(i))) {
-                        return "";
+        final TextWatcher textWatcher = new TextWatcher() {
+
+            private void withoutWhiteSpace(EditText editText){
+                String string = editText.getText().toString();
+                int i = 0;
+                boolean flag = true;
+                while(i <string.length() && flag ){
+                    if (Character.isWhitespace(string.charAt(i))) {
+                        flag = false;
+                        editText.setText(string.replaceAll(" ",""));
+                        editText.setSelection(editText.getText().length());
                     }
+                    i++;
                 }
-                return null;
+
             }
 
-        };
-        final InputFilter[] filters = {filter};
-        final TextWatcher textWatcher = new TextWatcher() {
-            private String withoutWhiteSpace(EditText editText){
-                final String text = editText.getText().toString();
-                return text.replaceAll("\\s+","");
-            }
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             }
@@ -80,7 +80,7 @@ public class ConfigurationFragment extends Fragment implements UFServiceInteract
             public void afterTextChanged(Editable editable) {
                 final String url = mUrlEditText.getText().toString();
                 boolean isValidUrl = Patterns.WEB_URL.matcher(url).matches();
-                if(url != null && !url.isEmpty() && !isValidUrl){
+                if(!url.isEmpty() && !isValidUrl){
                     mUrlEditText.setError(getString(R.string.invalid_url));
                 } else {
                     mUrlEditText.setError(null);
@@ -93,17 +93,18 @@ public class ConfigurationFragment extends Fragment implements UFServiceInteract
                 } else {
                     mButton.setEnabled(false);
                 }
+
+                withoutWhiteSpace(mUrlEditText);
+                withoutWhiteSpace(mTenantEditText);
+                withoutWhiteSpace(mControllerIdEditText);
             }
         };
         mTenantEditText = mRootView.findViewById(R.id.tenant_edittextview);
         mTenantEditText.addTextChangedListener(textWatcher);
-        mTenantEditText.setFilters(filters);
         mUrlEditText = mRootView.findViewById(R.id.url_edittextview);
         mUrlEditText.addTextChangedListener(textWatcher);
-        mUrlEditText.setFilters(filters);
         mControllerIdEditText = mRootView.findViewById(R.id.controllerid_edittextview);
         mControllerIdEditText.addTextChangedListener(textWatcher);
-        mControllerIdEditText.setFilters(filters);
         mButton = mRootView.findViewById(R.id.configure_service_button);
         mButton.setOnClickListener(view -> {
             final Bundle data = new Bundle();

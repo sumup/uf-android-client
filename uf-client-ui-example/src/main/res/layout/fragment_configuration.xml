@@ -34,6 +34,7 @@
                     android:id="@+id/url_edittextview"
                     android:hint="@string/uf_server_url"
                     android:padding="20dp"
+                    android:inputType="textNoSuggestions"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_alignParentTop="true" />
@@ -41,6 +42,7 @@
                     android:id="@+id/tenant_edittextview"
                     android:hint="@string/tenant"
                     android:padding="20dp"
+                    android:inputType="textNoSuggestions"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_below="@id/url_edittextview" />
@@ -49,6 +51,7 @@
                     android:text="test"
                     android:hint="@string/controller_id"
                     android:padding="20dp"
+                    android:inputType="textNoSuggestions"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_below="@id/tenant_edittextview"
