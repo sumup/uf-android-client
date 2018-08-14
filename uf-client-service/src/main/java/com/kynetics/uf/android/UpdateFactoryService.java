@@ -9,7 +9,10 @@
 
 package com.kynetics.uf.android;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -20,12 +23,14 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.kynetics.uf.android.api.UFServiceConfiguration;
 import com.kynetics.uf.android.api.UFServiceMessage;
 import com.kynetics.uf.android.api.UFServiceMessage.Suspend;
+import com.kynetics.uf.android.apicomptibility.ApiVersion;
 import com.kynetics.uf.android.configuration.ConfigurationFileLoader;
 import com.kynetics.uf.android.content.SharedPreferencesWithObject;
 import com.kynetics.uf.android.ui.MainActivity;
@@ -35,8 +40,6 @@ import com.kynetics.updatefactory.ddiclient.api.api.DdiRestApi;
 import com.kynetics.updatefactory.ddiclient.core.UFService;
 import com.kynetics.updatefactory.ddiclient.core.model.event.AbstractEvent;
 import com.kynetics.updatefactory.ddiclient.core.model.state.AbstractState;
-import com.kynetics.updatefactory.ddiclient.core.model.state.AbstractStateWithAction;
-import com.kynetics.updatefactory.ddiclient.core.model.state.AuthorizationWaitingState;
 import com.kynetics.updatefactory.ddiclient.core.model.state.SavingFileState;
 import com.kynetics.updatefactory.ddiclient.core.model.state.UpdateStartedState;
 import com.kynetics.updatefactory.ddiclient.core.model.state.WaitingState;
@@ -70,6 +73,9 @@ import static com.kynetics.uf.android.api.UFServiceMessage.Suspend.UPDATE;
  * @author Daniele Sergio
  */
 public class UpdateFactoryService extends Service implements UpdateFactoryServiceCommand {
+
+    private static final String CHANNEL_ID = "UPDATE_FACTORY_NOTIFICATION_CHANNEL_ID";
+    public static final int NOTIFICATION_ID = 0;
 
     public static UpdateFactoryServiceCommand getUFServiceCommand(){
         return ufServiceCommand;
@@ -118,6 +124,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         }
         saveServiceConfigurationToSharedPreferences(serviceConfiguration);
         buildServiceFromPreferences(serviceConfiguration!=null);
+        startForeground();
         return START_STICKY;
     }
 
@@ -345,7 +352,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 final AbstractEvent event = eventNotify.getEvent();
                 final AbstractState newState = eventNotify.getNewState();
                 final String newStateString = newState.getStateName() == AbstractState.StateName.SAVING_FILE ?
-                      String.format("%s (%s%%)", newState.getStateName().name(), (int) Math.floor(((SavingFileState)newState).getPercent() * 100))
+                        String.format("%s (%s%%)", newState.getStateName().name(), (int) Math.floor(((SavingFileState)newState).getPercent() * 100))
                         :  newState.getStateName().name();
                 final UFServiceMessage message = new UFServiceMessage(
                         event.getEventName().name(),
@@ -354,7 +361,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         getSuspend(newState)
                 );
 
-                String messageString = String.format( "Update state changed at %s: (%s,%s) -> %s",
+                final String messageString = String.format( "Update state changed at %s: (%s,%s) -> %s",
                         message.getDateTime(),
                         message.getOldState(),
                         message.getEventName(),
@@ -362,7 +369,12 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 Log.i(TAG, messageString);
                 writeObjectToSharedPreference(message, SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE);
                 sendMessage(message, MSG_SEND_STRING);
+                final String notirifcationString = String.format( "(%s,%s) -> %s",
+                        message.getOldState(),
+                        message.getEventName(),
+                        message.getCurrentState());
                 writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
+                mNotificationManager.notify(NOTIFICATION_ID,getNotification(notirifcationString));
             }
         }
     }
@@ -397,6 +409,22 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         sharedPreferences.putAndCommitObject(key, obj);
     }
 
+    private void startForeground(){
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        ApiVersion.fromVersionCode().configureChannel(CHANNEL_ID, getString(R.string.app_name), mNotificationManager);
+        startForeground(NOTIFICATION_ID, getNotification(""));
+    }
+
+    private Notification getNotification(String notificationContent) {
+        return new NotificationCompat.Builder(this, CHANNEL_ID)
+                 .setSmallIcon(R.drawable.uf_logo)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))
+                .setContentTitle(getString(R.string.update_factory_running))
+                .setContentText(notificationContent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .build();
+    }
+
     private void initSharedPreferencesKeys(){
         sharedPreferencesFile = getString(R.string.shared_preferences_file);
         sharedPreferencesCurrentStateKey = getString(R.string.shared_preferences_current_state_key);
@@ -427,6 +455,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private String sharedPreferencesServerType;
     private String sharedPreferencesArgs;
     private AndroidUserInteraction userInteraction;
+    private NotificationManager mNotificationManager;
 
     private static final String CLIENT_VERSION_ARG_KEY = "client_version";
     private static final String SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE";

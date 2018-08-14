@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.kynetics.uf.android.UpdateFactoryService;
+import com.kynetics.uf.android.apicomptibility.ApiVersion;
 
 /**
  * @author Daniele Sergio
@@ -24,8 +25,8 @@ public class BootCompletedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent != null && "android.intent.action.BOOT_COMPLETED".equals(intent.getAction())) {
-            Intent myIntent = new Intent(context, UpdateFactoryService.class);
-            context.startService(myIntent);
+            final Intent myIntent = new Intent(context, UpdateFactoryService.class);
+            ApiVersion.fromVersionCode().startService(context, myIntent);
         }
     }
 }

@@ -51,5 +51,6 @@
     <string name="retry_time_default">120000</string>
     <string name="shared_preferences_target_token_title">Target token</string>
     <string name="shared_preferences_gateway_token_title">Gateway token</string>
+    <string name="update_factory_running">Update Factory is running</string>
 
 </resources>
