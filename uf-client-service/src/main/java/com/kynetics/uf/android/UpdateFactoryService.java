@@ -110,6 +110,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "service's starting");
+        startForeground();
         final ConfigurationFileLoader configurationFile =
                 new ConfigurationFileLoader(super.getSharedPreferences(sharedPreferencesFile,MODE_PRIVATE), UF_CONF_FILE);
         UFServiceConfiguration serviceConfiguration = configurationFile.getNewFileConfiguration();
@@ -124,7 +125,6 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         }
         saveServiceConfigurationToSharedPreferences(serviceConfiguration);
         buildServiceFromPreferences(serviceConfiguration!=null);
-        startForeground();
         return START_STICKY;
     }
 
