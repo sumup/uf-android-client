@@ -75,7 +75,7 @@ import static com.kynetics.uf.android.api.UFServiceMessage.Suspend.UPDATE;
 public class UpdateFactoryService extends Service implements UpdateFactoryServiceCommand {
 
     private static final String CHANNEL_ID = "UPDATE_FACTORY_NOTIFICATION_CHANNEL_ID";
-    public static final int NOTIFICATION_ID = 0;
+    public static final int NOTIFICATION_ID = 1;
 
     public static UpdateFactoryServiceCommand getUFServiceCommand(){
         return ufServiceCommand;
