@@ -1,0 +1,45 @@
+sudo: required
+language: android
+jdk: oraclejdk8
+
+before_cache:
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -rf $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+  - "$HOME/.android/build-cache"
+
+env:
+  global:
+  - ANDROID_API=27
+  - ANDROID_BUILD_TOOLS=27.0.3
+
+android:
+  components:
+  - platform-tools
+  - tools
+  - build-tools-${ANDROID_BUILD_TOOLS}
+  - android-${ANDROID_API}
+  - extra-android-m2repository
+
+script:
+- "./gradlew clean test build"
+
+deploy:
+  provider: releases
+  overwrite: true
+  skip_cleanup: true
+  file_glob: true
+  api_key:
+    secure: "bud/oX0zwDKwDu3+P6RnumMwYNjdUziOXqjuSvf8bSw451Tzj+sj5GfpcNhf2yVAD7VGlMVopSfqg7KcsTwOH0x5y3kZfkD7lyh7vRwRCPdWoZGfTY4dZZxbQps9cuBs3P/PjQbY4hmFranRwUcCviR0mWPl9N8KsOHS3p7xPhwniYzS1w22aQ1PNY4BXIUofz2iXFits5R9ob8DyGYIfxruKyfLjE/5IeeSmyhbzBv2FaFpZT/oAohZJwAkAblwLabj3jQJeR17HpJMTmQdzAzDkmemxLa2ITQduxhbZ5IBdwQrMLCmUrEmYgcNXsqUQR/ib5b7EC8yKMleVnSvDQ8hYnxkc30iv9Ryp7QCqC6zhaokpx6uCLLVWH6vXPK8Ga/XmmQU9tlhW4ad2Vj9m1RwWVWsI8DkIhpGWKYbpAb6EKmQYdJR47nwUPxCviplUt/I+OrPHDIgE0KN/6c9HI9/TBoQ7acx9p0FPyoCDpD8KS2TpVtzx5I9O/d1ePLmE73su91Ikra7Y5zOdn3AbUk0b6VGvhYt4gjhZjADNpua9DQN6LC8dAArCuAoSIvJip0D/+2lwVuhsoavSl/TIxaVTpMLOLmtx3xWvp2IHCANiLjHee5/2DILSN5pZjpYXyosunwchUiUyBF/8fbyAxNzeboMDz9RWbBfIQJyeNY="
+  file:
+  - "uf-client-service/build/outputs/apk/debug/*"
+  - "uf-client-service/build/outputs/apk/release/*"
+  - "uf-client-ui-example/build/outputs/apk/debug/*"
+  - "uf-client-ui-example/build/outputs/apk/release/*"
+  on:
+    repo: Kynetics/UfAndroidClient
+    all_branches: true
+    tags: true
