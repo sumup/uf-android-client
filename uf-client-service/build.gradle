@@ -9,7 +9,8 @@
 
 apply plugin: 'com.android.application'
 apply plugin: 'com.github.dcendents.android-maven'
-
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 28
     buildToolsVersion '28.0.3'
@@ -48,4 +49,6 @@ dependencies {
     implementation 'com.github.Kynetics.uf-ddiclient:ddiclient-core:v0.4.2'
 
     implementation project(':uf-client-service:uf-client-service-api')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+
 }
