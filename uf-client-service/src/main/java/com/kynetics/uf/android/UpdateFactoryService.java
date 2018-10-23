@@ -112,7 +112,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         Log.i(TAG, "service's starting");
         startForeground();
         final ConfigurationFileLoader configurationFile =
-                new ConfigurationFileLoader(super.getSharedPreferences(sharedPreferencesFile,MODE_PRIVATE), UF_CONF_FILE);
+                new ConfigurationFileLoader(super.getSharedPreferences(sharedPreferencesFile,MODE_PRIVATE), UF_CONF_FILE, getApplicationContext());
         UFServiceConfiguration serviceConfiguration = configurationFile.getNewFileConfiguration();
         if(serviceConfiguration == null && intent != null){
             Log.i(TAG, "Loaded new configuration from intent");
@@ -155,8 +155,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
             final AbstractState initialState = getInitialState(startNewService, sharedPreferences);
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
-            final HashMap<String,String> defaultArgs = new HashMap<>();
-            final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs, defaultArgs.getClass());
+            final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs,  new HashMap<String,String>().getClass());
             args.put(CLIENT_VERSION_ARG_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
             final ServerType serverType = sharedPreferences.getObject(sharedPreferencesServerType, ServerType.class, ServerType.UPDATE_FACTORY);
             userInteraction = new AndroidUserInteraction() {
@@ -187,7 +186,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .withTargetData(()->args)
                         .withUserInteraction(userInteraction)
                         .build();
-                ufService.addObserver(new ObserverState(apiMode));
+                ufService.addObserver(new ObserverState());
                 startStopService(true);
             }catch (IllegalStateException | IllegalArgumentException e){
                 sharedPreferences.edit().putBoolean(sharedPreferencesServiceEnableKey, false).apply();
@@ -197,7 +196,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         }
     }
 
-    private ArrayList<Messenger> mClients = new ArrayList<Messenger>();
+    private ArrayList<Messenger> mClients = new ArrayList<>();
 
     private UFServiceConfiguration getCurrentConfiguration(SharedPreferencesWithObject sharedPreferences){
         final boolean serviceIsEnable = ufService != null && sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false);
@@ -339,10 +338,8 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     }
 
     private class ObserverState implements Observer {
-        private final boolean apiMode;
 
-        public ObserverState(boolean apiMode) {
-            this.apiMode = apiMode;
+        ObserverState() {
         }
 
         @Override

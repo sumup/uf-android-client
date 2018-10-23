@@ -9,9 +9,8 @@
 
 package com.kynetics.uf.android.configuration;
 
+import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Debug;
-import android.util.Log;
 
 import com.kynetics.uf.android.api.UFServiceConfiguration;
 
@@ -46,10 +45,12 @@ public class ConfigurationFileLoader {
 
     private final SharedPreferences sh;
     private final String configurationFilePath;
+    private final Context context;
 
-    public ConfigurationFileLoader(SharedPreferences sh, String configurationFilePath) {
+    public ConfigurationFileLoader(SharedPreferences sh, String configurationFilePath, Context context) {
         this.sh = sh;
         this.configurationFilePath = configurationFilePath;
+        this.context = context;
     }
 
     public UFServiceConfiguration getNewFileConfiguration(){
@@ -57,22 +58,22 @@ public class ConfigurationFileLoader {
             return null;
         }
         UFServiceConfiguration.Builder builder =  UFServiceConfiguration.builder()
-                .witEnable(getBooleanConfiguration(ENABLE_CONFIGURATION_KEY, true))
-                .withApiMode(getBooleanConfiguration(API_MODE_CONFIGURATION_KEY, true))
-                .withIsUpdateFactoryServer(getBooleanConfiguration(IS_UPDATE_FACTORY_SERVER_KEY, true))
+                .witEnable(getBooleanConfiguration(ENABLE_CONFIGURATION_KEY))
+                .withApiMode(getBooleanConfiguration(API_MODE_CONFIGURATION_KEY))
+                .withIsUpdateFactoryServer(getBooleanConfiguration(IS_UPDATE_FACTORY_SERVER_KEY))
                 .withGetawayToken(map.get(GATEWAY_TOKEN_CONFIGURATION_KEY))
                 .withTenant(map.get(TENANT_CONFIGURATION_KEY))
                 .withTargetToken(map.get(TARGET_TOKEN_CONFIGURATION_KEY))
                 .withRetryDelay(30_000)
-                .withControllerId(map.get(CONTROLLER_ID_CONFIGURATION_KEY))
+                .withControllerId(VariableEvaluation.Companion.parseStringWithVariable(map.get(CONTROLLER_ID_CONFIGURATION_KEY), context))
                 .withUrl(map.get(URL_CONFIGURATION_KEY));
 
         return builder.configurationIsValid() ? builder.build() : null;
     }
 
-    private boolean getBooleanConfiguration(String mapKey, boolean defaultValue){
+    private boolean getBooleanConfiguration(String mapKey){
         final String value = map.get(mapKey);
-        return value == null ? defaultValue : !value.equalsIgnoreCase("FALSE");
+        return value == null || !value.equalsIgnoreCase("FALSE");
     }
 
     private boolean parseFile(){
