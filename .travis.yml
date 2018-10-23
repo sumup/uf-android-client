@@ -1,7 +1,10 @@
 sudo: required
 language: android
 jdk: oraclejdk8
-
+branches:
+  only:
+  - master
+  - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
@@ -39,6 +42,5 @@ deploy:
   - "uf-client-ui-example/build/outputs/apk/debug/uf-client-ui-example-debug.apk"
   - "uf-client-ui-example/build/outputs/apk/release/uf-client-ui-example-release-unsigned.apk"
   on:
-    repo: Kynetics/UfAndroidClient
-    all_branches: true
+    branch: /^v\d+\.\d+(\.\d+)?(-\S*)?$/
     tags: true
