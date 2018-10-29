@@ -193,15 +193,15 @@ public class MainActivity extends AppCompatActivity
                             .onMessageReceived(messageString);
                     switch (messageObj.getSuspend()){
                         case NONE:
-                            mResumeUpdateFab.setVisibility(View.GONE);
+                            mResumeUpdateFab.hide();
                             break;
                         case DOWNLOAD:
                             mResumeUpdateFab.setImageResource(R.drawable.ic_get_app_black_48dp);
-                            mResumeUpdateFab.setVisibility(View.VISIBLE);
+                            mResumeUpdateFab.show();
                             break;
                         case UPDATE:
                             mResumeUpdateFab.setImageResource(R.drawable.ic_loop_black_48dp);
-                            mResumeUpdateFab.setVisibility(View.VISIBLE);
+                            mResumeUpdateFab.show();
                             break;
                     }
                     break;

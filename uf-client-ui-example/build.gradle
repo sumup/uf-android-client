@@ -16,16 +16,35 @@ android {
         applicationId "com.kynetics.uf.clientexample"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 4
+        versionCode 6
         versionName versionFromGit(project)
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
+    signingConfigs {
+        release
+    }
+
+    def isRunningOnTravis = System.getenv("CI") == "true"
+
+    if (isRunningOnTravis) {
+        // configure keystore
+        signingConfigs.release.storeFile = file("../travis/Keystore.jks")
+        signingConfigs.release.storePassword = System.getenv("storePassword")
+        signingConfigs.release.keyAlias = System.getenv("keyAlias")
+        signingConfigs.release.keyPassword = System.getenv("keyPassword")
+    }
+
     buildTypes {
         release {
+            if (isRunningOnTravis){
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
