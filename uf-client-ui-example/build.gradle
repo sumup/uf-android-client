@@ -29,10 +29,10 @@ android {
 
     if (isRunningOnTravis) {
         // configure keystore
-        signingConfigs.release.storeFile = file("../travis/Keystore.jks")
-        signingConfigs.release.storePassword = System.getenv("storePassword")
-        signingConfigs.release.keyAlias = System.getenv("keyAlias")
-        signingConfigs.release.keyPassword = System.getenv("keyPassword")
+        signingConfigs.release.storeFile = file("../travis/kynetics-Keystore.jks")
+        signingConfigs.release.storePassword = System.getenv("kynetics-storePassword")
+        signingConfigs.release.keyAlias = System.getenv("kynetics-keyAlias")
+        signingConfigs.release.keyPassword = System.getenv("kynetics-keyPassword")
     }
 
     buildTypes {
