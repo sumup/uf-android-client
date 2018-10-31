@@ -21,11 +21,18 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
+    def isRunningOnTravis = System.getenv("CI") == "true"
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "${project.name}-${variant.name}${isRunningOnTravis ? "-kynetics-key" : ""}.apk"
+        }
+    }
+
     signingConfigs {
         release
     }
 
-    def isRunningOnTravis = System.getenv("CI") == "true"
 
     if (isRunningOnTravis) {
         // configure keystore

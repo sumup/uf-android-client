@@ -34,6 +34,12 @@ android {
 
     def isRunningOnTravis = System.getenv("CI") == "true"
 
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "${project.name}-${variant.name}${isRunningOnTravis ? "-nxp-platform-key" : ""}.apk"
+        }
+    }
+
     if (isRunningOnTravis) {
         // configure keystore
         signingConfigs.release.storeFile = file("../travis/nxp-platform-keystore.jks")
