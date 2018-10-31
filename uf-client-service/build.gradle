@@ -36,16 +36,18 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "${project.name}-${variant.name}${isRunningOnTravis ? "-nxp-platform-key" : ""}.apk"
+            if(variant.name == "release") {
+                outputFileName = "${project.name}-${variant.name}${isRunningOnTravis ? "-nxp-platform-key" : ""}.apk"
+            }
         }
     }
 
     if (isRunningOnTravis) {
         // configure keystore
-        signingConfigs.release.storeFile = file("../travis/nxp-platform-keystore.jks")
-        signingConfigs.release.storePassword = System.getenv("nxp-storePassword")
-        signingConfigs.release.keyAlias = System.getenv("nxp-keyAlias")
-        signingConfigs.release.keyPassword = System.getenv("nxp-keyPassword")
+        signingConfigs.release.storeFile = file("../nxp_platform_keystore.jks")
+        signingConfigs.release.storePassword = System.getenv("nxp_storePassword")
+        signingConfigs.release.keyAlias = System.getenv("nxp_keyAlias")
+        signingConfigs.release.keyPassword = System.getenv("nxp_keyPassword")
     }
 
     buildTypes {

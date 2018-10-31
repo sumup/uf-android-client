@@ -25,7 +25,9 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "${project.name}-${variant.name}${isRunningOnTravis ? "-kynetics-key" : ""}.apk"
+            if(variant.name == "release"){
+                outputFileName = "${project.name}-${variant.name}${isRunningOnTravis ? "-kynetics-key" : ""}.apk"
+            }
         }
     }
 
@@ -36,10 +38,10 @@ android {
 
     if (isRunningOnTravis) {
         // configure keystore
-        signingConfigs.release.storeFile = file("../travis/kynetics-Keystore.jks")
-        signingConfigs.release.storePassword = System.getenv("kynetics-storePassword")
-        signingConfigs.release.keyAlias = System.getenv("kynetics-keyAlias")
-        signingConfigs.release.keyPassword = System.getenv("kynetics-keyPassword")
+        signingConfigs.release.storeFile = file("../kynetics_keystore.jks")
+        signingConfigs.release.storePassword = System.getenv("kynetics_storePassword")
+        signingConfigs.release.keyAlias = System.getenv("kynetics_keyAlias")
+        signingConfigs.release.keyPassword = System.getenv("kynetics_keyPassword")
     }
 
     buildTypes {
