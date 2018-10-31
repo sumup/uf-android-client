@@ -36,10 +36,10 @@ android {
 
     if (isRunningOnTravis) {
         // configure keystore
-        signingConfigs.release.storeFile = file("../travis/Keystore.jks")
-        signingConfigs.release.storePassword = System.getenv("storePassword")
-        signingConfigs.release.keyAlias = System.getenv("keyAlias")
-        signingConfigs.release.keyPassword = System.getenv("keyPassword")
+        signingConfigs.release.storeFile = file("../travis/nxp-platform-keystore.jks")
+        signingConfigs.release.storePassword = System.getenv("nxp-storePassword")
+        signingConfigs.release.keyAlias = System.getenv("nxp-keyAlias")
+        signingConfigs.release.keyPassword = System.getenv("nxp-keyPassword")
     }
 
     buildTypes {
