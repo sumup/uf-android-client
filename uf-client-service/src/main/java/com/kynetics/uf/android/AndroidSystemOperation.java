@@ -56,15 +56,16 @@ public class AndroidSystemOperation implements SystemOperation {
 
     @Override
     public void executeUpdate(long updateId) {
-        if(apkFound || osFound){
+        if(apkFound && osFound){
+            resetApkOsFlag();
             updateStatus = UpdateStatus.APPLIED_WITH_ERROR;
         } else if(UpdateSystem.apkToInstall(context)){
+            resetApkOsFlag();
             updateApp();
         } else {
+            resetApkOsFlag();
             updateOta(updateId);
         }
-
-        resetApkOsFlag();
     }
 
     private void updateOta(long updateId) {
