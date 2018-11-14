@@ -18,10 +18,6 @@
             android:icon="@drawable/ic_settings_black_48dp"
             android:title="@string/label_settings" />
         <item
-            android:id="@+id/menu_default_settings"
-            android:icon="@drawable/ic_settings_black_48dp"
-            android:title="@string/label_default_settings" />
-        <item
             android:id="@+id/menu_log"
             android:icon="@drawable/ic_reorder_black_48dp"
             android:title="@string/label_log" />

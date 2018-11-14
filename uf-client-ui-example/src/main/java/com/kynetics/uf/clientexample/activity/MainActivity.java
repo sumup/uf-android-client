@@ -45,7 +45,6 @@ import com.kynetics.uf.android.api.UFServiceConfiguration;
 import com.kynetics.uf.android.api.UFServiceMessage;
 import com.kynetics.uf.clientexample.BuildConfig;
 import com.kynetics.uf.clientexample.R;
-import com.kynetics.uf.clientexample.fragment.ConfigurationFragment;
 import com.kynetics.uf.clientexample.fragment.LogFragment;
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment;
 
@@ -135,9 +134,6 @@ public class MainActivity extends AppCompatActivity
         final int id = item.getItemId();
         switch (id){
             case R.id.menu_settings:
-                changePage(ConfigurationFragment.newInstance());
-                break;
-            case R.id.menu_default_settings:
                 final Intent settingsIntent = new Intent(ACTION_SETTINGS);
                 startActivity(settingsIntent);
                 break;
@@ -214,7 +210,8 @@ public class MainActivity extends AppCompatActivity
                     if(!(serializable instanceof UFServiceConfiguration) ||
                             !((UFServiceConfiguration)serializable).isEnable()) {
                         mNavigationView.setCheckedItem(R.id.menu_settings);
-                        changePage(ConfigurationFragment.newInstance());
+                        final Intent settingsIntent = new Intent(ACTION_SETTINGS);
+                        startActivity(settingsIntent);
                     }
                     break;
                 default:
