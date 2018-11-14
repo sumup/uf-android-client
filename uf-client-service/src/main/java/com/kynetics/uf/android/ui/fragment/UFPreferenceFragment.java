@@ -159,6 +159,12 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        getPreferenceScreen().getSharedPreferences().edit().apply();
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
