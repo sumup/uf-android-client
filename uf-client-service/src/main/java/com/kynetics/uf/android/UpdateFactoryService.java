@@ -60,9 +60,9 @@ import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AU
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_CONFIGURE_SERVICE;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_REGISTER_CLIENT;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_RESUME_SUSPEND_UPGRADE;
-import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SEND_STRING;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_STATUS;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_CONFIGURATION_STATUS;
-import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNCH_REQUEST;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNC_REQUEST;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_UNREGISTER_CLIENT;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY;
 import static com.kynetics.uf.android.api.UFServiceMessage.Suspend.DOWNLOAD;
@@ -244,7 +244,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 case MSG_RESUME_SUSPEND_UPGRADE:
                     ufService.restartSuspendState();
                     break;
-                case MSG_SYNCH_REQUEST:
+                case MSG_SYNC_REQUEST:
                     final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
                     UpdateFactoryService.this.sendMessage(getCurrentConfiguration(sharedPreferences), MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
                     if(ufService == null){
@@ -252,7 +252,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     }
                     final UFServiceMessage lastMessage = sharedPreferences.getObject(SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE, UFServiceMessage.class);
                     if(lastMessage != null){
-                        UpdateFactoryService.this.sendMessage(lastMessage, MSG_SEND_STRING, msg.replyTo);
+                        UpdateFactoryService.this.sendMessage(lastMessage, MSG_SERVICE_STATUS, msg.replyTo);
                     }
                     AbstractState lastState = sharedPreferences.getObject(sharedPreferencesCurrentStateKey, AbstractState.class);
                     if(lastState.getStateName() == AbstractState.StateName.AUTHORIZATION_WAITING){
@@ -365,13 +365,13 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         message.getCurrentState());
                 Log.i(TAG, messageString);
                 writeObjectToSharedPreference(message, SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE);
-                sendMessage(message, MSG_SEND_STRING);
-                final String notirifcationString = String.format( "(%s,%s) -> %s",
+                sendMessage(message, MSG_SERVICE_STATUS);
+                final String notificationString = String.format( "(%s,%s) -> %s",
                         message.getOldState(),
                         message.getEventName(),
                         message.getCurrentState());
                 writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
-                mNotificationManager.notify(NOTIFICATION_ID,getNotification(notirifcationString));
+                mNotificationManager.notify(NOTIFICATION_ID,getNotification(notificationString));
             }
         }
     }

@@ -50,13 +50,12 @@ import com.kynetics.uf.clientexample.fragment.LogFragment;
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment;
 
 import java.io.Serializable;
-import java.util.List;
 
 import static android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.ACTION_SETTINGS;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_RESPONSE;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_CONFIGURATION_STATUS;
-import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNCH_REQUEST;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNC_REQUEST;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY;
 
 /**
@@ -182,7 +181,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case UFServiceCommunicationConstants.MSG_SEND_STRING:
+                case UFServiceCommunicationConstants.MSG_SERVICE_STATUS:
                     UFServiceMessage messageObj = (UFServiceMessage) msg.getData().getSerializable(SERVICE_DATA_KEY);
                     String messageString = String.format(MESSAGE_TEMPLATE,
                             messageObj.getDateTime(),
@@ -254,7 +253,7 @@ public class MainActivity extends AppCompatActivity
                         UFServiceCommunicationConstants.MSG_REGISTER_CLIENT);
                 msg.replyTo = mMessenger;
                 mService.send(msg);
-                msg = Message.obtain(null, MSG_SYNCH_REQUEST);
+                msg = Message.obtain(null, MSG_SYNC_REQUEST);
                 msg.replyTo = mMessenger;
                 mService.send(msg);
             } catch (RemoteException e) {

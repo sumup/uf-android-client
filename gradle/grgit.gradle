@@ -52,7 +52,7 @@ ext {
 
 
 task showVersions {
-    group 'adu'
+    group 'uf'
     doLast {
         subprojects.each {
             println it.name + ": Building version " + versionFromGit(it)

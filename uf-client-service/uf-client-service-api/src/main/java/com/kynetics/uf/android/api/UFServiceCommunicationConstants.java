@@ -34,7 +34,7 @@ public class UFServiceCommunicationConstants {
      * service to supply a new value, and will be sent by the service to
      * any registered clients with the new value.
      */
-    public static final int MSG_SEND_STRING = 4;
+    public static final int MSG_SERVICE_STATUS = 4;
 
     public static final int MSG_AUTHORIZATION_REQUEST = 5;
 
@@ -42,7 +42,7 @@ public class UFServiceCommunicationConstants {
 
     public static final int MSG_RESUME_SUSPEND_UPGRADE = 7;
 
-    public static final int MSG_SYNCH_REQUEST = 8;
+    public static final int MSG_SYNC_REQUEST = 8;
 
     public static final int MSG_SERVICE_CONFIGURATION_STATUS = 9;
 
