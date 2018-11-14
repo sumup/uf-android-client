@@ -14,7 +14,7 @@
     <string name="action_settings">Settings</string>
 
     <string name="update_download_title">New update available</string>
-    <string name="update_download_content">New update is available to download.\nDownloading the latest update you will get the latest features, improvements and bug fixes.\nClick OK to download the upgrade now</string>
+    <string name="update_download_content">New update is available to download.\nUpdates include new features, improvements and bug fixes.\nClick OK to download the update now.</string>
     <string name="update_started_title">Update Authorization</string>
     <string name="update_started_content">The upgrade is ready, click OK to upgrade now.\nThe device will be restarted during the upgrade process.</string>
     <string name="yes">yes</string>
