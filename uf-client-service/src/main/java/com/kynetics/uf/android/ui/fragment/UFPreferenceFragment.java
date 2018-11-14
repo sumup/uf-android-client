@@ -98,6 +98,7 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
                 !((SwitchPreferenceCompat)preference).isChecked()){
             new AlertDialog.Builder(getContext())
                     .setTitle(getResources().getString(R.string.stop_service_dialog_title))
+                    .setCancelable(false)
                     .setMessage(
                             getResources().getString(R.string.stop_service_dialog_message))
                     .setPositiveButton(
