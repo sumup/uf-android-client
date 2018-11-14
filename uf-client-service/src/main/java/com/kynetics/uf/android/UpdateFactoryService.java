@@ -154,7 +154,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
             final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
             final AbstractState initialState = getInitialState(startNewService, sharedPreferences);
-            final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
+            final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, false);
             final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs,  new HashMap<String,String>().getClass());
             args.put(CLIENT_VERSION_ARG_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
             final ServerType serverType = sharedPreferences.getObject(sharedPreferencesServerType, ServerType.class, ServerType.UPDATE_FACTORY);

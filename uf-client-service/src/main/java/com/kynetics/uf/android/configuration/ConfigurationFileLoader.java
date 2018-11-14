@@ -59,7 +59,7 @@ public class ConfigurationFileLoader {
         }
         UFServiceConfiguration.Builder builder =  UFServiceConfiguration.builder()
                 .witEnable(getBooleanConfiguration(ENABLE_CONFIGURATION_KEY))
-                .withApiMode(getBooleanConfiguration(API_MODE_CONFIGURATION_KEY))
+                .withApiMode(getApiModeConfiguration())
                 .withIsUpdateFactoryServer(getBooleanConfiguration(IS_UPDATE_FACTORY_SERVER_KEY))
                 .withGetawayToken(map.get(GATEWAY_TOKEN_CONFIGURATION_KEY))
                 .withTenant(map.get(TENANT_CONFIGURATION_KEY))
@@ -69,6 +69,11 @@ public class ConfigurationFileLoader {
                 .withUrl(map.get(URL_CONFIGURATION_KEY));
 
         return builder.configurationIsValid() ? builder.build() : null;
+    }
+
+    private boolean getApiModeConfiguration(){
+        final String value = map.get(API_MODE_CONFIGURATION_KEY);
+        return value != null && value.equalsIgnoreCase("TRUE");
     }
 
     private boolean getBooleanConfiguration(String mapKey){
