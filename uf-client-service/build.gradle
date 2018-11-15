@@ -28,35 +28,48 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    signingConfigs {
-        release
-    }
-
     def isRunningOnTravis = System.getenv("CI") == "true"
 
-    applicationVariants.all { variant ->
-        variant.outputs.all {
-            if(variant.name == "release") {
-                outputFileName = "${project.name}-${variant.name}${isRunningOnTravis ? "-nxp-platform-key" : ""}.apk"
+    if (isRunningOnTravis) {
+        signingConfigs {
+            nxp_platform {
+                storePassword System.getenv("uf_store_password")
+                keyAlias System.getenv("nxp_alias")
+                keyPassword System.getenv("nxp_key_password")
+                storeFile file('../travis/uf_keystore.jks')
+                v2SigningEnabled true
+                v1SigningEnabled true
+            }
+
+            aosp_platform {
+                storePassword System.getenv("uf_store_password")
+                keyAlias System.getenv("aosp_alias")
+                keyPassword System.getenv("asop_key_password")
+                storeFile file('../travis/uf_keystore.jks')
+                v2SigningEnabled true
+                v1SigningEnabled true
             }
         }
     }
 
-    if (isRunningOnTravis) {
-        // configure keystore
-        signingConfigs.release.storeFile = file("../nxp_platform_keystore.jks")
-        signingConfigs.release.storePassword = System.getenv("nxp_storePassword")
-        signingConfigs.release.keyAlias = System.getenv("nxp_keyAlias")
-        signingConfigs.release.keyPassword = System.getenv("nxp_keyPassword")
-    }
-
     buildTypes {
         release {
-            if (isRunningOnTravis){
-                signingConfig signingConfigs.release
-            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        if (isRunningOnTravis) {
+            nxp_platform_key {
+                signingConfig signingConfigs.nxp_platform
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            }
+
+            aosp_platform_key {
+                signingConfig signingConfigs.aosp_platform
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            }
         }
     }
 }

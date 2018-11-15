@@ -23,34 +23,30 @@ android {
 
     def isRunningOnTravis = System.getenv("CI") == "true"
 
-    applicationVariants.all { variant ->
-        variant.outputs.all {
-            if(variant.name == "release"){
-                outputFileName = "${project.name}-${variant.name}${isRunningOnTravis ? "-kynetics-key" : ""}.apk"
+    if (isRunningOnTravis) {
+        signingConfigs {
+            kynetics {
+                storePassword System.getenv("kynetics_key_password")
+                keyAlias System.getenv("kynetics_alias")
+                keyPassword System.getenv("kynetics_key_password")
+                storeFile file('../travis/uf_keystore.jks')
+                v2SigningEnabled true
+                v1SigningEnabled true
             }
         }
     }
 
-    signingConfigs {
-        release
-    }
-
-
-    if (isRunningOnTravis) {
-        // configure keystore
-        signingConfigs.release.storeFile = file("../kynetics_keystore.jks")
-        signingConfigs.release.storePassword = System.getenv("kynetics_storePassword")
-        signingConfigs.release.keyAlias = System.getenv("kynetics_keyAlias")
-        signingConfigs.release.keyPassword = System.getenv("kynetics_keyPassword")
-    }
-
     buildTypes {
         release {
-            if (isRunningOnTravis){
-                signingConfig signingConfigs.release
-            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        if (isRunningOnTravis) {
+            kynetics_key {
+                signingConfig signingConfigs.kynetics
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            }
         }
     }
 
