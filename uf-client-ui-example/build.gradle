@@ -26,7 +26,7 @@ android {
     if (isRunningOnTravis) {
         signingConfigs {
             kynetics {
-                storePassword System.getenv("kynetics_key_password")
+                storePassword System.getenv("uf_store_password")
                 keyAlias System.getenv("kynetics_alias")
                 keyPassword System.getenv("kynetics_key_password")
                 storeFile file('../travis/uf_keystore.jks')
