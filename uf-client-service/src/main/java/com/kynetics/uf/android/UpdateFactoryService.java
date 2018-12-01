@@ -155,7 +155,10 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
             final AbstractState initialState = getInitialState(startNewService, sharedPreferences);
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, false);
-            final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs,  new HashMap<String,String>().getClass());
+            Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs, new HashMap<String,String>().getClass());
+            if(args == null){
+                args = new HashMap<>();
+            }
             args.put(CLIENT_VERSION_ARG_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
             final ServerType serverType = sharedPreferences.getObject(sharedPreferencesServerType, ServerType.class, ServerType.UPDATE_FACTORY);
             userInteraction = new AndroidUserInteraction() {
@@ -176,6 +179,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .withHttpBuilder(buildOkHttpClient())
                         .withServerType(serverType)
                         .build();
+                Map<String, String> finalArgs = args;
                 ufService = UFService.builder()
                         .withClient(client)
                         .withRetryDelayOnCommunicationError(delay)
@@ -183,7 +187,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .withControllerId(controllerId)
                         .withInitialState(initialState)
                         .withSystemOperation(new AndroidSystemOperation(getApplicationContext(), initialState.getStateName() == AbstractState.StateName.UPDATE_STARTED))
-                        .withTargetData(()->args)
+                        .withTargetData(()-> finalArgs)
                         .withUserInteraction(userInteraction)
                         .build();
                 ufService.addObserver(new ObserverState());

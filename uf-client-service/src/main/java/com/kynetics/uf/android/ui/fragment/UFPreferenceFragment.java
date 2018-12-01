@@ -10,6 +10,7 @@
 package com.kynetics.uf.android.ui.fragment;
 
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
@@ -22,6 +23,8 @@ import android.support.v7.preference.SwitchPreferenceCompat;
 import android.widget.Toast;
 
 import com.kynetics.uf.android.R;
+import com.kynetics.uf.android.UpdateFactoryService;
+import com.kynetics.uf.android.apicomptibility.ApiVersion;
 import com.kynetics.uf.android.content.SharedPreferencesWithObject;
 import com.kynetics.updatefactory.ddiclient.core.model.state.AbstractState;
 
@@ -62,6 +65,13 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
         }
         return true;
     };
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        final Intent myIntent = new Intent(getContext(), UpdateFactoryService.class);
+        ApiVersion.fromVersionCode().startService(getContext(), myIntent);
+    }
 
     @Override
     public void onResume() {
