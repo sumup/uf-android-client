@@ -24,10 +24,10 @@ public class UFServiceConfiguration implements Serializable{
 
     public static class Builder {
         private Builder(){
-            args = new HashMap<>(2);
-            args.put("client","Android");
+            targetAttributes = new HashMap<>(2);
+            targetAttributes.put("client","Android");
             final SimpleDateFormat sm = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z", Locale.getDefault());
-            args.put("date", sm.format(new Date()));
+            targetAttributes.put("date", sm.format(new Date()));
 
         }
         public Builder withTenant(String tenant) {
@@ -51,7 +51,9 @@ public class UFServiceConfiguration implements Serializable{
         }
 
         public Builder withRetryDelay(long retryDelay) {
-            this.retryDelay = retryDelay;
+            if(retryDelay >= 30_000) {
+                this.retryDelay = retryDelay;
+            }
             return this;
         }
 
@@ -65,14 +67,30 @@ public class UFServiceConfiguration implements Serializable{
             return this;
         }
 
+        /**
+         * @deprecated  As of release 0.3.4, replaced by {@link #withEnable(boolean)}
+         */
+        @Deprecated
         public Builder witEnable(boolean enable) {
+            return withEnable(enable);
+        }
+
+        /**
+         * @deprecated  As of release 0.3.4, replaced by {@link #withTargetAttributes(Map<String,String>)}
+         */
+        @Deprecated
+        public Builder witArgs(Map<String,String> args) {
+            return withTargetAttributes(args);
+        }
+
+        public Builder withEnable(boolean enable) {
             this.enable = enable;
             return this;
         }
 
-        public Builder witArgs(Map<String,String> args) {
-            if(args != null && args.size() > 0) {
-                this.args = args;
+        public Builder withTargetAttributes(Map<String,String> targetAttribute) {
+            if(targetAttribute != null && targetAttribute.size() > 0) {
+                this.targetAttributes = targetAttribute;
             }
             return this;
         }
@@ -86,14 +104,14 @@ public class UFServiceConfiguration implements Serializable{
             Objects.requireNonNull(tenant);
             Objects.requireNonNull(controllerId);
             Objects.requireNonNull(url);
-            if(retryDelay <= 0 ){
+            if(retryDelay < 0 ){
                 throw new IllegalStateException("retryDelay must be grater than 0");
             }
             return new UFServiceConfiguration(tenant, controllerId, retryDelay, url,
                     targetToken == null ? "" : targetToken,
                     gatewayToken == null ? "" : gatewayToken,
                     apiMode, enable, isUpdateFactoryServer,
-                    args);
+                    targetAttributes);
         }
 
         public boolean configurationIsValid(){
@@ -108,14 +126,14 @@ public class UFServiceConfiguration implements Serializable{
         }
         private String tenant;
         private String controllerId;
-        private long retryDelay;
+        private long retryDelay = 900_000;
         private String url;
         private boolean apiMode = true;
         private boolean enable = true;
         private boolean isUpdateFactoryServer = true;
         private String targetToken;
         private String gatewayToken;
-        private Map<String,String> args;
+        private Map<String,String> targetAttributes;
     }
 
     public static Builder builder(){
@@ -154,8 +172,16 @@ public class UFServiceConfiguration implements Serializable{
         return gatewayToken;
     }
 
+    /**
+     * @deprecated  As of release 0.3.4, replaced by {@link #getTargetAttributes()}
+     */
+    @Deprecated
     public Map<String, String> getArgs() {
-        return args;
+        return getTargetAttributes();
+    }
+
+    public Map<String, String> getTargetAttributes() {
+        return targetAttributes;
     }
 
     public boolean isUpdateFactoryServe() {
@@ -171,7 +197,7 @@ public class UFServiceConfiguration implements Serializable{
                                    boolean apiMode,
                                    boolean isEnable,
                                    boolean isUpdateFactoryServe,
-                                   Map<String,String> args) {
+                                   Map<String,String> targetAttributes) {
         this.tenant = tenant;
         this.controllerId = controllerId;
         this.retryDelay = retryDelay;
@@ -181,7 +207,7 @@ public class UFServiceConfiguration implements Serializable{
         this.apiMode = apiMode;
         this.enable = isEnable;
         this.isUpdateFactoryServe = isUpdateFactoryServe;
-        this.args = args;
+        this.targetAttributes = targetAttributes;
     }
 
     private final String tenant;
@@ -192,7 +218,7 @@ public class UFServiceConfiguration implements Serializable{
     private final String gatewayToken;
     private final boolean apiMode;
     private final boolean enable;
-    private final Map<String,String> args;
+    private final Map<String,String> targetAttributes;
     private final boolean isUpdateFactoryServe;
 
     private static final long serialVersionUID = -6025361892414738765L;

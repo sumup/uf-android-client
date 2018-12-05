@@ -11,7 +11,7 @@ apply plugin: 'java-library'
 apply plugin: 'maven'
 
 group 'com.kynetics.uf.android'
-version '1.0-SNAPSHOT'
+version versionFromGit(project)
 
 repositories {
     mavenCentral()

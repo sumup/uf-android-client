@@ -155,11 +155,11 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
             final AbstractState initialState = getInitialState(startNewService, sharedPreferences);
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, false);
-            Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs, new HashMap<String,String>().getClass());
-            if(args == null){
-                args = new HashMap<>();
+            Map<String,String> targetAttributes = sharedPreferences.getObject(sharedPreferencesTargetAttributes, new HashMap<String,String>().getClass());
+            if(targetAttributes == null){
+                targetAttributes = new HashMap<>();
             }
-            args.put(CLIENT_VERSION_ARG_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
+            targetAttributes.put(CLIENT_VERSION_TARGET_ATTRIBUTE_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
             final ServerType serverType = sharedPreferences.getObject(sharedPreferencesServerType, ServerType.class, ServerType.UPDATE_FACTORY);
             userInteraction = new AndroidUserInteraction() {
                 @Override
@@ -179,7 +179,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .withHttpBuilder(buildOkHttpClient())
                         .withServerType(serverType)
                         .build();
-                Map<String, String> finalArgs = args;
+                final Map<String, String> finalTargetAttributes = targetAttributes;
                 ufService = UFService.builder()
                         .withClient(client)
                         .withRetryDelayOnCommunicationError(delay)
@@ -187,7 +187,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .withControllerId(controllerId)
                         .withInitialState(initialState)
                         .withSystemOperation(new AndroidSystemOperation(getApplicationContext(), initialState.getStateName() == AbstractState.StateName.UPDATE_STARTED))
-                        .withTargetData(()-> finalArgs)
+                        .withTargetData(()->finalTargetAttributes)
                         .withUserInteraction(userInteraction)
                         .build();
                 ufService.addObserver(new ObserverState());
@@ -209,13 +209,13 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         final String gatewayToken = sharedPreferences.getString(sharedPreferencesGatewayToken, "");
         final String targetToken = sharedPreferences.getString(sharedPreferencesTargetToken, "");
         final String tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "");
-        final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
+        final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 900_000);
         final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true);
-        final Map<String,String> args = sharedPreferences.getObject(sharedPreferencesArgs, new HashMap<String,String>().getClass());
+        final Map<String,String> targetAttributes = sharedPreferences.getObject(sharedPreferencesTargetAttributes, new HashMap<String,String>().getClass());
         final ServerType serverType = sharedPreferences.getObject(sharedPreferencesServerType, ServerType.class, ServerType.UPDATE_FACTORY);
         return UFServiceConfiguration.builder()
-                .witArgs(args)
-                .witEnable(serviceIsEnable)
+                .withTargetAttributes(targetAttributes)
+                .withEnable(serviceIsEnable)
                 .withApiMode(apiMode)
                 .withControllerId(controllerId)
                 .withGetawayToken(gatewayToken)
@@ -286,7 +286,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode());
         editor.putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnable());
         editor.apply();
-        sharedPreferences.putAndCommitObject(sharedPreferencesArgs,configuration.getArgs());
+        sharedPreferences.putAndCommitObject(sharedPreferencesTargetAttributes,configuration.getTargetAttributes());
         sharedPreferences.putAndCommitObject(sharedPreferencesServerType,
                 configuration.isUpdateFactoryServe() ? ServerType.UPDATE_FACTORY : ServerType.HAWKBIT);
     }
@@ -437,7 +437,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         sharedPreferencesServiceEnableKey = getString(R.string.shared_preferences_is_enable_key);
         sharedPreferencesGatewayToken = getString(R.string.shared_preferences_gateway_token_key);
         sharedPreferencesTargetToken = getString(R.string.shared_preferences_target_token_key);
-        sharedPreferencesArgs = getString(R.string.shared_preferences_args_key);
+        sharedPreferencesTargetAttributes = getString(R.string.shared_preferences_args_key);
         sharedPreferencesServerType = getString(R.string.shared_preferences_server_type_key);
     }
 
@@ -454,11 +454,11 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private String sharedPreferencesTargetToken;
     private String sharedPreferencesFile;
     private String sharedPreferencesServerType;
-    private String sharedPreferencesArgs;
+    private String sharedPreferencesTargetAttributes;
     private AndroidUserInteraction userInteraction;
     private NotificationManager mNotificationManager;
 
-    private static final String CLIENT_VERSION_ARG_KEY = "client_version";
+    private static final String CLIENT_VERSION_TARGET_ATTRIBUTE_KEY = "client_version";
     private static final String SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE";
     private static final String EXTERNAL_STORAGE_DIR = Environment.getExternalStorageDirectory().getPath();
     private static final String UF_CONF_FILE = EXTERNAL_STORAGE_DIR + "/UpdateFactoryConfiguration/ufConf.conf" ;

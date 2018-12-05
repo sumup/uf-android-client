@@ -58,7 +58,7 @@ public class ConfigurationFileLoader {
             return null;
         }
         UFServiceConfiguration.Builder builder =  UFServiceConfiguration.builder()
-                .witEnable(getBooleanConfiguration(ENABLE_CONFIGURATION_KEY))
+                .withEnable(getBooleanConfiguration(ENABLE_CONFIGURATION_KEY))
                 .withApiMode(getApiModeConfiguration())
                 .withIsUpdateFactoryServer(getBooleanConfiguration(IS_UPDATE_FACTORY_SERVER_KEY))
                 .withGetawayToken(map.get(GATEWAY_TOKEN_CONFIGURATION_KEY))
