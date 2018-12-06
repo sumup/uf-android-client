@@ -18,7 +18,7 @@ android {
         applicationId "com.kynetics.uf.service"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 9
+        versionCode 10
         versionName versionFromGit(project)
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -85,7 +85,7 @@ dependencies {
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
     implementation "com.android.support:preference-v7:$supportLibraryVersion"
     testImplementation 'junit:junit:4.12'
-    implementation 'com.github.Kynetics.uf-ddiclient:ddiclient-core:v0.4.3'
+    implementation 'com.github.Kynetics.uf-ddiclient:ddiclient-core:v0.4.4'
     implementation project(':uf-client-service:uf-client-service-api')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
