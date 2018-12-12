@@ -240,7 +240,10 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     break;
                 case MSG_REGISTER_CLIENT:
                     Log.i(TAG, "receive subscription request");
-                    mClients.add(msg.replyTo);
+                    if(msg.replyTo != null){
+                        mClients.add(msg.replyTo);
+                        Log.i(TAG, "client subscription ignored. Field replyTo mustn't be null");
+                    }
                     Log.i(TAG, "client subscription");
                     break;
                 case MSG_UNREGISTER_CLIENT:
@@ -316,6 +319,10 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     }
 
     private void sendMessage(Serializable messageContent, int code, Messenger messenger) {
+        if(messenger == null){
+            Log.i(TAG, "Response isn't' sent because there isn't a receiver (replyTo is null)");
+            return;
+        }
         final Message message = getMessage(messageContent, code);
         try {
             messenger.send(message);
