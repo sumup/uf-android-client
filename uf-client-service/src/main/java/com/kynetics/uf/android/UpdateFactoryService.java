@@ -232,23 +232,35 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_CONFIGURE_SERVICE:
+                    Log.i(TAG, "receive configuration update request");
                     final UFServiceConfiguration configuration = (UFServiceConfiguration) msg.getData().getSerializable(SERVICE_DATA_KEY);
                     saveServiceConfigurationToSharedPreferences(configuration);
                     buildServiceFromPreferences(true);
+                    Log.i(TAG, "configuration updated");
                     break;
                 case MSG_REGISTER_CLIENT:
+                    Log.i(TAG, "receive subscription request");
                     mClients.add(msg.replyTo);
+                    Log.i(TAG, "client subscription");
                     break;
                 case MSG_UNREGISTER_CLIENT:
+                    Log.i(TAG, "receive unsubscription request");
                     mClients.remove(msg.replyTo);
+                    Log.i(TAG, "client unsubscription");
                     break;
                 case MSG_AUTHORIZATION_RESPONSE:
-                    userInteraction.setAuthorization(msg.getData().getBoolean(SERVICE_DATA_KEY));
+                    Log.i(TAG, "receive authorization response");
+                    final boolean response = msg.getData().getBoolean(SERVICE_DATA_KEY);
+                    userInteraction.setAuthorization(response);
+                    Log.i(TAG, String.format("authorization %s", response ? "granted" : "denied"));
                     break;
                 case MSG_RESUME_SUSPEND_UPGRADE:
+                    Log.i(TAG, "receive request to resume suspend state");
                     ufService.restartSuspendState();
+                    Log.i(TAG, "resumed suspend state");
                     break;
                 case MSG_SYNC_REQUEST:
+                    Log.i(TAG, "received sync request");
                     final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
                     UpdateFactoryService.this.sendMessage(getCurrentConfiguration(sharedPreferences), MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
                     if(ufService == null){
@@ -264,6 +276,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                                 MSG_AUTHORIZATION_REQUEST,
                                 msg.replyTo);
                     }
+                    Log.i(TAG, "client synced");
                     break;
                 default:
                     super.handleMessage(msg);
@@ -337,7 +350,6 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.i(TAG, "onBind called");
         return mMessenger.getBinder();
     }
 
