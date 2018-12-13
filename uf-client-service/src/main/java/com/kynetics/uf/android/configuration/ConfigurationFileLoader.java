@@ -57,6 +57,7 @@ public class ConfigurationFileLoader {
         if(!configurationFileFound() || !parseFile()){
             return null;
         }
+        final String controllerId = map.get(CONTROLLER_ID_CONFIGURATION_KEY);
         UFServiceConfiguration.Builder builder =  UFServiceConfiguration.builder()
                 .withEnable(getBooleanConfiguration(ENABLE_CONFIGURATION_KEY))
                 .withApiMode(getApiModeConfiguration())
@@ -65,7 +66,7 @@ public class ConfigurationFileLoader {
                 .withTenant(map.get(TENANT_CONFIGURATION_KEY))
                 .withTargetToken(map.get(TARGET_TOKEN_CONFIGURATION_KEY))
                 .withRetryDelay(30_000)
-                .withControllerId(VariableEvaluation.Companion.parseStringWithVariable(map.get(CONTROLLER_ID_CONFIGURATION_KEY), context))
+                .withControllerId(VariableEvaluation.Companion.parseStringWithVariable(controllerId == null ? "" : controllerId, context))
                 .withUrl(map.get(URL_CONFIGURATION_KEY));
 
         return builder.configurationIsValid() ? builder.build() : null;
