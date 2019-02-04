@@ -22,21 +22,21 @@ import java.io.InputStream;
 
 public class AndroidSystemOperation implements SystemOperation {
     private UpdateStatus updateStatus;
-    private boolean updateExecuted;
+    private boolean isOtaUpdateExecuted;
     private final Context context;
     private boolean apkFound;
     private boolean osFound;
 
-    AndroidSystemOperation(Context context, boolean updateExecuted) {
+    AndroidSystemOperation(Context context, boolean isOtaUpdateExecuted) {
         this.updateStatus = UpdateStatus.NOT_APPLIED;
         this.context = context;
-        this.updateExecuted = updateExecuted;
+        this.isOtaUpdateExecuted = isOtaUpdateExecuted;
         resetApkOsFlag();
     }
 
     @Override
     public boolean savingFile(InputStream inputStream, FileInfo fileInfo) {
-        updateExecuted = false;
+        isOtaUpdateExecuted = false;
         this.updateStatus = UpdateStatus.NOT_APPLIED;
         final String fileName = fileInfo.getLinkInfo().getFileName();
         return fileName.endsWith("apk") ?
@@ -86,7 +86,7 @@ public class AndroidSystemOperation implements SystemOperation {
 
     @Override
     public UpdateStatus updateStatus() {
-        return updateExecuted ? UpdateSystem.successInstallation() : updateStatus;
+        return isOtaUpdateExecuted ? UpdateSystem.successInstallation() : updateStatus;
     }
 
     private void resetApkOsFlag(){
