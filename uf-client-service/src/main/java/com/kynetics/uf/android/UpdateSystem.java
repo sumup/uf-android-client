@@ -166,7 +166,7 @@ public class UpdateSystem {
             return true;
         }
 
-        boolean flag = true;
+        boolean installWithoutErrors = true;
 
         final CountDownLatch countDownLatch = new CountDownLatch(updateDirectory.listFiles().length);
         for(File file : updateDirectory.listFiles()){
@@ -174,7 +174,7 @@ public class UpdateSystem {
                 try {
                     installPackage(context, new FileInputStream(file),getPakcageFromApk(context, file.getAbsolutePath()), countDownLatch);
                 } catch (IOException e) {
-                    flag = false;
+                    installWithoutErrors = false;
                 }
             } else {
                 countDownLatch.countDown();
@@ -185,7 +185,7 @@ public class UpdateSystem {
             file.delete();
         }
 
-        return flag;
+        return installWithoutErrors;
     }
 
     public static boolean apkToInstall(Context context){
