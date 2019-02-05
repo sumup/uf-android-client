@@ -182,7 +182,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 final Map<String, String> finalTargetAttributes = targetAttributes;
                 ufService = UFService.builder()
                         .withClient(client)
-                        .withRetryDelayOnCommunicationError(Math.max(delay, 300_000))//todo refactor
+                        .withRetryDelayOnCommunicationError(delay)
                         .withTenant(tenant)
                         .withControllerId(controllerId)
                         .withInitialState(initialState)
