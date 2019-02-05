@@ -46,8 +46,12 @@ import com.kynetics.updatefactory.ddiclient.core.model.state.WaitingState;
 import com.kynetics.updatefactory.ddiclient.core.servicecallback.UserInteraction;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
@@ -76,6 +80,12 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
 
     private static final String CHANNEL_ID = "UPDATE_FACTORY_NOTIFICATION_CHANNEL_ID";
     public static final int NOTIFICATION_ID = 1;
+    public static final String ANDROID_BUILD_DATE_TARGET_ATTRIBUTE_KEY = "android_build_date";
+    public static final String ANDROID_BUILD_TYPE_TARGET_ATTRIBUTE_KEY = "android_build_type";
+    public static final String ANDROID_FINGERPRINT_TARGET_ATTRIBUTE_KEY = "android_fingerprint";
+    public static final String ANDROID_KEYS_TARGET_ATTRIBUTE_KEY = "android_keys";
+    public static final String ANDROID_VERSION_TARGET_ATTRIBUTE_KEY = "android_version";
+    public static final String DEVICE_NAME_TARGET_ATTRIBUTE_KEY = "device_name";
 
     public static UpdateFactoryServiceCommand getUFServiceCommand(){
         return ufServiceCommand;
@@ -155,11 +165,6 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
             final long delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 30000);
             final AbstractState initialState = getInitialState(startNewService, sharedPreferences);
             final boolean apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, false);
-            Map<String,String> targetAttributes = sharedPreferences.getObject(sharedPreferencesTargetAttributes, new HashMap<String,String>().getClass());
-            if(targetAttributes == null){
-                targetAttributes = new HashMap<>();
-            }
-            targetAttributes.put(CLIENT_VERSION_TARGET_ATTRIBUTE_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
             final ServerType serverType = sharedPreferences.getObject(sharedPreferencesServerType, ServerType.class, ServerType.UPDATE_FACTORY);
             userInteraction = new AndroidUserInteraction() {
                 @Override
@@ -179,7 +184,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .withHttpBuilder(buildOkHttpClient())
                         .withServerType(serverType)
                         .build();
-                final Map<String, String> finalTargetAttributes = targetAttributes;
+                final Map<String, String> finalTargetAttributes = decorateTargetAttribute(sharedPreferences);
                 ufService = UFService.builder()
                         .withClient(client)
                         .withRetryDelayOnCommunicationError(delay)
@@ -198,6 +203,24 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .show();
             }
         }
+    }
+
+    @NonNull
+    private Map<String, String> decorateTargetAttribute(SharedPreferencesWithObject sharedPreferences) {
+        Map<String,String> targetAttributes = sharedPreferences.getObject(sharedPreferencesTargetAttributes, new HashMap<String,String>().getClass());
+        if(targetAttributes == null){
+            targetAttributes = new HashMap<>();
+        }
+        targetAttributes.put(CLIENT_VERSION_TARGET_ATTRIBUTE_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
+        final Date buildDate = new Date(android.os.Build.TIME);
+        final DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd", Locale.UK);
+        targetAttributes.put(ANDROID_BUILD_DATE_TARGET_ATTRIBUTE_KEY,dateFormat.format(buildDate));
+        targetAttributes.put(ANDROID_BUILD_TYPE_TARGET_ATTRIBUTE_KEY,android.os.Build.TYPE);
+        targetAttributes.put(ANDROID_FINGERPRINT_TARGET_ATTRIBUTE_KEY,android.os.Build.FINGERPRINT);
+        targetAttributes.put(ANDROID_KEYS_TARGET_ATTRIBUTE_KEY,(android.os.Build.TAGS));
+        targetAttributes.put(ANDROID_VERSION_TARGET_ATTRIBUTE_KEY,(android.os.Build.VERSION.RELEASE));
+        targetAttributes.put(DEVICE_NAME_TARGET_ATTRIBUTE_KEY,(android.os.Build.DEVICE));
+        return targetAttributes;
     }
 
     private ArrayList<Messenger> mClients = new ArrayList<>();
