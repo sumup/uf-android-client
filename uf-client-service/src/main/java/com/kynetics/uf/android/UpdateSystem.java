@@ -9,13 +9,9 @@
 
 package com.kynetics.uf.android;
 
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentSender;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
@@ -24,24 +20,24 @@ import android.os.RecoverySystem;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
+import com.kynetics.uf.android.update.InstallerSession;
 import com.kynetics.updatefactory.ddiclient.core.servicecallback.SystemOperation;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Daniele Sergio
@@ -52,7 +48,6 @@ public class UpdateSystem {
     private static final String OTA_FILE_NAME = "update.zip";
     private static final String UPDATE_PENDING_FILE_NAME = "update_pending";
     private static final String UPDATE_APK_FOLDER = "updateApplication";
-    static final String ACTION_INSTALL_COMPLETE = "com.kynetics.aciont.INSTALL_COMPLETED";
 
     static boolean copyFile(InputStream inputStream){
         final File packageFile = new File(getPath(OTA_FILE_NAME));
@@ -166,15 +161,18 @@ public class UpdateSystem {
             return true;
         }
 
-        boolean installWithoutErrors = true;
+        final AtomicBoolean installWithoutErrors = new AtomicBoolean(true);
 
         final CountDownLatch countDownLatch = new CountDownLatch(updateDirectory.listFiles().length);
         for(File file : updateDirectory.listFiles()){
             if(file.getName().endsWith("apk")){
                 try {
-                    installPackage(context, new FileInputStream(file),getPakcageFromApk(context, file.getAbsolutePath()), countDownLatch);
-                } catch (IOException e) {
-                    installWithoutErrors = false;
+                    Log.d(TAG, String.format("installing apk named %s", file.getName()));
+                    installPackage(context, file, getPackageFromApk(context, file.getAbsolutePath()), countDownLatch, installWithoutErrors);
+                } catch (IOException | IllegalArgumentException e) {
+                    installWithoutErrors.set(false);
+                    Log.d(TAG, String.format("Failed to install %s", file.getName()));
+                    Log.d(TAG, e.getMessage(), e);
                 }
             } else {
                 countDownLatch.countDown();
@@ -185,7 +183,7 @@ public class UpdateSystem {
             file.delete();
         }
 
-        return installWithoutErrors;
+        return installWithoutErrors.get();
     }
 
     public static boolean apkToInstall(Context context){
@@ -199,76 +197,26 @@ public class UpdateSystem {
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private static final class UFSessionCallback extends PackageInstaller.SessionCallback{
-        private final int sessionId;
-        private final CountDownLatch countDownLatch;
-
-        public UFSessionCallback(int sessionId, CountDownLatch countDownLatch) {
-            this.sessionId = sessionId;
-            this.countDownLatch = countDownLatch;
-        }
-
-        @Override
-        public void onCreated(int sessionId) {
-
-        }
-
-        @Override
-        public void onBadgingChanged(int sessionId) {
-
-        }
-
-        @Override
-        public void onActiveChanged(int sessionId, boolean active) {
-
-        }
-
-        @Override
-        public void onProgressChanged(int sessionId, float progress) {
-
-        }
-
-        @Override
-        public void onFinished(int sessionId, boolean success) {
-            if(this.sessionId == sessionId ){
-                countDownLatch.countDown();
-            }
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    static void installPackage(Context context, InputStream in, String packageName, CountDownLatch countDownLatch)
+    static void installPackage(Context context, File file, String packageName, CountDownLatch countDownLatch, AtomicBoolean installWithoutErrors)
             throws IOException {
         try{
             Looper.prepare();
         } catch (RuntimeException r){
             Log.d(TAG, r.getMessage());
         }
-        PackageInstaller packageInstaller = context.getPackageManager().getPackageInstaller();
-        PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
-                PackageInstaller.SessionParams.MODE_FULL_INSTALL);
-        params.setAppPackageName(packageName);
-        // set params
-        final int sessionId = packageInstaller.createSession(params);
-        packageInstaller.registerSessionCallback(new UFSessionCallback(sessionId, countDownLatch));
-        PackageInstaller.Session session = packageInstaller.openSession(sessionId);
-        OutputStream out = session.openWrite(packageName, 0, -1);
-        byte[] buffer = new byte[65536];
-        int c;
-        while ((c = in.read(buffer)) != -1) {
-            out.write(buffer, 0, c);
-        }
-        session.fsync(out);
-        in.close();
-        out.close();
 
-        session.commit(createIntentSender(context, sessionId));
-
+        final InstallerSession installerSession = InstallerSession.newInstance(
+                context,
+                countDownLatch,
+                packageName,
+                installWithoutErrors
+        );
+        installerSession.writeSession(file,  packageName);
+        installerSession.commitSession();
+        /**/
     }
 
-
-
-    private static String getPakcageFromApk(Context context, String apkPath){
+    private static String getPackageFromApk(Context context, String apkPath){
         PackageInfo packageInfo = context.getPackageManager().getPackageArchiveInfo(apkPath,PackageManager.GET_ACTIVITIES);
         if(packageInfo != null) {
             ApplicationInfo appInfo = packageInfo.applicationInfo;
@@ -277,12 +225,4 @@ public class UpdateSystem {
         return null;
     }
 
-    private static IntentSender createIntentSender(Context context, int sessionId) {
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                context,
-                sessionId,
-                new Intent(ACTION_INSTALL_COMPLETE),
-                0);
-        return pendingIntent.getIntentSender();
-    }
 }
