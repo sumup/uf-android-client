@@ -14,6 +14,7 @@ package com.kynetics.uf.android.update;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageInstaller;
 import android.os.Build;
@@ -31,12 +32,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class InstallerSession {
 
-    private static final String ACTION_INSTALL_COMPLETE = "com.kynetics.aciont.INSTALL_COMPLETED";
+    static final String ACTION_INSTALL_COMPLETE = "com.kynetics.action.INSTALL_COMPLETED";
 
     public static InstallerSession newInstance(Context context,
-                                        CountDownLatch countDownLatch,
-                                        String packageName,
-                                        AtomicBoolean installWithoutErrors) throws IOException {
+                                               CountDownLatch countDownLatch,
+                                               String packageName,
+                                               AtomicBoolean installWithoutErrors) throws IOException {
         final PackageInstaller packageInstaller = context.getPackageManager()
                 .getPackageInstaller();
         final PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
@@ -46,6 +47,11 @@ public class InstallerSession {
         final UFSessionCallback ufSessionCallback = new UFSessionCallback(sessionId,
                 countDownLatch,
                 installWithoutErrors);
+        context.registerReceiver(new PackageInstallerBroadcastReceiver(
+                        sessionId,
+                        countDownLatch,
+                        installWithoutErrors),
+                new IntentFilter(InstallerSession.ACTION_INSTALL_COMPLETE));
         packageInstaller.registerSessionCallback(ufSessionCallback);
         return new InstallerSession(context, packageInstaller, sessionId);
     }

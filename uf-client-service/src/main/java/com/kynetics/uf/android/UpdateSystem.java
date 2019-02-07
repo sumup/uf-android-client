@@ -185,6 +185,12 @@ public class UpdateSystem {
             file.delete();
         }
 
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            installWithoutErrors.set(false);
+        }
+
         return installWithoutErrors.get();
     }
 
