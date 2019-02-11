@@ -416,7 +416,11 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         message.getOldState(),
                         message.getEventName(),
                         message.getCurrentState());
-                writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
+
+                if(newState.getStateName() != AbstractState.StateName.SAVING_FILE) {
+                    writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
+                }
+
                 mNotificationManager.notify(NOTIFICATION_ID,getNotification(notificationString));
             }
         }
