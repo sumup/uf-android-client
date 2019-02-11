@@ -173,7 +173,7 @@ public class UpdateSystem {
             if(file.getName().endsWith("apk")){
                 try {
                     installPackage(context, new FileInputStream(file),getPakcageFromApk(context, file.getAbsolutePath()), countDownLatch);
-                } catch (IOException e) {
+                } catch (IOException | IllegalArgumentException e) {
                     installWithoutErrors = false;
                 }
             } else {
