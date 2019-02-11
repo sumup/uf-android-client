@@ -34,5 +34,6 @@
     <string name="connected">Connected</string>
     <string name="ui_version">UI version: %s</string>
     <string name="service_version">Service version: %s</string>
+    <string name="nav_header_title">Update Factory</string>
 
 </resources>
