@@ -45,6 +45,7 @@
                 android:layout_weight="1"
                 android:fitsSystemWindows="true"
                 android:clickable="true"
+                app:elevation="0dp"
                 app:headerLayout="@layout/nav_header_main"
                 app:menu="@menu/activity_main_drawer">
 
