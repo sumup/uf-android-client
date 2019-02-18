@@ -76,7 +76,7 @@ import static com.kynetics.uf.android.api.UFServiceMessage.Suspend.UPDATE;
 /**
  * @author Daniele Sergio
  */
-public class UpdateFactoryService extends Service implements UpdateFactoryServiceCommand { //todo refactor class
+public class UpdateFactoryService extends Service implements UpdateFactoryServiceCommand {
 
     private static final String CHANNEL_ID = "UPDATE_FACTORY_NOTIFICATION_CHANNEL_ID";
     public static final int NOTIFICATION_ID = 1;
@@ -86,6 +86,8 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     public static final String ANDROID_KEYS_TARGET_ATTRIBUTE_KEY = "android_keys";
     public static final String ANDROID_VERSION_TARGET_ATTRIBUTE_KEY = "android_version";
     public static final String DEVICE_NAME_TARGET_ATTRIBUTE_KEY = "device_name";
+    public static final String CLIENT_TYPE_TARGET_TOKEN_KEY = "client";
+    public static final String CLIENT_DATE_TARGET_TOKEN_KEY = "date";
 
     public static UpdateFactoryServiceCommand getUFServiceCommand(){
         return ufServiceCommand;
@@ -213,6 +215,9 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         if(targetAttributes == null){
             targetAttributes = new HashMap<>();
         }
+        targetAttributes.put(CLIENT_TYPE_TARGET_TOKEN_KEY,"Android");
+        final SimpleDateFormat sm = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z", Locale.getDefault());
+        targetAttributes.put(CLIENT_DATE_TARGET_TOKEN_KEY, sm.format(new Date()));
         targetAttributes.put(CLIENT_VERSION_TARGET_ATTRIBUTE_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
         final Date buildDate = new Date(android.os.Build.TIME);
         final DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd", Locale.UK);
@@ -251,6 +256,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 .withUrl(url)
                 .build();
     }
+
 
     private class IncomingHandler extends Handler {
         @Override

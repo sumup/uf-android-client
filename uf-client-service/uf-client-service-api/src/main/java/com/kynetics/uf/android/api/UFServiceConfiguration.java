@@ -24,10 +24,6 @@ public class UFServiceConfiguration implements Serializable{
 
     public static class Builder {
         private Builder(){
-            targetAttributes = new HashMap<>(2);
-            targetAttributes.put("client","Android");
-            final SimpleDateFormat sm = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z", Locale.getDefault());
-            targetAttributes.put("date", sm.format(new Date()));
 
         }
         public Builder withTenant(String tenant) {
@@ -51,9 +47,7 @@ public class UFServiceConfiguration implements Serializable{
         }
 
         public Builder withRetryDelay(long retryDelay) {
-            if(retryDelay >= 30_000) {
-                this.retryDelay = retryDelay;
-            }
+            this.retryDelay = retryDelay;
             return this;
         }
 
