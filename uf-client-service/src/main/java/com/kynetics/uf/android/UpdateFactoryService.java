@@ -518,7 +518,12 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private String sharedPreferencesFile;
     private String sharedPreferencesServerType;
     private String sharedPreferencesTargetAttributes;
-    private AndroidUserInteraction userInteraction;
+    private AndroidUserInteraction userInteraction = new AndroidUserInteraction() {
+        @Override
+        protected void onAuthorizationAsked(Authorization authorization) {
+            Log.i(TAG, "onAuthorizationAsked ignored because hasn't yet configured");
+        }
+    };
     private NotificationManager mNotificationManager;
 
     private static final String CLIENT_VERSION_TARGET_ATTRIBUTE_KEY = "client_version";
