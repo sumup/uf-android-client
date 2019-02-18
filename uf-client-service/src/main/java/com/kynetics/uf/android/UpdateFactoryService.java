@@ -259,8 +259,11 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 case MSG_CONFIGURE_SERVICE:
                     Log.i(TAG, "receive configuration update request");
                     final UFServiceConfiguration configuration = (UFServiceConfiguration) msg.getData().getSerializable(SERVICE_DATA_KEY);
-                    saveServiceConfigurationToSharedPreferences(configuration);
-                    buildServiceFromPreferences(true);
+                    if(!getCurrentConfiguration(getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE)).equals(configuration)) {
+                        saveServiceConfigurationToSharedPreferences(configuration);
+                        buildServiceFromPreferences(true);
+                        Log.i(TAG, "new configuration equals to current configuration");
+                    }
                     Log.i(TAG, "configuration updated");
                     break;
                 case MSG_REGISTER_CLIENT:
