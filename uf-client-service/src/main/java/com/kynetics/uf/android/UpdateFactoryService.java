@@ -297,7 +297,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         UpdateFactoryService.this.sendMessage(lastMessage, MSG_SERVICE_STATUS, msg.replyTo);
                     }
                     AbstractState lastState = sharedPreferences.getObject(sharedPreferencesCurrentStateKey, AbstractState.class);
-                    if(lastState.getStateName() == AbstractState.StateName.AUTHORIZATION_WAITING){
+                    if(lastState != null && lastState.getStateName() == AbstractState.StateName.AUTHORIZATION_WAITING){
                         UpdateFactoryService.this.sendMessage(userInteraction.getAuthRequest().name(),
                                 MSG_AUTHORIZATION_REQUEST,
                                 msg.replyTo);
