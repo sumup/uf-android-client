@@ -133,8 +133,10 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         } else if (serviceConfiguration != null){
             Log.i(TAG, "Loaded new configuration from file");
         }
-        saveServiceConfigurationToSharedPreferences(serviceConfiguration);
-        buildServiceFromPreferences(serviceConfiguration!=null);
+        if(!getCurrentConfiguration(getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE)).equals(serviceConfiguration)) {
+            saveServiceConfigurationToSharedPreferences(serviceConfiguration);
+            buildServiceFromPreferences(serviceConfiguration != null);
+        }
         return START_STICKY;
     }
 
