@@ -394,12 +394,18 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 final UFService.SharedEvent eventNotify = (UFService.SharedEvent) o;
                 final AbstractEvent event = eventNotify.getEvent();
                 final AbstractState newState = eventNotify.getNewState();
+                final AbstractState oldState = eventNotify.getOldState();
+
+                if(oldState == null || event == null || newState == null){
+                    return;
+                }
+
                 final String newStateString = newState.getStateName() == AbstractState.StateName.SAVING_FILE ?
                         String.format("%s (%s%%)", newState.getStateName().name(), (int) Math.floor(((SavingFileState)newState).getPercent() * 100))
                         :  newState.getStateName().name();
                 final UFServiceMessage message = new UFServiceMessage(
                         event.getEventName().name(),
-                        eventNotify.getOldState().getStateName().name(),
+                        oldState.getStateName().name(),
                         newStateString,
                         getSuspend(newState)
                 );
