@@ -76,7 +76,7 @@ import static com.kynetics.uf.android.api.UFServiceMessage.Suspend.UPDATE;
 /**
  * @author Daniele Sergio
  */
-public class UpdateFactoryService extends Service implements UpdateFactoryServiceCommand {
+public class UpdateFactoryService extends Service implements UpdateFactoryServiceCommand { //todo refactor class
 
     private static final String CHANNEL_ID = "UPDATE_FACTORY_NOTIFICATION_CHANNEL_ID";
     public static final int NOTIFICATION_ID = 1;
@@ -265,14 +265,19 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     Log.i(TAG, "receive subscription request");
                     if(msg.replyTo != null){
                         mClients.add(msg.replyTo);
+                        Log.i(TAG, "client subscription");
+                    } else {
                         Log.i(TAG, "client subscription ignored. Field replyTo mustn't be null");
                     }
-                    Log.i(TAG, "client subscription");
                     break;
                 case MSG_UNREGISTER_CLIENT:
                     Log.i(TAG, "receive unsubscription request");
-                    mClients.remove(msg.replyTo);
-                    Log.i(TAG, "client unsubscription");
+                    if(msg.replyTo != null){
+                        mClients.remove(msg.replyTo);
+                        Log.i(TAG, "client unsubscription");
+                    } else {
+                        Log.i(TAG, "client unsubscription ignored. Field replyTo mustn't be null");
+                    }
                     break;
                 case MSG_AUTHORIZATION_RESPONSE:
                     Log.i(TAG, "receive authorization response");
@@ -282,16 +287,22 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     break;
                 case MSG_RESUME_SUSPEND_UPGRADE:
                     Log.i(TAG, "receive request to resume suspend state");
-                    ufService.restartSuspendState();
-                    Log.i(TAG, "resumed suspend state");
+                    if(ufService != null){
+                        ufService.restartSuspendState();
+                        Log.i(TAG, "resumed suspend state");
+                    } else {
+                        Log.i(TAG, "command ignored because ufService is not configured");
+                    }
                     break;
                 case MSG_SYNC_REQUEST:
                     Log.i(TAG, "received sync request");
-                    final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
-                    UpdateFactoryService.this.sendMessage(getCurrentConfiguration(sharedPreferences), MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
-                    if(ufService == null){
+                    if(ufService == null || msg.replyTo == null){
+                        Log.i(TAG, "command ignored because ufService is not configured or field replyTo is null");
                         return;
                     }
+                    final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
+                    UpdateFactoryService.this.sendMessage(getCurrentConfiguration(sharedPreferences), MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
+
                     final UFServiceMessage lastMessage = sharedPreferences.getObject(SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE, UFServiceMessage.class);
                     if(lastMessage != null){
                         UpdateFactoryService.this.sendMessage(lastMessage, MSG_SERVICE_STATUS, msg.replyTo);
