@@ -203,8 +203,11 @@ public class UpdateSystem {
         }
 
         final UpdateConfirmationTimeoutProvider.Timeout timeout = UpdateConfirmationTimeoutProvider
-                .FixedTimeProvider./**/ofSeconds(1800).getTimeout(null); // TODO: 20/02/19 make seconds configurables
-        countDownLatch.await(timeout.value, timeout.timeUnit);
+                .FixedTimeProvider.ofSeconds(1800).getTimeout(null); // TODO: 20/02/19 make seconds configurables
+
+        if(!countDownLatch.await(timeout.value, timeout.timeUnit)){
+            errorMessages.add("Time to update exceeds the timeout");
+        }
 
         return errorMessages.size() == 0 ? newSuccessStatus(null) : newFailureStatus(errorMessages.toArray(new String[0]));
     }

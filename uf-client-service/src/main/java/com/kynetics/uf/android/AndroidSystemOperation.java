@@ -97,7 +97,7 @@ public class AndroidSystemOperation implements SystemOperation {
             updateStatus = UpdateSystem.installApk(context);
         } catch (InterruptedException e) {
             Log.i(TAG, e.getMessage(), e);
-            updateStatus = UpdateStatus.newFailureStatus(new String[]{"Time to update exceeds the timeout"});
+            updateStatus = UpdateStatus.newFailureStatus(new String[]{e.getMessage()});
         }
     }
 
