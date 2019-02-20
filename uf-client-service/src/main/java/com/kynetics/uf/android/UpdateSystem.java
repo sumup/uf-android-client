@@ -189,6 +189,7 @@ public class UpdateSystem {
                     installPackage(context, file, getPackageFromApk(context, file.getAbsolutePath()), countDownLatch, errorMessages);
                 } catch (IOException | IllegalArgumentException e) {
                     errorMessages.add(String.format("%s installation fails with error %s", file.getName(), e.getMessage()));
+                    countDownLatch.countDown();
                     Log.d(TAG, String.format("Failed to install %s", file.getName()));
                     Log.d(TAG, e.getMessage(), e);
                 }
