@@ -23,6 +23,7 @@ import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import com.kynetics.uf.android.update.InstallerSession;
+import com.kynetics.uf.android.update.UpdateConfirmationTimeoutProvider;
 import com.kynetics.updatefactory.ddiclient.core.servicecallback.SystemOperation;
 
 import java.io.BufferedReader;
@@ -152,7 +153,7 @@ public class UpdateSystem {
     }
 
 
-    static boolean installApk(Context context){
+    static boolean installApk(Context context) throws InterruptedException {
         if(android.os.Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP){
             return false;
         }
@@ -185,11 +186,9 @@ public class UpdateSystem {
             file.delete();
         }
 
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            installWithoutErrors.set(false);
-        }
+        final UpdateConfirmationTimeoutProvider.Timeout timeout = UpdateConfirmationTimeoutProvider
+                .FixedTimeProvider./**/ofSeconds(1800).getTimeout(null); // TODO: 20/02/19 make seconds configurables
+        countDownLatch.await(timeout.value, timeout.timeUnit);
 
         return installWithoutErrors.get();
     }

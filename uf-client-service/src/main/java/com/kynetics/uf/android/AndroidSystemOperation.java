@@ -79,10 +79,14 @@ public class AndroidSystemOperation implements SystemOperation {
     }
 
     private void updateApp(){
-        if(UpdateSystem.installApk(context)){
-            updateStatus = UpdateStatus.SUCCESSFULLY_APPLIED;
-        } else {
-            updateStatus = UpdateStatus.APPLIED_WITH_ERROR;
+        try {
+            if(UpdateSystem.installApk(context)){
+                updateStatus = UpdateStatus.SUCCESSFULLY_APPLIED;
+            } else {
+                updateStatus = UpdateStatus.APPLIED_WITH_ERROR;
+            }
+        } catch (InterruptedException e) {
+            Log.i(TAG, e.getMessage(), e);
         }
     }
 

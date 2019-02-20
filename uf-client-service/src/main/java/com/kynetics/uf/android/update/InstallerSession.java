@@ -44,15 +44,11 @@ public class InstallerSession {
                 PackageInstaller.SessionParams.MODE_FULL_INSTALL);
         params.setAppPackageName(packageName);
         final int sessionId = packageInstaller.createSession(params);
-        final UFSessionCallback ufSessionCallback = new UFSessionCallback(sessionId,
-                countDownLatch,
-                installWithoutErrors);
         context.registerReceiver(new PackageInstallerBroadcastReceiver(
                         sessionId,
                         countDownLatch,
                         installWithoutErrors),
                 new IntentFilter(InstallerSession.ACTION_INSTALL_COMPLETE));
-        packageInstaller.registerSessionCallback(ufSessionCallback);
         return new InstallerSession(context, packageInstaller, sessionId);
     }
 
