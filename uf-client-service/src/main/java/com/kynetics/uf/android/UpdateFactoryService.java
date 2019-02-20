@@ -221,6 +221,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         final SimpleDateFormat sm = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z", Locale.getDefault());
         targetAttributes.put(CLIENT_DATE_TARGET_TOKEN_KEY, sm.format(new Date()));
         targetAttributes.put(CLIENT_VERSION_TARGET_ATTRIBUTE_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
+        targetAttributes.put(CLIENT_VERSION_CODE_ATTRIBUTE_KEY,String.valueOf(BuildConfig.VERSION_CODE));
         final Date buildDate = new Date(android.os.Build.TIME);
         final DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd", Locale.UK);
         targetAttributes.put(ANDROID_BUILD_DATE_TARGET_ATTRIBUTE_KEY,dateFormat.format(buildDate));
@@ -540,6 +541,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private NotificationManager mNotificationManager;
 
     private static final String CLIENT_VERSION_TARGET_ATTRIBUTE_KEY = "client_version";
+    private static final String CLIENT_VERSION_CODE_ATTRIBUTE_KEY = "client_version_code";
     private static final String SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE";
     private static final String EXTERNAL_STORAGE_DIR = Environment.getExternalStorageDirectory().getPath();
     private static final String UF_CONF_FILE = EXTERNAL_STORAGE_DIR + "/UpdateFactoryConfiguration/ufConf.conf" ;
