@@ -88,14 +88,16 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        mNavigationView = findViewById(R.id.nav_view);
+        final NavigationView navigationViewWrapper = findViewById(R.id.nav_view_wrapper);
+
+        mNavigationView = navigationViewWrapper.findViewById(R.id.nav_view);
         mNavigationView.setCheckedItem(R.id.menu_settings);
         mNavigationView.setNavigationItemSelectedListener(this);
         changePage(LogFragment.newInstance());
         mNavigationView.setCheckedItem(R.id.menu_log);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        final TextView textViewUiVersion = mNavigationView.findViewById(R.id.ui_version);
-        final TextView textViewServiceVersion = mNavigationView.findViewById(R.id.service_version);
+        final TextView textViewUiVersion = navigationViewWrapper.findViewById(R.id.ui_version);
+        final TextView textViewServiceVersion = navigationViewWrapper.findViewById(R.id.service_version);
         textViewUiVersion.setText(String.format(getString(R.string.ui_version), BuildConfig.VERSION_NAME));
         try{
             final PackageInfo pinfo =

@@ -26,10 +26,6 @@ public class UFServiceConfiguration implements Serializable{
 
     public static class Builder {
         private Builder(){
-            targetAttributes = new HashMap<>(2);
-            targetAttributes.put("client","Android");
-            final SimpleDateFormat sm = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z", Locale.getDefault());
-            targetAttributes.put("date", sm.format(new Date()));
 
         }
         public Builder withTenant(String tenant) {
@@ -53,9 +49,7 @@ public class UFServiceConfiguration implements Serializable{
         }
 
         public Builder withRetryDelay(long retryDelay) {
-            if(retryDelay >= 30_000) {
-                this.retryDelay = retryDelay;
-            }
+            this.retryDelay = retryDelay;
             return this;
         }
 
@@ -222,6 +216,28 @@ public class UFServiceConfiguration implements Serializable{
     private final boolean enable;
     private final Map<String,String> targetAttributes;
     private final boolean isUpdateFactoryServe;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UFServiceConfiguration that = (UFServiceConfiguration) o;
+        return retryDelay == that.retryDelay &&
+                apiMode == that.apiMode &&
+                enable == that.enable &&
+                isUpdateFactoryServe == that.isUpdateFactoryServe &&
+                Objects.equals(tenant, that.tenant) &&
+                Objects.equals(controllerId, that.controllerId) &&
+                Objects.equals(url, that.url) &&
+                Objects.equals(targetToken, that.targetToken) &&
+                Objects.equals(gatewayToken, that.gatewayToken) &&
+                Objects.equals(targetAttributes, that.targetAttributes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tenant, controllerId, retryDelay, url, targetToken, gatewayToken, apiMode, enable, targetAttributes, isUpdateFactoryServe);
+    }
 
     private static final long serialVersionUID = -6025361892414738765L;
 }

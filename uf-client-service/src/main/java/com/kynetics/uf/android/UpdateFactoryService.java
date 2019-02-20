@@ -88,6 +88,8 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     public static final String ANDROID_KEYS_TARGET_ATTRIBUTE_KEY = "android_keys";
     public static final String ANDROID_VERSION_TARGET_ATTRIBUTE_KEY = "android_version";
     public static final String DEVICE_NAME_TARGET_ATTRIBUTE_KEY = "device_name";
+    public static final String CLIENT_TYPE_TARGET_TOKEN_KEY = "client";
+    public static final String CLIENT_DATE_TARGET_TOKEN_KEY = "date";
 
     public static UpdateFactoryServiceCommand getUFServiceCommand(){
         return ufServiceCommand;
@@ -135,8 +137,10 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         } else if (serviceConfiguration != null){
             Log.i(TAG, "Loaded new configuration from file");
         }
-        saveServiceConfigurationToSharedPreferences(serviceConfiguration);
-        buildServiceFromPreferences(serviceConfiguration!=null);
+        if(!getCurrentConfiguration(getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE)).equals(serviceConfiguration)) {
+            saveServiceConfigurationToSharedPreferences(serviceConfiguration);
+            buildServiceFromPreferences(serviceConfiguration != null);
+        }
         return START_STICKY;
     }
 
@@ -213,6 +217,9 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
         if(targetAttributes == null){
             targetAttributes = new HashMap<>();
         }
+        targetAttributes.put(CLIENT_TYPE_TARGET_TOKEN_KEY,"Android");
+        final SimpleDateFormat sm = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z", Locale.getDefault());
+        targetAttributes.put(CLIENT_DATE_TARGET_TOKEN_KEY, sm.format(new Date()));
         targetAttributes.put(CLIENT_VERSION_TARGET_ATTRIBUTE_KEY, BuildConfig.VERSION_NAME); // TODO: 4/17/18 refactor
         final Date buildDate = new Date(android.os.Build.TIME);
         final DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd", Locale.UK);
@@ -252,6 +259,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 .build();
     }
 
+
     private class IncomingHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
@@ -259,22 +267,30 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 case MSG_CONFIGURE_SERVICE:
                     Log.i(TAG, "receive configuration update request");
                     final UFServiceConfiguration configuration = (UFServiceConfiguration) msg.getData().getSerializable(SERVICE_DATA_KEY);
-                    saveServiceConfigurationToSharedPreferences(configuration);
-                    buildServiceFromPreferences(true);
+                    if(!getCurrentConfiguration(getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE)).equals(configuration)) {
+                        saveServiceConfigurationToSharedPreferences(configuration);
+                        buildServiceFromPreferences(true);
+                        Log.i(TAG, "new configuration equals to current configuration");
+                    }
                     Log.i(TAG, "configuration updated");
                     break;
                 case MSG_REGISTER_CLIENT:
                     Log.i(TAG, "receive subscription request");
                     if(msg.replyTo != null){
                         mClients.add(msg.replyTo);
+                        Log.i(TAG, "client subscription");
+                    } else {
                         Log.i(TAG, "client subscription ignored. Field replyTo mustn't be null");
                     }
-                    Log.i(TAG, "client subscription");
                     break;
                 case MSG_UNREGISTER_CLIENT:
                     Log.i(TAG, "receive unsubscription request");
-                    mClients.remove(msg.replyTo);
-                    Log.i(TAG, "client unsubscription");
+                    if(msg.replyTo != null){
+                        mClients.remove(msg.replyTo);
+                        Log.i(TAG, "client unsubscription");
+                    } else {
+                        Log.i(TAG, "client unsubscription ignored. Field replyTo mustn't be null");
+                    }
                     break;
                 case MSG_AUTHORIZATION_RESPONSE:
                     Log.i(TAG, "receive authorization response");
@@ -284,22 +300,28 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     break;
                 case MSG_RESUME_SUSPEND_UPGRADE:
                     Log.i(TAG, "receive request to resume suspend state");
-                    ufService.restartSuspendState();
-                    Log.i(TAG, "resumed suspend state");
+                    if(ufService != null){
+                        ufService.restartSuspendState();
+                        Log.i(TAG, "resumed suspend state");
+                    } else {
+                        Log.i(TAG, "command ignored because ufService is not configured");
+                    }
                     break;
                 case MSG_SYNC_REQUEST:
                     Log.i(TAG, "received sync request");
-                    final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
-                    UpdateFactoryService.this.sendMessage(getCurrentConfiguration(sharedPreferences), MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
-                    if(ufService == null){
+                    if(ufService == null || msg.replyTo == null){
+                        Log.i(TAG, "command ignored because ufService is not configured or field replyTo is null");
                         return;
                     }
+                    final SharedPreferencesWithObject sharedPreferences = getSharedPreferences(sharedPreferencesFile, MODE_PRIVATE);
+                    UpdateFactoryService.this.sendMessage(getCurrentConfiguration(sharedPreferences), MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo);
+
                     final UFServiceMessage lastMessage = sharedPreferences.getObject(SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE, UFServiceMessage.class);
                     if(lastMessage != null){
                         UpdateFactoryService.this.sendMessage(lastMessage, MSG_SERVICE_STATUS, msg.replyTo);
                     }
                     AbstractState lastState = sharedPreferences.getObject(sharedPreferencesCurrentStateKey, AbstractState.class);
-                    if(lastState.getStateName() == AbstractState.StateName.AUTHORIZATION_WAITING){
+                    if(lastState != null && lastState.getStateName() == AbstractState.StateName.AUTHORIZATION_WAITING){
                         UpdateFactoryService.this.sendMessage(userInteraction.getAuthRequest().name(),
                                 MSG_AUTHORIZATION_REQUEST,
                                 msg.replyTo);
@@ -396,12 +418,18 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                 final UFService.SharedEvent eventNotify = (UFService.SharedEvent) o;
                 final AbstractEvent event = eventNotify.getEvent();
                 final AbstractState newState = eventNotify.getNewState();
+                final AbstractState oldState = eventNotify.getOldState();
+
+                if(oldState == null || event == null || newState == null){
+                    return;
+                }
+
                 final String newStateString = newState.getStateName() == AbstractState.StateName.SAVING_FILE ?
                         String.format("%s (%s%%)", newState.getStateName().name(), (int) Math.floor(((SavingFileState)newState).getPercent() * 100))
                         :  newState.getStateName().name();
                 final UFServiceMessage message = new UFServiceMessage(
                         event.getEventName().name(),
-                        eventNotify.getOldState().getStateName().name(),
+                        oldState.getStateName().name(),
                         newStateString,
                         getSuspend(newState)
                 );
@@ -418,7 +446,11 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         message.getOldState(),
                         message.getEventName(),
                         message.getCurrentState());
-                writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
+
+                if(newState.getStateName() != AbstractState.StateName.SAVING_FILE) {
+                    writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
+                }
+
                 mNotificationManager.notify(NOTIFICATION_ID,getNotification(notificationString));
             }
         }
@@ -499,7 +531,12 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
     private String sharedPreferencesFile;
     private String sharedPreferencesServerType;
     private String sharedPreferencesTargetAttributes;
-    private AndroidUserInteraction userInteraction;
+    private AndroidUserInteraction userInteraction = new AndroidUserInteraction() {
+        @Override
+        protected void onAuthorizationAsked(Authorization authorization) {
+            Log.i(TAG, "onAuthorizationAsked ignored because hasn't yet configured");
+        }
+    };
     private NotificationManager mNotificationManager;
 
     private static final String CLIENT_VERSION_TARGET_ATTRIBUTE_KEY = "client_version";
