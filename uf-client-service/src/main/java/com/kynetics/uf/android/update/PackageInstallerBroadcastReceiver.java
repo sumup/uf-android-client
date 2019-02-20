@@ -19,6 +19,7 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,7 +32,7 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
     private static final int SESSION_ID_NOT_FOUND = -1;
     private final int sessionId;
     private final CountDownLatch countDownLatch;
-    private final AtomicBoolean installWithoutErrors;
+    private final List<String> errorMessages;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -56,13 +57,13 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
             case PackageInstaller.STATUS_FAILURE_INCOMPATIBLE:
             case PackageInstaller.STATUS_FAILURE_INVALID:
             case PackageInstaller.STATUS_FAILURE_STORAGE:
-                installWithoutErrors.set(false);
+                errorMessages.add(String.format("Installation of %s fails with error code %s", packageName, result));
             case PackageInstaller.STATUS_SUCCESS:
                 countDownLatch.countDown();
                 context.unregisterReceiver(this);
                 break;
             default:
-                Log.w(TAG, String.format("Status (%s) of package installation (%s) not handler",
+                Log.w(TAG, String.format("Status (%s) of package installation (%s) not handle",
                         result,
                         packageName));
                 break;
@@ -72,9 +73,9 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
     }
 
 
-    PackageInstallerBroadcastReceiver(int sessionId, CountDownLatch countDownLatch, AtomicBoolean installWithoutErrors) {
+    PackageInstallerBroadcastReceiver(int sessionId, CountDownLatch countDownLatch, List<String> errorMessages) {
         this.sessionId = sessionId;
         this.countDownLatch = countDownLatch;
-        this.installWithoutErrors = installWithoutErrors;
+        this.errorMessages = errorMessages;
     }
 }

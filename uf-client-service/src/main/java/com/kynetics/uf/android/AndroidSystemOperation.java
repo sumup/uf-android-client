@@ -12,17 +12,24 @@
 package com.kynetics.uf.android;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.kynetics.updatefactory.ddiclient.core.model.FileInfo;
 import com.kynetics.updatefactory.ddiclient.core.servicecallback.SystemOperation;
 
 import java.io.InputStream;
 
+import static com.kynetics.uf.android.UpdateSystem.clearApkUpdate;
+import static com.kynetics.uf.android.UpdateSystem.clearOtaUpdate;
+
+
 /**
  * @author Daniele Sergio
  */
 
 public class AndroidSystemOperation implements SystemOperation {
+    private static final String TAG = AndroidSystemOperation.class.getSimpleName();
+
     private UpdateStatus updateStatus;
     private boolean isOtaUpdateExecuted;
     private final Context context;
@@ -30,7 +37,7 @@ public class AndroidSystemOperation implements SystemOperation {
     private boolean osFound;
 
     AndroidSystemOperation(Context context, boolean isOtaUpdateExecuted) {
-        this.updateStatus = UpdateStatus.NOT_APPLIED;
+        this.updateStatus = UpdateStatus.newPendingStatus();
         this.context = context;
         this.isOtaUpdateExecuted = isOtaUpdateExecuted;
         resetApkOsFlag();
@@ -39,7 +46,7 @@ public class AndroidSystemOperation implements SystemOperation {
     @Override
     public boolean savingFile(InputStream inputStream, FileInfo fileInfo) {
         isOtaUpdateExecuted = false;
-        this.updateStatus = UpdateStatus.NOT_APPLIED;
+        this.updateStatus = UpdateStatus.newPendingStatus();
         final String fileName = fileInfo.getLinkInfo().getFileName();
         return fileName.endsWith("apk") ?
                 copyApkFile(inputStream, fileName)
@@ -47,12 +54,12 @@ public class AndroidSystemOperation implements SystemOperation {
     }
 
     private boolean copyOsFile(InputStream inputStream) {
-        apkFound = true;
+        osFound = true;
         return UpdateSystem.copyFile(inputStream);
     }
 
     private boolean copyApkFile(InputStream inputStream, String fileName) {
-        osFound = true;
+        apkFound = true;
         return UpdateSystem.copyApkFile(context, inputStream, fileName);
     }
 
@@ -60,7 +67,7 @@ public class AndroidSystemOperation implements SystemOperation {
     public void executeUpdate(long updateId) {
         if(apkFound && osFound){
             resetApkOsFlag();
-            updateStatus = UpdateStatus.APPLIED_WITH_ERROR;
+            updateStatus = UpdateStatus.newFailureStatus(new String[]{"Update os with application is not yet supported"});
         } else if(UpdateSystem.apkToInstall(context)){
             resetApkOsFlag();
             updateApp();
@@ -68,25 +75,25 @@ public class AndroidSystemOperation implements SystemOperation {
             resetApkOsFlag();
             updateOta(updateId);
         }
+
+        clearOtaUpdate();
+        clearApkUpdate(context);
     }
 
     private void updateOta(long updateId) {
         if(UpdateSystem.verify()){
             UpdateSystem.install(context, updateId);
         } else {
-            updateStatus = UpdateStatus.APPLIED_WITH_ERROR;
+            updateStatus = UpdateStatus.newFailureStatus(new String[]{"Wrong ota signature"});
         }
     }
 
     private void updateApp(){
         try {
-            if(UpdateSystem.installApk(context)){
-                updateStatus = UpdateStatus.SUCCESSFULLY_APPLIED;
-            } else {
-                updateStatus = UpdateStatus.APPLIED_WITH_ERROR;
-            }
+            updateStatus = UpdateSystem.installApk(context);
         } catch (InterruptedException e) {
             Log.i(TAG, e.getMessage(), e);
+            updateStatus = UpdateStatus.newFailureStatus(new String[]{"Time to update exceeds the timeout"});
         }
     }
 

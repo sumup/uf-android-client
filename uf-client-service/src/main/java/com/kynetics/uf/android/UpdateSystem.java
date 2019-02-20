@@ -38,9 +38,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.kynetics.updatefactory.ddiclient.core.servicecallback.SystemOperation.UpdateStatus.newFailureStatus;
+import static com.kynetics.updatefactory.ddiclient.core.servicecallback.SystemOperation.UpdateStatus.newSuccessStatus;
 
 /**
  * @author Daniele Sergio
@@ -53,12 +57,22 @@ public class UpdateSystem {
     private static final String UPDATE_APK_FOLDER = "updateApplication";
 
     static boolean copyFile(InputStream inputStream){
+        clearOtaUpdate();
+        return write(inputStream, new File(getPath(OTA_FILE_NAME)));
+    }
+
+    public static void clearOtaUpdate(){
         final File packageFile = new File(getPath(OTA_FILE_NAME));
         if (packageFile.exists()) {
             packageFile.delete();
         }
+    }
 
-        return write(inputStream, packageFile);
+    public static void clearApkUpdate(Context context){
+        final File updateDirectory = new File(context.getFilesDir(), UPDATE_APK_FOLDER);
+        for(File file : updateDirectory.listFiles()) {
+            file.delete();
+        }
     }
 
     static boolean copyApkFile(Context context, InputStream inputStream, String fileName){
@@ -143,37 +157,38 @@ public class UpdateSystem {
     static SystemOperation.UpdateStatus successInstallation() {
         try (BufferedReader fileInputStream = new BufferedReader(new FileReader(new File("/cache/recovery", "last_install")))) {
             fileInputStream.readLine();
-            return Integer.parseInt(fileInputStream.readLine()) == 1 ?
-                    SystemOperation.UpdateStatus.SUCCESSFULLY_APPLIED :
-                    SystemOperation.UpdateStatus.APPLIED_WITH_ERROR;
+            final int resultCode = Integer.parseInt(fileInputStream.readLine());
+            return resultCode  == 1 ? SystemOperation.UpdateStatus.newSuccessStatus(null) :
+                    newFailureStatus(new String[] {String.format("last_install result code: %s",resultCode)});
         }catch (IOException exception){
             Log.e(TAG, "installation error", exception);
-            return SystemOperation.UpdateStatus.APPLIED_WITH_ERROR;
+            return newFailureStatus(new String[] {
+                    String.format("Installation fails with exception: %s", exception.getMessage())});
         }
     }
 
 
-    static boolean installApk(Context context) throws InterruptedException {
+    static SystemOperation.UpdateStatus installApk(Context context) throws InterruptedException {
         if(android.os.Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP){
-            return false;
+            return newFailureStatus(new String[]{String.format("Installation of apk is not supported from device with android system api lower than %s (current is %s)",Build.VERSION_CODES.LOLLIPOP, android.os.Build.VERSION.SDK_INT) });
         }
 
         final File updateDirectory = new File(context.getFilesDir(), UPDATE_APK_FOLDER);
 
         if(!updateDirectory.exists()){
-            return true;
+            return newFailureStatus(new String[]{"Apk not found"});
         }
 
-        final AtomicBoolean installWithoutErrors = new AtomicBoolean(true);
+        final List<String> errorMessages = new ArrayList<>();
 
         final CountDownLatch countDownLatch = new CountDownLatch(updateDirectory.listFiles().length);
         for(File file : updateDirectory.listFiles()){
             if(file.getName().endsWith("apk")){
                 try {
                     Log.d(TAG, String.format("installing apk named %s", file.getName()));
-                    installPackage(context, file, getPackageFromApk(context, file.getAbsolutePath()), countDownLatch, installWithoutErrors);
+                    installPackage(context, file, getPackageFromApk(context, file.getAbsolutePath()), countDownLatch, errorMessages);
                 } catch (IOException | IllegalArgumentException e) {
-                    installWithoutErrors.set(false);
+                    errorMessages.add(String.format("%s installation fails with error %s", file.getName(), e.getMessage()));
                     Log.d(TAG, String.format("Failed to install %s", file.getName()));
                     Log.d(TAG, e.getMessage(), e);
                 }
@@ -190,7 +205,7 @@ public class UpdateSystem {
                 .FixedTimeProvider./**/ofSeconds(1800).getTimeout(null); // TODO: 20/02/19 make seconds configurables
         countDownLatch.await(timeout.value, timeout.timeUnit);
 
-        return installWithoutErrors.get();
+        return errorMessages.size() == 0 ? newSuccessStatus(null) : newFailureStatus(errorMessages.toArray(new String[0]));
     }
 
     public static boolean apkToInstall(Context context){
@@ -204,7 +219,7 @@ public class UpdateSystem {
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    static void installPackage(Context context, File file, String packageName, CountDownLatch countDownLatch, AtomicBoolean installWithoutErrors)
+    static void installPackage(Context context, File file, String packageName, CountDownLatch countDownLatch, List<String> errorMessages)
             throws IOException {
         try{
             Looper.prepare();
@@ -216,7 +231,7 @@ public class UpdateSystem {
                 context,
                 countDownLatch,
                 packageName,
-                installWithoutErrors
+                errorMessages
         );
         installerSession.writeSession(file,  packageName);
         installerSession.commitSession();
