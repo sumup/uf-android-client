@@ -197,7 +197,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .withTenant(tenant)
                         .withControllerId(controllerId)
                         .withInitialState(initialState)
-                        .withSystemOperation(new AndroidSystemOperation(getApplicationContext(), initialState.getStateName() == AbstractState.StateName.UPDATE_STARTED))
+                        .withSystemOperation(new AndroidSystemOperation(getApplicationContext(), initialState.getStateName() == AbstractState.StateName.UPDATE_STARTED, sharedPreferences))
                         .withTargetData(()->finalTargetAttributes)
                         .withUserInteraction(userInteraction)
                         .build();
