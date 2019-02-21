@@ -66,8 +66,8 @@ import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AU
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_CONFIGURE_SERVICE;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_REGISTER_CLIENT;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_RESUME_SUSPEND_UPGRADE;
-import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_STATUS;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_CONFIGURATION_STATUS;
+import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_STATUS;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNC_REQUEST;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_UNREGISTER_CLIENT;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY;
@@ -197,7 +197,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                         .withTenant(tenant)
                         .withControllerId(controllerId)
                         .withInitialState(initialState)
-                        .withSystemOperation(new AndroidSystemOperation(getApplicationContext(), initialState.getStateName() == AbstractState.StateName.UPDATE_STARTED, sharedPreferences))
+                        .withSystemOperation(new AndroidSystemOperation(getApplicationContext(), initialState.getStateName() == AbstractState.StateName.UPDATE_STARTED))
                         .withTargetData(()->finalTargetAttributes)
                         .withUserInteraction(userInteraction)
                         .build();

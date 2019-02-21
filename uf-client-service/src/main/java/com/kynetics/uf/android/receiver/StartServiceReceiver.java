@@ -17,15 +17,21 @@ import android.content.Intent;
 
 import com.kynetics.uf.android.UpdateFactoryService;
 import com.kynetics.uf.android.apicomptibility.ApiVersion;
+import com.kynetics.uf.android.update.CurrentUpdateState;
 
 public class StartServiceReceiver extends BroadcastReceiver {
 
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent != null && (Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())
-                ||  Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction()))) {
+        if(intent == null){
+            return;
+        }
+        final String action = intent.getAction();
+        final boolean ufServiceIsUpdated = Intent.ACTION_MY_PACKAGE_REPLACED.equals(action);
+        if (ufServiceIsUpdated || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
             final Intent myIntent = new Intent(context, UpdateFactoryService.class);
+            new CurrentUpdateState(context).setUpdateUpdated(ufServiceIsUpdated);
             ApiVersion.fromVersionCode().startService(context, myIntent);
         }
     }

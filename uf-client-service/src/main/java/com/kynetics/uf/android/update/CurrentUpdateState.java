@@ -24,6 +24,7 @@ public class CurrentUpdateState {
     private static final String SHARED_PREFERENCES_FILE_NAME = "CURRENT_UPDATE_STATE";
     private static final String OTA_IS_FOUND_KEY = "OTA_IS_FOUND";
     private static final String APK_IS_FOUND_KEY = "APK_IS_FOUND";
+    private static final String UF_SERVICE_IS_UPDATED_KEY = "UF_SERVICE_IS_UPDATED";
 
     private final SharedPreferences sharedPreferences;
 
@@ -48,10 +49,19 @@ public class CurrentUpdateState {
         sharedPreferences.edit().putBoolean(APK_IS_FOUND_KEY, true).apply();
     }
 
-    public void resetApkOsFlag(){
+    public boolean isUfServiceUpdated(){
+        return sharedPreferences.getBoolean(UF_SERVICE_IS_UPDATED_KEY, false);
+    }
+
+    public void setUpdateUpdated(boolean isUpdated){
+        sharedPreferences.edit().putBoolean(UF_SERVICE_IS_UPDATED_KEY,isUpdated).apply();
+    }
+
+    public void clearState(){
         sharedPreferences.edit()
                 .remove(OTA_IS_FOUND_KEY)
                 .remove(APK_IS_FOUND_KEY)
+                .remove(UF_SERVICE_IS_UPDATED_KEY)
                 .apply();
     }
 }
