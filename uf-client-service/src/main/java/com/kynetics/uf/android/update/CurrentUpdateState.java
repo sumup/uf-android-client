@@ -61,7 +61,7 @@ public class CurrentUpdateState {
         return sharedPreferences.getBoolean(UF_SERVICE_IS_UPDATED_KEY, false);
     }
 
-    public void setUpdateUpdated(boolean isUpdated){
+    public void setUFUpdated(boolean isUpdated){
         sharedPreferences.edit().putBoolean(UF_SERVICE_IS_UPDATED_KEY,isUpdated).apply();
     }
 

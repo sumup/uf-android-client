@@ -12,7 +12,6 @@
 package com.kynetics.uf.android;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.kynetics.uf.android.update.CurrentUpdateState;
@@ -70,9 +69,9 @@ public class AndroidSystemOperation implements SystemOperation {
             updateStatus = UpdateStatus.newFailureStatus(new String[]{"Update os with application is not yet supported"});
         } else if(currentUpdateState.isUfServiceUpdated()){
             currentUpdateState.incrementApkAlreadyInstalled();
-            currentUpdateState.setUpdateUpdated(false);
+            currentUpdateState.setUFUpdated(false);
             updateApp();
-        } if(UpdateSystem.apkToInstall(context)) {
+        } else if(UpdateSystem.apkToInstall(context)) {
             updateApp();
         } else {
             updateOta(updateId);
