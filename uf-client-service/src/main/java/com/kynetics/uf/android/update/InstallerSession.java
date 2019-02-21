@@ -26,7 +26,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -37,7 +37,7 @@ public class InstallerSession {
     public static InstallerSession newInstance(Context context,
                                                CountDownLatch countDownLatch,
                                                String packageName,
-                                               List<String> errorMessages) throws IOException {
+                                               CurrentUpdateState currentUpdateState) throws IOException {
         final PackageInstaller packageInstaller = context.getPackageManager()
                 .getPackageInstaller();
         final PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
@@ -47,7 +47,7 @@ public class InstallerSession {
         context.registerReceiver(new PackageInstallerBroadcastReceiver(
                         sessionId,
                         countDownLatch,
-                        errorMessages),
+                        currentUpdateState),
                 new IntentFilter(InstallerSession.ACTION_INSTALL_COMPLETE));
         return new InstallerSession(context, packageInstaller, sessionId);
     }

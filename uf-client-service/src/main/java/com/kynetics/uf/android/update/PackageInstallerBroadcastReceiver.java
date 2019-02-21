@@ -19,9 +19,8 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static android.content.pm.PackageInstaller.EXTRA_PACKAGE_NAME;
 
@@ -32,7 +31,7 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
     private static final int SESSION_ID_NOT_FOUND = -1;
     private final int sessionId;
     private final CountDownLatch countDownLatch;
-    private final List<String> errorMessages;
+    private final CurrentUpdateState currentUpdateState;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -57,8 +56,11 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
             case PackageInstaller.STATUS_FAILURE_INCOMPATIBLE:
             case PackageInstaller.STATUS_FAILURE_INVALID:
             case PackageInstaller.STATUS_FAILURE_STORAGE:
-                errorMessages.add(String.format("Installation of %s fails with error code %s", packageName, result));
+                final Set<String> messages = currentUpdateState.getDistributionReportError();
+                messages.add(String.format("Installation of %s fails with error code %s", packageName, result));
+                currentUpdateState.setDistributionReportError(messages);
             case PackageInstaller.STATUS_SUCCESS:
+                currentUpdateState.incrementApkAlreadyInstalled();
                 countDownLatch.countDown();
                 context.unregisterReceiver(this);
                 break;
@@ -73,9 +75,9 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
     }
 
 
-    PackageInstallerBroadcastReceiver(int sessionId, CountDownLatch countDownLatch, List<String> errorMessages) {
+    PackageInstallerBroadcastReceiver(int sessionId, CountDownLatch countDownLatch, CurrentUpdateState currentUpdateState) {
         this.sessionId = sessionId;
         this.countDownLatch = countDownLatch;
-        this.errorMessages = errorMessages;
+        this.currentUpdateState = currentUpdateState;
     }
 }

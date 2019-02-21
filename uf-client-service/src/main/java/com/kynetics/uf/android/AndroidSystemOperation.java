@@ -68,10 +68,12 @@ public class AndroidSystemOperation implements SystemOperation {
     public void executeUpdate(long updateId) {
         if(currentUpdateState.getApkIsFound() && currentUpdateState.getOtaIsFound()){
             updateStatus = UpdateStatus.newFailureStatus(new String[]{"Update os with application is not yet supported"});
-        } else if(UpdateSystem.apkToInstall(context)) {
-            updateApp();
         } else if(currentUpdateState.isUfServiceUpdated()){
-            updateStatus = UpdateStatus.newSuccessStatus(null);
+            currentUpdateState.incrementApkAlreadyInstalled();
+            currentUpdateState.setUpdateUpdated(false);
+            updateApp();
+        } if(UpdateSystem.apkToInstall(context)) {
+            updateApp();
         } else {
             updateOta(updateId);
         }
@@ -92,7 +94,7 @@ public class AndroidSystemOperation implements SystemOperation {
 
     private void updateApp(){
         try {
-            updateStatus = UpdateSystem.installApk(context);
+            updateStatus = UpdateSystem.installApk(context, currentUpdateState);
         } catch (InterruptedException e) {
             Log.i(TAG, e.getMessage(), e);
             updateStatus = UpdateStatus.newFailureStatus(new String[]{e.getMessage()});

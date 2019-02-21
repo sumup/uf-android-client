@@ -452,7 +452,10 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
                 }
 
-                mNotificationManager.notify(NOTIFICATION_ID,getNotification(notificationString));
+                if(mNotificationManager != null){
+                    mNotificationManager.notify(NOTIFICATION_ID,getNotification(notificationString));
+
+                }
             }
         }
     }

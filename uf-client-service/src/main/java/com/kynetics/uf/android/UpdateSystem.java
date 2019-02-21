@@ -22,6 +22,7 @@ import android.os.RecoverySystem;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
+import com.kynetics.uf.android.update.CurrentUpdateState;
 import com.kynetics.uf.android.update.InstallerSession;
 import com.kynetics.uf.android.update.UpdateConfirmationTimeoutProvider;
 import com.kynetics.updatefactory.ddiclient.core.servicecallback.SystemOperation;
@@ -39,8 +40,14 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 
 import static com.kynetics.updatefactory.ddiclient.core.servicecallback.SystemOperation.UpdateStatus.newFailureStatus;
@@ -168,7 +175,7 @@ public class UpdateSystem {
     }
 
 
-    static SystemOperation.UpdateStatus installApk(Context context) throws InterruptedException {
+    static SystemOperation.UpdateStatus installApk(Context context, CurrentUpdateState currentUpdateState) throws InterruptedException {
         if(android.os.Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP){
             return newFailureStatus(new String[]{String.format("Installation of apk is not supported from device with android system api lower than %s (current is %s)",Build.VERSION_CODES.LOLLIPOP, android.os.Build.VERSION.SDK_INT) });
         }
@@ -179,21 +186,35 @@ public class UpdateSystem {
             return newFailureStatus(new String[]{"Apk not found"});
         }
 
-        final List<String> errorMessages = new ArrayList<>();
 
-        final CountDownLatch countDownLatch = new CountDownLatch(updateDirectory.listFiles().length);
-        for(File file : updateDirectory.listFiles()){
+        final int numberOfApkToInstall = updateDirectory.listFiles().length - currentUpdateState.getApkAlreadyInstalled();
+        if(numberOfApkToInstall < 1){
+            return  getDistributionInstalletionResponse(currentUpdateState);
+        }
+        final CountDownLatch countDownLatch = new CountDownLatch(numberOfApkToInstall);
+        final TreeSet<File> fileOrdered = new TreeSet<>();
+        fileOrdered.addAll(Arrays.asList(updateDirectory.listFiles()));
+        final Iterator<File> fileIterator = fileOrdered.iterator();
+        for(int i=0; i<currentUpdateState.getApkAlreadyInstalled(); i++){
+            if(fileIterator.hasNext()){
+                fileIterator.next();
+            }
+        }
+        while (fileIterator.hasNext()){
+            final File file = fileIterator.next();
             if(file.getName().endsWith("apk")){
                 try {
                     Log.d(TAG, String.format("installing apk named %s", file.getName()));
-                    installPackage(context, file, getPackageFromApk(context, file.getAbsolutePath()), countDownLatch, errorMessages);
+                    installPackage(context, file, getPackageFromApk(context, file.getAbsolutePath()), countDownLatch, currentUpdateState);
                 } catch (IOException | IllegalArgumentException e) {
-                    errorMessages.add(String.format("%s installation fails with error %s", file.getName(), e.getMessage()));
+                    addErrorMessage(currentUpdateState, String.format("%s installation fails with error %s", file.getName(), e.getMessage()));
+                    currentUpdateState.incrementApkAlreadyInstalled();
                     countDownLatch.countDown();
                     Log.d(TAG, String.format("Failed to install %s", file.getName()));
                     Log.d(TAG, e.getMessage(), e);
                 }
             } else {
+                currentUpdateState.incrementApkAlreadyInstalled();
                 countDownLatch.countDown();
             }
         }
@@ -203,13 +224,29 @@ public class UpdateSystem {
         }
 
         final UpdateConfirmationTimeoutProvider.Timeout timeout = UpdateConfirmationTimeoutProvider
-                .FixedTimeProvider.ofSeconds(1800).getTimeout(null); // TODO: 20/02/19 make seconds configurables
+                .FixedTimeProvider.ofSeconds(1800).getTimeout(null);
 
         if(!countDownLatch.await(timeout.value, timeout.timeUnit)){
-            errorMessages.add("Time to update exceeds the timeout");
+            addErrorMessage(currentUpdateState,"Time to update exceeds the timeout");
         }
 
-        return errorMessages.size() == 0 ? newSuccessStatus(null) : newFailureStatus(errorMessages.toArray(new String[0]));
+        return  getDistributionInstalletionResponse(currentUpdateState);
+
+    }
+
+    private static SystemOperation.UpdateStatus getDistributionInstalletionResponse(CurrentUpdateState currentUpdateState) {
+        final Set<String> errors = currentUpdateState.getDistributionReportError();
+        final Set<String> success = currentUpdateState.getDistributionReportSuccess();
+        final Set<String> allReport = new HashSet<>();
+        allReport.addAll(errors);
+        allReport.addAll(success);
+        return errors.size() == 0 ? newSuccessStatus(allReport.toArray(new String[0])) : newFailureStatus(allReport.toArray(new String[0]));
+    }
+
+    private static void addErrorMessage(CurrentUpdateState currentUpdateState, String newErrorMessage){
+        final Set<String> errorMessages = currentUpdateState.getDistributionReportError();
+        errorMessages.add(newErrorMessage);
+        currentUpdateState.setDistributionReportError(errorMessages);
     }
 
     public static boolean apkToInstall(Context context){
@@ -223,7 +260,7 @@ public class UpdateSystem {
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    static void installPackage(Context context, File file, String packageName, CountDownLatch countDownLatch, List<String> errorMessages)
+    static void installPackage(Context context, File file, String packageName, CountDownLatch countDownLatch, CurrentUpdateState currentUpdateState)
             throws IOException {
         try{
             Looper.prepare();
@@ -235,11 +272,10 @@ public class UpdateSystem {
                 context,
                 countDownLatch,
                 packageName,
-                errorMessages
+                currentUpdateState
         );
         installerSession.writeSession(file,  packageName);
         installerSession.commitSession();
-        /**/
     }
 
     private static String getPackageFromApk(Context context, String apkPath){

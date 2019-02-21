@@ -13,8 +13,13 @@ package com.kynetics.uf.android.update;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.ArraySet;
 
 import com.kynetics.uf.android.BuildConfig;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_PACKAGE_NAME;
@@ -25,6 +30,9 @@ public class CurrentUpdateState {
     private static final String OTA_IS_FOUND_KEY = "OTA_IS_FOUND";
     private static final String APK_IS_FOUND_KEY = "APK_IS_FOUND";
     private static final String UF_SERVICE_IS_UPDATED_KEY = "UF_SERVICE_IS_UPDATED";
+    private static final String APK_ALREADY_INSTALLED_KEY = "APK_ALREADY_INSTALLED";
+    private static final String APK_DISTRIBUTION_REPORT_SUCCESS_KEY = "APK_DISTRIBUTION_REPORT_SUCCESS";
+    private static final String APK_DISTRIBUTION_REPORT_ERROR_KEY = "APK_DISTRIBUTION_REPORT_ERROR";
 
     private final SharedPreferences sharedPreferences;
 
@@ -57,11 +65,42 @@ public class CurrentUpdateState {
         sharedPreferences.edit().putBoolean(UF_SERVICE_IS_UPDATED_KEY,isUpdated).apply();
     }
 
+    public void incrementApkAlreadyInstalled(){
+        sharedPreferences.edit().putInt(APK_ALREADY_INSTALLED_KEY, getApkAlreadyInstalled() + 1).apply();
+    }
+
+    public int getApkAlreadyInstalled(){
+        return sharedPreferences.getInt(APK_ALREADY_INSTALLED_KEY, 0);
+    }
+
+    public Set<String> getDistributionReportError(){
+        return sharedPreferences.getStringSet(APK_DISTRIBUTION_REPORT_ERROR_KEY, new HashSet<>());
+    }
+
+    public void setDistributionReportError(Set<String> messages){
+        sharedPreferences.edit().putStringSet(APK_DISTRIBUTION_REPORT_ERROR_KEY, messages).apply();
+    }
+
+    public Set<String> getDistributionReportSuccess(){
+        return sharedPreferences.getStringSet(APK_DISTRIBUTION_REPORT_SUCCESS_KEY, new HashSet<>());
+    }
+
+    public void setDistributionReportSuccess(Set<String> messages){
+        sharedPreferences.edit().putStringSet(APK_DISTRIBUTION_REPORT_SUCCESS_KEY, messages).apply();
+    }
+
+
+
+
     public void clearState(){
         sharedPreferences.edit()
                 .remove(OTA_IS_FOUND_KEY)
                 .remove(APK_IS_FOUND_KEY)
                 .remove(UF_SERVICE_IS_UPDATED_KEY)
+                .remove(APK_ALREADY_INSTALLED_KEY)
+                .remove(APK_DISTRIBUTION_REPORT_SUCCESS_KEY)
+                .remove(APK_DISTRIBUTION_REPORT_ERROR_KEY)
                 .apply();
     }
+
 }
