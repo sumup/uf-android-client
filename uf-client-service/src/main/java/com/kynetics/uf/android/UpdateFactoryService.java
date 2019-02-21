@@ -453,7 +453,7 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
                 }
 
-                if(newState.getStateName() == AbstractState.StateName.WAITING &&
+                if(newState!=null && newState.getStateName() == AbstractState.StateName.WAITING &&
                         !((WaitingState)newState).hasInnerState()){
                     new CurrentUpdateState(getApplicationContext()).clearState(); //todo refactor: workaround to reset state when an update is cancelled
                 }
