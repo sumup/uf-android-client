@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.kynetics.uf.android.update.CurrentUpdateState;
 import com.kynetics.updatefactory.ddiclient.core.model.FileInfo;
 import com.kynetics.updatefactory.ddiclient.core.servicecallback.SystemOperation;
 
@@ -34,17 +35,13 @@ public class AndroidSystemOperation implements SystemOperation {
     private UpdateStatus updateStatus;
     private boolean isOtaUpdateExecuted;
     private final Context context;
+    private final CurrentUpdateState currentUpdateState;
 
-    private static final String OTA_IS_FOUND_KEY = "OTA_IS_FOUND";
-    private static final String APK_IS_FOUND_KEY = "APK_IS_FOUND";
-
-    private final SharedPreferences sharedPreferences;
-
-    AndroidSystemOperation(Context context, boolean isOtaUpdateExecuted, SharedPreferences sharedPreferences) {
+    AndroidSystemOperation(Context context, boolean isOtaUpdateExecuted) {
         this.updateStatus = UpdateStatus.newPendingStatus();
         this.context = context;
         this.isOtaUpdateExecuted = isOtaUpdateExecuted;
-        this.sharedPreferences = sharedPreferences;
+        this.currentUpdateState = new CurrentUpdateState(context);
     }
 
     @Override
@@ -58,25 +55,25 @@ public class AndroidSystemOperation implements SystemOperation {
     }
 
     private boolean copyOsFile(InputStream inputStream) {
-        setOtaIsFoundToTrue();
+        currentUpdateState.setOtaIsFoundToTrue();
         return UpdateSystem.copyFile(inputStream);
     }
 
     private boolean copyApkFile(InputStream inputStream, String fileName) {
-        setApkIsFoundTrue();
+        currentUpdateState.setApkIsFoundTrue();
         return UpdateSystem.copyApkFile(context, inputStream, fileName);
     }
 
     @Override
     public void executeUpdate(long updateId) {
-        if(getApkIsFound() && getOtaIsFound()){
-            resetApkOsFlag();
+        if(currentUpdateState.getApkIsFound() && currentUpdateState.getOtaIsFound()){
+            currentUpdateState.resetApkOsFlag();
             updateStatus = UpdateStatus.newFailureStatus(new String[]{"Update os with application is not yet supported"});
         } else if(UpdateSystem.apkToInstall(context)){
-            resetApkOsFlag();
+            currentUpdateState.resetApkOsFlag();
             updateApp();
         } else {
-            resetApkOsFlag();
+            currentUpdateState.resetApkOsFlag();
             updateOta(updateId);
         }
 
@@ -104,28 +101,5 @@ public class AndroidSystemOperation implements SystemOperation {
     @Override
     public UpdateStatus updateStatus() {
         return isOtaUpdateExecuted ? UpdateSystem.successInstallation() : updateStatus;
-    }
-
-    private boolean getOtaIsFound(){
-        return sharedPreferences.getBoolean(OTA_IS_FOUND_KEY, false);
-    }
-
-    private void setOtaIsFoundToTrue(){
-        sharedPreferences.edit().putBoolean(OTA_IS_FOUND_KEY, true).apply();
-    }
-
-    private boolean getApkIsFound(){
-        return sharedPreferences.getBoolean(APK_IS_FOUND_KEY, false);
-    }
-
-    private void setApkIsFoundTrue(){
-        sharedPreferences.edit().putBoolean(APK_IS_FOUND_KEY, true).apply();
-    }
-
-    private void resetApkOsFlag(){
-        sharedPreferences.edit()
-                .remove(OTA_IS_FOUND_KEY)
-                .remove(APK_IS_FOUND_KEY)
-                .apply();
     }
 }
