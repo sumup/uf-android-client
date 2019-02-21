@@ -36,6 +36,7 @@ import com.kynetics.uf.android.apicomptibility.ApiVersion;
 import com.kynetics.uf.android.configuration.ConfigurationFileLoader;
 import com.kynetics.uf.android.content.SharedPreferencesWithObject;
 import com.kynetics.uf.android.ui.MainActivity;
+import com.kynetics.uf.android.update.CurrentUpdateState;
 import com.kynetics.updatefactory.ddiclient.api.ClientBuilder;
 import com.kynetics.updatefactory.ddiclient.api.ServerType;
 import com.kynetics.updatefactory.ddiclient.api.api.DdiRestApi;
@@ -452,10 +453,15 @@ public class UpdateFactoryService extends Service implements UpdateFactoryServic
                     writeObjectToSharedPreference(eventNotify.getNewState(), sharedPreferencesCurrentStateKey);
                 }
 
+                if(newState.getStateName() == AbstractState.StateName.WAITING &&
+                        !((WaitingState)newState).hasInnerState()){
+                    new CurrentUpdateState(getApplicationContext()).clearState(); //todo refactor: workaround to reset state when an update is cancelled
+                }
+
                 if(mNotificationManager != null){
                     mNotificationManager.notify(NOTIFICATION_ID,getNotification(notificationString));
-
                 }
+
             }
         }
     }
