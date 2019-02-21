@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Looper;
 import android.os.RecoverySystem;
+import android.os.StatFs;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
@@ -186,14 +187,29 @@ public class UpdateSystem {
             return newFailureStatus(new String[]{"Apk not found"});
         }
 
-
-        final int numberOfApkToInstall = updateDirectory.listFiles().length - currentUpdateState.getApkAlreadyInstalled();
+        final File[] files = updateDirectory.listFiles();
+        final int numberOfApkToInstall = files.length - currentUpdateState.getApkAlreadyInstalled();
         if(numberOfApkToInstall < 1){
             return  getDistributionInstalletionResponse(currentUpdateState);
         }
+
+        long memoryNeeded = 0;
+        for(int i =0; i< files.length; i++){
+            if(i>=currentUpdateState.getApkAlreadyInstalled()){
+                memoryNeeded += files[i].length();
+            }
+        }
+
+        final long freeSpace = getFreeSpace( Environment.getDataDirectory());
+        Log.i(TAG, String.format("FreeSpace: %s; Space needed: %s", freeSpace, memoryNeeded));
+        if(memoryNeeded * 2 > freeSpace){
+            return newFailureStatus(new String[]{"Not enough space available"});
+        }
+
+
         final CountDownLatch countDownLatch = new CountDownLatch(numberOfApkToInstall);
         final TreeSet<File> fileOrdered = new TreeSet<>();
-        fileOrdered.addAll(Arrays.asList(updateDirectory.listFiles()));
+        fileOrdered.addAll(Arrays.asList(files));
         final Iterator<File> fileIterator = fileOrdered.iterator();
         for(int i=0; i<currentUpdateState.getApkAlreadyInstalled(); i++){
             if(fileIterator.hasNext()){
@@ -219,7 +235,7 @@ public class UpdateSystem {
             }
         }
 
-        for(File file : updateDirectory.listFiles()) {
+        for(File file : files) {
             file.delete();
         }
 
@@ -232,6 +248,15 @@ public class UpdateSystem {
 
         return  getDistributionInstalletionResponse(currentUpdateState);
 
+    }
+
+    public static long getFreeSpace(File path){
+        StatFs stat = new StatFs(path.getPath());
+        long availBlocks = stat.getAvailableBlocksLong();
+        long blockSize = stat.getBlockSizeLong();
+        long free_memory = availBlocks * blockSize;
+
+        return free_memory;
     }
 
     private static SystemOperation.UpdateStatus getDistributionInstalletionResponse(CurrentUpdateState currentUpdateState) {

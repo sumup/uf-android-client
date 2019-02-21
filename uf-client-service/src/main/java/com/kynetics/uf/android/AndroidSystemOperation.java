@@ -12,6 +12,7 @@
 package com.kynetics.uf.android;
 
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 
 import com.kynetics.uf.android.update.CurrentUpdateState;
@@ -22,6 +23,7 @@ import java.io.InputStream;
 
 import static com.kynetics.uf.android.UpdateSystem.clearApkUpdate;
 import static com.kynetics.uf.android.UpdateSystem.clearOtaUpdate;
+import static com.kynetics.uf.android.UpdateSystem.getFreeSpace;
 
 
 /**
@@ -103,5 +105,12 @@ public class AndroidSystemOperation implements SystemOperation {
     @Override
     public UpdateStatus updateStatus() {
         return isOtaUpdateExecuted ? UpdateSystem.successInstallation() : updateStatus;
+    }
+
+    @Override
+    public boolean checkSpace(long spaceNeeded) {
+        final long freeSpace = getFreeSpace( Environment.getDownloadCacheDirectory());
+        Log.i(TAG, String.format("FreeSpace: %s; Space needed: %s", freeSpace, spaceNeeded));
+        return freeSpace > spaceNeeded;//todo make it configurable
     }
 }

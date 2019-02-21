@@ -18,7 +18,7 @@ android {
         applicationId "com.kynetics.uf.clientexample"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 17
+        versionCode 18
         versionName versionFromGit(project)
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
