@@ -24,18 +24,18 @@ import java.net.URI
 enum class VariableEvaluation {
 
     FILE {
-        override fun variableEvaluation(uri: URI, context: Context): String? {
+        override fun evaluate(uri: URI, context: Context): String? {
             return File(uri.path).bufferedReader().readLine().trim()
         }
     },
 
     PROPERTY {
-        override fun variableEvaluation(uri: URI, context: Context): String? {
+        override fun evaluate(uri: URI, context: Context): String? {
             return PROPERTIES[uri.schemeSpecificPart]?.invoke(context)
         }
     };
 
-    protected abstract fun variableEvaluation(uri: URI, context: Context): String?
+    protected abstract fun evaluate(uri: URI, context: Context): String?
 
 
     companion object {
@@ -54,7 +54,7 @@ enum class VariableEvaluation {
             return try{
                 val uri = URI.create(variable)
                 VariableEvaluation.valueOf(uri.scheme.toUpperCase())
-                        .variableEvaluation(uri, context)
+                        .evaluate(uri, context)
                         ?: (DEFAULT(context))
 
             } catch (e: IllegalArgumentException){
