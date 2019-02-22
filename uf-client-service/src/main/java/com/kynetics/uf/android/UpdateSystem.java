@@ -78,6 +78,9 @@ public class UpdateSystem {
 
     public static void clearApkUpdate(Context context){
         final File updateDirectory = new File(context.getFilesDir(), UPDATE_APK_FOLDER);
+        if(!updateDirectory.exists()){
+            return;
+        }
         for(File file : updateDirectory.listFiles()) {
             file.delete();
         }
