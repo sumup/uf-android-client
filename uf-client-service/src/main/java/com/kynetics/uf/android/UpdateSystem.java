@@ -20,6 +20,7 @@ import android.os.Environment;
 import android.os.Looper;
 import android.os.RecoverySystem;
 import android.os.StatFs;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
@@ -40,12 +41,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
@@ -57,70 +55,45 @@ import static com.kynetics.updatefactory.ddiclient.core.servicecallback.SystemOp
 /**
  * @author Daniele Sergio
  */
-public class UpdateSystem {
+class UpdateSystem {
     private static final String TAG = UpdateSystem.class.getSimpleName();
 
     private static final String OTA_FILE_NAME = "update.zip";
     private static final String UPDATE_PENDING_FILE_NAME = "update_pending";
     private static final String UPDATE_APK_FOLDER = "updateApplication";
 
-    static boolean copyFile(InputStream inputStream){
+    static boolean copyOtaFile(InputStream inputStream){
         clearOtaUpdate();
         return write(inputStream, new File(getPath(OTA_FILE_NAME)));
     }
 
-    public static void clearOtaUpdate(){
-        final File packageFile = new File(getPath(OTA_FILE_NAME));
-        if (packageFile.exists()) {
-            packageFile.delete();
-        }
+    static void clearOtaUpdate(){
+        logWarnIfDeletionFails(new File(getPath(OTA_FILE_NAME)));
     }
 
-    public static void clearApkUpdate(Context context){
-        final File updateDirectory = new File(context.getFilesDir(), UPDATE_APK_FOLDER);
+    static void clearApkUpdate(Context context){
+        final File updateDirectory = getUpdateApkFolder(context);
         if(!updateDirectory.exists()){
             return;
         }
+
         for(File file : updateDirectory.listFiles()) {
-            file.delete();
+            logWarnIfDeletionFails(file);
         }
     }
 
     static boolean copyApkFile(Context context, InputStream inputStream, String fileName){
-        final File updateFolder = new File(context.getFilesDir(),  UPDATE_APK_FOLDER);
-        if(!updateFolder.exists()){
-            updateFolder.mkdir();
+        final File updateFolder = getUpdateApkFolder(context);
+        if(!updateFolder.exists() && !updateFolder.mkdir()){
+            return false;
         }
 
-
-        final File apkFile = new File(updateFolder,  fileName);
-        if(apkFile.exists()){
-            apkFile.delete();
+        final File destinationFile = new File(updateFolder, fileName);
+        if(!deleteFileIfExists(destinationFile)){
+            return false;
         }
 
-        return write(inputStream, apkFile);
-    }
-
-    private static boolean write(InputStream inputStream, File outputStream) {
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
-        try (FileChannel dest = (new FileOutputStream(outputStream)).getChannel();
-             InputStream src = inputStream;
-             ReadableByteChannel source = Channels.newChannel(src)
-        ){
-            while (source.read(buffer) != -1) {
-                buffer.flip();
-                dest.write(buffer);
-                buffer.compact();
-            }
-            buffer.flip();
-            while (buffer.hasRemaining()) {
-                dest.write(buffer);
-            }
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to copy update file into internal storage ", e);
-        }
-        return false;
+        return write(inputStream, destinationFile);
     }
 
     static Long getUpdatePendingId(){
@@ -135,9 +108,9 @@ public class UpdateSystem {
                 updatePendingId = Long.decode(line);
             }
         } catch (FileNotFoundException | NumberFormatException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getMessage(), e);
         }
-        file.delete();
+        logWarnIfDeletionFails(file);
         return updatePendingId;
     }
 
@@ -148,7 +121,7 @@ public class UpdateSystem {
             return true;
         }
         catch (Exception e) {
-            Log.e(TAG, "Corrupted package: " + e);
+            Log.e(TAG, "Corrupted package", e);
             return false;
         }
     }
@@ -178,13 +151,13 @@ public class UpdateSystem {
         }
     }
 
-
-    static SystemOperation.UpdateStatus installApk(Context context, CurrentUpdateState currentUpdateState) throws InterruptedException {
+    // TODO: 22/02/19 refactor
+    static SystemOperation.UpdateStatus installApplications(Context context, CurrentUpdateState currentUpdateState) throws InterruptedException {
         if(android.os.Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP){
             return newFailureStatus(new String[]{String.format("Installation of apk is not supported from device with android system api lower than %s (current is %s)",Build.VERSION_CODES.LOLLIPOP, android.os.Build.VERSION.SDK_INT) });
         }
 
-        final File updateDirectory = new File(context.getFilesDir(), UPDATE_APK_FOLDER);
+        final File updateDirectory = getUpdateApkFolder(context);
 
         if(!updateDirectory.exists()){
             return newFailureStatus(new String[]{"Apk not found"});
@@ -211,8 +184,7 @@ public class UpdateSystem {
 
 
         final CountDownLatch countDownLatch = new CountDownLatch(numberOfApkToInstall);
-        final TreeSet<File> fileOrdered = new TreeSet<>();
-        fileOrdered.addAll(Arrays.asList(files));
+        final TreeSet<File> fileOrdered = new TreeSet<>(Arrays.asList(files));
         final Iterator<File> fileIterator = fileOrdered.iterator();
         for(int i=0; i<currentUpdateState.getApkAlreadyInstalled(); i++){
             if(fileIterator.hasNext()){
@@ -224,7 +196,7 @@ public class UpdateSystem {
             if(file.getName().endsWith("apk")){
                 try {
                     Log.d(TAG, String.format("installing apk named %s", file.getName()));
-                    installPackage(context, file, getPackageFromApk(context, file.getAbsolutePath()), countDownLatch, currentUpdateState);
+                    installApk(context, file, getPackageFromApk(context, file.getAbsolutePath()), countDownLatch, currentUpdateState);
                 } catch (IOException | IllegalArgumentException e) {
                     addErrorMessage(currentUpdateState, String.format("%s installation fails with error %s", file.getName(), e.getMessage()));
                     currentUpdateState.incrementApkAlreadyInstalled();
@@ -239,7 +211,7 @@ public class UpdateSystem {
         }
 
         for(File file : files) {
-            file.delete();
+            logWarnIfDeletionFails(file);
         }
 
         final UpdateConfirmationTimeoutProvider.Timeout timeout = UpdateConfirmationTimeoutProvider
@@ -253,13 +225,14 @@ public class UpdateSystem {
 
     }
 
-    public static long getFreeSpace(File path){
-        StatFs stat = new StatFs(path.getPath());
-        long availBlocks = stat.getAvailableBlocksLong();
-        long blockSize = stat.getBlockSizeLong();
-        long free_memory = availBlocks * blockSize;
+    static boolean existApkToInstall(Context context){
+        final File updateDirectory = getUpdateApkFolder(context);
+        return updateDirectory.exists() && updateDirectory.listFiles().length > 0;
+    }
 
-        return free_memory;
+    static long getFreeSpace(File path){
+        final StatFs stat = new StatFs(path.getPath());
+        return stat.getAvailableBlocksLong() * stat.getBlockSizeLong();
     }
 
     private static SystemOperation.UpdateStatus getDistributionInstalletionResponse(CurrentUpdateState currentUpdateState) {
@@ -277,18 +250,13 @@ public class UpdateSystem {
         currentUpdateState.setDistributionReportError(errorMessages);
     }
 
-    public static boolean apkToInstall(Context context){
-        final File updateDirectory = new File(context.getFilesDir(), UPDATE_APK_FOLDER);
-        return updateDirectory.exists() && updateDirectory.listFiles().length > 0;
-    }
-
     private static String getPath(String fileName){
         return String.format("%s/%s",Environment.getDownloadCacheDirectory(), fileName);
     }
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    static void installPackage(Context context, File file, String packageName, CountDownLatch countDownLatch, CurrentUpdateState currentUpdateState)
+    private static void installApk(Context context, File file, String packageName, CountDownLatch countDownLatch, CurrentUpdateState currentUpdateState)
             throws IOException {
         try{
             Looper.prepare();
@@ -315,4 +283,48 @@ public class UpdateSystem {
         return null;
     }
 
+    private static boolean write(InputStream inputStream, File outputStream) {
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
+        try (FileChannel dest = (new FileOutputStream(outputStream)).getChannel();
+             InputStream src = inputStream;
+             ReadableByteChannel source = Channels.newChannel(src)
+        ){
+            while (source.read(buffer) != -1) {
+                buffer.flip();
+                dest.write(buffer);
+                buffer.compact();
+            }
+            buffer.flip();
+            while (buffer.hasRemaining()) {
+                dest.write(buffer);
+            }
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to copy update file into internal storage ", e);
+        }
+        return false;
+    }
+
+    private static boolean deleteFileIfExists(File file){
+        try {
+            if (file == null || !file.exists()) {
+                return true;
+            }
+            return file.delete();
+        } catch (SecurityException e){
+            Log.d(TAG, String.format("Delete file named %s throw exception",file.getName()), e);
+            return false;
+        }
+    }
+
+    private static void logWarnIfDeletionFails(File file){
+        if(!deleteFileIfExists(file)){
+            Log.w(TAG, String.format("Deletion of %s is failed", file.getName()));
+        }
+    }
+
+    @NonNull
+    private static File getUpdateApkFolder(Context context) {
+        return new File(context.getFilesDir(), UPDATE_APK_FOLDER);
+    }
 }

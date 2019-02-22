@@ -57,7 +57,7 @@ public class AndroidSystemOperation implements SystemOperation {
 
     private boolean copyOsFile(InputStream inputStream) {
         currentUpdateState.setOtaIsFoundToTrue();
-        return UpdateSystem.copyFile(inputStream);
+        return UpdateSystem.copyOtaFile(inputStream);
     }
 
     private boolean copyApkFile(InputStream inputStream, String fileName) {
@@ -73,7 +73,7 @@ public class AndroidSystemOperation implements SystemOperation {
             currentUpdateState.incrementApkAlreadyInstalled();
             currentUpdateState.setUFUpdated(false);
             updateApp();
-        } else if(UpdateSystem.apkToInstall(context)) {
+        } else if(UpdateSystem.existApkToInstall(context)) {
             updateApp();
         } else {
             updateOta(updateId);
@@ -95,7 +95,7 @@ public class AndroidSystemOperation implements SystemOperation {
 
     private void updateApp(){
         try {
-            updateStatus = UpdateSystem.installApk(context, currentUpdateState);
+            updateStatus = UpdateSystem.installApplications(context, currentUpdateState);
         } catch (InterruptedException e) {
             Log.i(TAG, e.getMessage(), e);
             updateStatus = UpdateStatus.newFailureStatus(new String[]{e.getMessage()});
