@@ -29,9 +29,11 @@ public class StartServiceReceiver extends BroadcastReceiver {
         }
         final String action = intent.getAction();
         final boolean ufServiceIsUpdated = Intent.ACTION_MY_PACKAGE_REPLACED.equals(action);
+        if(ufServiceIsUpdated){
+            new CurrentUpdateState(context).setUFUpdated();
+        }
         if (ufServiceIsUpdated || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
             final Intent myIntent = new Intent(context, UpdateFactoryService.class);
-            new CurrentUpdateState(context).setUFUpdated(ufServiceIsUpdated);
             ApiVersion.fromVersionCode().startService(context, myIntent);
         }
     }

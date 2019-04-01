@@ -28,7 +28,6 @@ import com.kynetics.uf.android.R;
 import com.kynetics.uf.android.UpdateFactoryService;
 import com.kynetics.uf.android.apicomptibility.ApiVersion;
 import com.kynetics.uf.android.content.SharedPreferencesWithObject;
-import com.kynetics.updatefactory.ddiclient.core.model.state.AbstractState;
 
 /**
  * A simple {@link PreferenceFragmentCompat} subclass.
@@ -150,7 +149,8 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
         }
 
         if(key.equals(getString(R.string.shared_preferences_current_state_key))){
-            preference.setSummary(getStateName(key, sharedPrefs));
+            //new client
+//            preference.setSummary(getStateName(key, sharedPrefs));
             return;
         }
 
@@ -161,14 +161,15 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
 
     }
 
-    private String getStateName(String key, SharedPreferences sharedPreferences){
+    //new client
+    /*private String getStateName(String key, SharedPreferences sharedPreferences){
         final SharedPreferencesWithObject sharedPrefs = new SharedPreferencesWithObject(sharedPreferences);
         AbstractState state = sharedPrefs.getObject(key, AbstractState.class);
         if(state != null){
             return state.getStateName().name();
         }
         return "";
-    }
+    }*/
 
     @Override
     public void onPause() {

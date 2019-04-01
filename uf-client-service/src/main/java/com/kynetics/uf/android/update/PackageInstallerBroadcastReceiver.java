@@ -19,7 +19,12 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
-import java.util.Set;
+import com.kynetics.updatefactory.ddiclient.core.api.Updater;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import static android.content.pm.PackageInstaller.EXTRA_PACKAGE_NAME;
@@ -32,6 +37,8 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
     private final int sessionId;
     private final CountDownLatch countDownLatch;
     private final CurrentUpdateState currentUpdateState;
+    private final Updater.SwModuleWithPath.Artifact artifact;
+    private final Updater.Messenger messenger;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -56,11 +63,19 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
             case PackageInstaller.STATUS_FAILURE_INCOMPATIBLE:
             case PackageInstaller.STATUS_FAILURE_INVALID:
             case PackageInstaller.STATUS_FAILURE_STORAGE:
-                final Set<String> messages = currentUpdateState.getDistributionReportError();
-                messages.add(String.format("Installation of %s fails with error code %s", packageName, result));
-                currentUpdateState.setDistributionReportError(messages);
+                final String errorMessage = String.format("Installation of %s (%s) fails with error code %s", artifact.getFilename(), packageName, result);
+                currentUpdateState.addErrorToRepor(errorMessage);
+                currentUpdateState.persistArtifactInstallationResult(artifact, new CurrentUpdateState.InstallationResult(Collections.singletonList(errorMessage)));
+                messenger.sendMessageToServer(errorMessage);
+                countDownLatch.countDown();
+                context.unregisterReceiver(this);
+                break;
+
             case PackageInstaller.STATUS_SUCCESS:
-                currentUpdateState.incrementApkAlreadyInstalled();
+                final String message = String.format("%s (%s) installed", artifact.getFilename(), packageName);
+                currentUpdateState.addSuccessMessageToRepor(message);
+                currentUpdateState.persistArtifactInstallationResult(artifact, new CurrentUpdateState.InstallationResult());
+                messenger.sendMessageToServer(message);
                 countDownLatch.countDown();
                 context.unregisterReceiver(this);
                 break;
@@ -75,9 +90,15 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
     }
 
 
-    PackageInstallerBroadcastReceiver(int sessionId, CountDownLatch countDownLatch, CurrentUpdateState currentUpdateState) {
+    PackageInstallerBroadcastReceiver(int sessionId,
+                                      CountDownLatch countDownLatch,
+                                      Updater.SwModuleWithPath.Artifact artifact,
+                                      CurrentUpdateState currentUpdateState,
+                                      Updater.Messenger messenger) {
         this.sessionId = sessionId;
         this.countDownLatch = countDownLatch;
         this.currentUpdateState = currentUpdateState;
+        this.artifact = artifact;
+        this.messenger = messenger;
     }
 }

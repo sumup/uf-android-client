@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization{
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            UpdateFactoryService.getUFServiceCommand().configureService();
+            UpdateFactoryService.getUfServiceCommand().configureService();
             finish();
         }
         return super.onOptionsItemSelected(item);
@@ -99,13 +99,13 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization{
 
     @Override
     public void onAuthorizationGrant() {
-        UpdateFactoryService.getUFServiceCommand().authorizationGranted();
+        UpdateFactoryService.getUfServiceCommand().authorizationGranted();
         finishActivity();
     }
 
     @Override
     public void onAuthorizationDenied() {
-        UpdateFactoryService.getUFServiceCommand().authorizationDenied();
+        UpdateFactoryService.getUfServiceCommand().authorizationDenied();
         finishActivity();
     }
 

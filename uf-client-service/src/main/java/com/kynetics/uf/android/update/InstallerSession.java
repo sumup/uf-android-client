@@ -21,6 +21,8 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
+import com.kynetics.updatefactory.ddiclient.core.api.Updater;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -37,6 +39,8 @@ public class InstallerSession {
     public static InstallerSession newInstance(Context context,
                                                CountDownLatch countDownLatch,
                                                String packageName,
+                                               Updater.SwModuleWithPath.Artifact artifact,
+                                               Updater.Messenger messenger,
                                                CurrentUpdateState currentUpdateState) throws IOException {
         final PackageInstaller packageInstaller = context.getPackageManager()
                 .getPackageInstaller();
@@ -47,7 +51,9 @@ public class InstallerSession {
         context.registerReceiver(new PackageInstallerBroadcastReceiver(
                         sessionId,
                         countDownLatch,
-                        currentUpdateState),
+                        artifact,
+                        currentUpdateState,
+                        messenger),
                 new IntentFilter(InstallerSession.ACTION_INSTALL_COMPLETE));
         return new InstallerSession(context, packageInstaller, sessionId);
     }
