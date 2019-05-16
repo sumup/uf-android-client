@@ -93,7 +93,7 @@ class OtaUpdater(private val context: Context) : Updater {
             else ->{
                 val message = "Wrong ota signature"
                 messenger.sendMessageToServer(message)
-                Log.w(ApkUpdater.TAG, message)
+                Log.w(TAG, message)
                 CurrentUpdateState.InstallationResult(listOf(message))
             }
         }
