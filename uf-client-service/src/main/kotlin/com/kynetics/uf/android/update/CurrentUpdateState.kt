@@ -18,6 +18,7 @@ import java.util.HashSet
 
 import android.content.Context.MODE_PRIVATE
 import android.os.Environment
+import android.os.SystemProperties
 import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
@@ -130,10 +131,37 @@ class CurrentUpdateState(context: Context) {
                 .remove(UF_SERVICE_IS_UPDATED_KEY)
                 .remove(APK_DISTRIBUTION_REPORT_SUCCESS_KEY)
                 .remove(APK_DISTRIBUTION_REPORT_ERROR_KEY)
+                .remove(LAST_SLOT_NAME_SHAREDPREFERENCES_KEY)
                 .apply()
     }
 
+    fun saveSlotName(){
+        val partionSlotName = SystemProperties.get(LAST_LOST_NAME_PROPERTY_KEY)
+        Log.d(TAG, "Using slot named: $partionSlotName")
+        sharedPreferences.edit()
+                .putString(LAST_SLOT_NAME_SHAREDPREFERENCES_KEY, partionSlotName)
+                .apply()
+    }
+
+    //todo refactor
+    fun lastABIntallationResult(artifact: Updater.SwModuleWithPath.Artifact):InstallationResult{
+        return try {
+            val currentSlotName = SystemProperties.get(LAST_LOST_NAME_PROPERTY_KEY)
+            val previousSlotName =  sharedPreferences.getString(LAST_SLOT_NAME_SHAREDPREFERENCES_KEY, "")
+            Log.d(TAG, "(current slot named, previous slot name) ($currentSlotName,$previousSlotName)")
+            val success = previousSlotName !=  currentSlotName
+            val response = if(success){InstallationResult()} else { InstallationResult(listOf("System reboot on the same partition"))}
+            persistArtifactInstallationResult(artifact, response)
+            response
+        } catch (e:Throwable){
+            Log.e(TAG, e.message, e)
+            InstallationResult(listOf("Installation fails with exception: ${e.message}"))
+        }
+    }
+
     companion object {
+        private const val LAST_LOST_NAME_PROPERTY_KEY = "ro.boot.slot_suffix"
+        private const val LAST_SLOT_NAME_SHAREDPREFERENCES_KEY = "slot_suffix"
         private const val TAG = "CurrentUpdateState"
         private val SHARED_PREFERENCES_FILE_NAME = "CURRENT_UPDATE_STATE"
         private val UF_SERVICE_IS_UPDATED_KEY = "UF_SERVICE_IS_UPDATED"
