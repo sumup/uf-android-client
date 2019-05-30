@@ -185,8 +185,6 @@ public class MainActivity extends AppCompatActivity
                     UFServiceMessage messageObj = (UFServiceMessage) msg.getData().getSerializable(SERVICE_DATA_KEY);
                     String messageString = String.format(MESSAGE_TEMPLATE,
                             messageObj.getDateTime(),
-                            messageObj.getOldState(),
-                            messageObj.getEventName(),
                             messageObj.getCurrentState());
                     ((UFServiceInteractionFragment) MainActivity.this.getSupportFragmentManager().findFragmentById(R.id.fragment_content))
                             .onMessageReceived(messageString);
@@ -376,5 +374,5 @@ public class MainActivity extends AppCompatActivity
     private FloatingActionButton mResumeUpdateFab;
     private NavigationView mNavigationView;
 
-    private static final String MESSAGE_TEMPLATE = "%s: (%s,%s) -> %s";
+    private static final String MESSAGE_TEMPLATE = "%s: %s";
 }
