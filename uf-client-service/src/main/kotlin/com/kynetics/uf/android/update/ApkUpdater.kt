@@ -14,16 +14,10 @@ package com.kynetics.uf.android.update
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Environment
 import android.os.StatFs
 import android.support.annotation.RequiresApi
 import android.util.Log
-import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import okhttp3.Dispatcher
 import java.io.File
 import java.util.concurrent.CountDownLatch
 
@@ -53,7 +47,7 @@ class ApkUpdater(private val context: Context) : Updater {
     override fun apply(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
         if(android.os.Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP) {
             val errorMessage = "Installation of apk is not supported from device with android system " +
-                    "api lower than ${Build.VERSION_CODES.LOLLIPOP} (current is ${android.os.Build.VERSION.SDK_INT})"
+                    "com.kynetics.uf.android.api lower than ${Build.VERSION_CODES.LOLLIPOP} (current is ${android.os.Build.VERSION.SDK_INT})"
             messenger.sendMessageToServer(errorMessage)
             Log.w(TAG,errorMessage)
             return false
