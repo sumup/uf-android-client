@@ -154,6 +154,10 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
             return;
         }
 
+        if(key.equals(getString(R.string.shared_preferences_system_update_type_key))){
+            preference.setSummary(sharedPrefs.getString(getString(R.string.shared_preferences_system_update_type_key),""));
+        }
+
         if(key.equals(getString(R.string.shared_preferences_retry_delay_key))){
             preference.setSummary(String.valueOf(sharedPrefs.getLong(key, 12_000)));
             return;
