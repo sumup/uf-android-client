@@ -51,22 +51,22 @@ data class UFServiceConfiguration (val tenant: String,
         private var targetToken: String? = null
         private var gatewayToken: String? = null
         private var targetAttributes: Map<String, String>? = null
-        fun withTenant(tenant: String): Builder {
+        fun withTenant(tenant: String?): Builder {
             this.tenant = tenant
             return this
         }
 
-        fun withControllerId(controllerId: String): Builder {
+        fun withControllerId(controllerId: String?): Builder {
             this.controllerId = controllerId
             return this
         }
 
-        fun withGetawayToken(gatewayToken: String): Builder {
+        fun withGetawayToken(gatewayToken: String?): Builder {
             this.gatewayToken = gatewayToken
             return this
         }
 
-        fun withTargetToken(targetToken: String): Builder {
+        fun withTargetToken(targetToken: String?): Builder {
             this.targetToken = targetToken
             return this
         }
@@ -76,7 +76,7 @@ data class UFServiceConfiguration (val tenant: String,
             return this
         }
 
-        fun withUrl(url: String): Builder {
+        fun withUrl(url: String?): Builder {
             this.url = url
             return this
         }
