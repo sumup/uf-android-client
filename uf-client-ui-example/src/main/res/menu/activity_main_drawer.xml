@@ -23,6 +23,10 @@
             android:id="@+id/menu_log"
             android:icon="@drawable/ic_reorder_black_48dp"
             android:title="@string/label_log" />
+        <item
+            android:id="@+id/force_ping"
+            android:icon="@drawable/baseline_sync_problem_black_48"
+            android:title="@string/label_force_ping" />
     </group>
 
 </menu>

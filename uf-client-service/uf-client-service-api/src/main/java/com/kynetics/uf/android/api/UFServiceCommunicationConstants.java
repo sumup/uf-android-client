@@ -48,6 +48,8 @@ public class UFServiceCommunicationConstants {
 
     public static final int MSG_SERVICE_CONFIGURATION_STATUS = 9;
 
+    public static final int MSG_FORCE_PING = 10;
+
     public static final String SERVICE_PACKAGE_NAME = "com.kynetics.uf.service";
 
     public static final String SERVICE_ACTION = "com.kynetics.action.BIND_UF_SERVICE";

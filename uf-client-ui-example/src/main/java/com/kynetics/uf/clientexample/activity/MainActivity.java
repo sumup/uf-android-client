@@ -36,6 +36,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
@@ -64,6 +65,8 @@ import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVIC
  */
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, UFActivity{
+
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,6 +147,13 @@ public class MainActivity extends AppCompatActivity
             case R.id.menu_log:
                 changePage(LogFragment.newInstance());
                 break;
+            case R.id.force_ping:
+                Log.d(TAG, "Force Ping Request");
+                try {
+                    mService.send(Message.obtain(null, UFServiceCommunicationConstants.MSG_FORCE_PING));
+                } catch (RemoteException e) {
+                    Log.d(TAG, "Failed to send force ping", e);
+                }
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
