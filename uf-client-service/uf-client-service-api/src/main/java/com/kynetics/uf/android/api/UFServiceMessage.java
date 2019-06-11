@@ -39,11 +39,18 @@ public class UFServiceMessage implements Serializable {
         return dateTime;
     }
 
+    /**
+     * @deprecated  As of release 1.0.0
+     */
+    @Deprecated
     public String getEventName() {
         return eventName;
     }
 
-
+    /**
+     * @deprecated  As of release 1.0.0
+     */
+    @Deprecated
     public String getOldState() {
         return oldState;
     }
