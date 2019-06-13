@@ -29,7 +29,7 @@ class ApkUpdater(private val context: Context) : Updater {
 
     override fun requiredSoftwareModulesAndPriority(swModules: Set<Updater.SwModule>): Updater.SwModsApplication {
 
-        return Updater.SwModsApplication( 0,
+        return Updater.SwModsApplication( 1,
                 swModules
                         .filter { it.type == "bApp" }
                         .map { Updater.SwModsApplication.SwModule(
@@ -85,7 +85,6 @@ class ApkUpdater(private val context: Context) : Updater {
         val currentUpdateState = CurrentUpdateState(context)
         val apk = File(artifact.path)
 
-        println(artifact.path)
         when{
             !apk.exists() ->{
                 val errorMessage = "Apk not found"

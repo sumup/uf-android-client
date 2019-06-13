@@ -27,7 +27,7 @@ class OtaUpdater(private val context: Context) : Updater {
     }
 
     override fun requiredSoftwareModulesAndPriority(swModules: Set<Updater.SwModule>): Updater.SwModsApplication {
-        return Updater.SwModsApplication( 1,
+        return Updater.SwModsApplication( 0,
                 swModules
                         .filter { it.type == "os" }
                         .map { Updater.SwModsApplication.SwModule(
@@ -80,7 +80,6 @@ class OtaUpdater(private val context: Context) : Updater {
             currentUpdateState.artifactInstallationState(artifact) == CurrentUpdateState.ArtifacInstallationState.ERROR ->{
                 CurrentUpdateState.InstallationResult(listOf("Installation of ${artifact.filename} is failed"))
             }
-
 
             verify(artifact) ->{
                 val packageFile = File(artifact.path)
