@@ -28,7 +28,7 @@ import android.os.PowerManager
 
 
 @RequiresApi(Build.VERSION_CODES.O)
-class ABUpdater(private val context: Context) : Updater {
+class ABUpdater(context: Context) : AndroidUpdater(context) {
 
     private val updateEngine: UpdateEngine = UpdateEngine()
 
@@ -62,8 +62,7 @@ class ABUpdater(private val context: Context) : Updater {
                         }.toSet())
     }
 
-    override fun apply(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
-        val currentUpdateState = CurrentUpdateState(context)
+    override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
         return modules.dropWhile {
             Log.d(TAG, "apply module ${it.name} ${it.version} of type ${it.type}")
             it.artifacts.dropWhile { a ->

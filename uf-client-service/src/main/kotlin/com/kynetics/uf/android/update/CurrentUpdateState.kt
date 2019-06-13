@@ -21,7 +21,6 @@ import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.util.*
 
-//todo ask update at register time if update is pending
 class CurrentUpdateState(context: Context) {
 
     private val sharedPreferences: SharedPreferences
@@ -78,6 +77,16 @@ class CurrentUpdateState(context: Context) {
         }
     }
 
+    fun startUpdate(){
+        sharedPreferences.edit()
+                .putBoolean(UPDATE_IS_STARTED_KEY, true)
+                .apply()
+    }
+
+    fun isUpdateStart():Boolean{
+        return sharedPreferences.getBoolean(UPDATE_IS_STARTED_KEY, false)
+    }
+
     fun addPendingInstallation(artifact: Updater.SwModuleWithPath.Artifact){
         val file = getPendingInstallationFile(artifact)
         if(!file.exists()){
@@ -130,6 +139,7 @@ class CurrentUpdateState(context: Context) {
                 .remove(APK_DISTRIBUTION_REPORT_SUCCESS_KEY)
                 .remove(APK_DISTRIBUTION_REPORT_ERROR_KEY)
                 .remove(LAST_SLOT_NAME_SHAREDPREFERENCES_KEY)
+                .remove(UPDATE_IS_STARTED_KEY)
                 .apply()
     }
 
@@ -158,6 +168,7 @@ class CurrentUpdateState(context: Context) {
     }
 
     companion object {
+        private const val UPDATE_IS_STARTED_KEY = "UPDATE_IS_STARTED"
         private const val LAST_INSTALL_FILE = "cache/recovery/last_install"
         private const val LAST_LOST_NAME_PROPERTY_KEY = "ro.boot.slot_suffix"
         private const val LAST_SLOT_NAME_SHAREDPREFERENCES_KEY = "slot_suffix"

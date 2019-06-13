@@ -12,7 +12,6 @@
 package com.kynetics.uf.android.update
 
 import android.content.Context
-import android.os.Debug
 import android.os.RecoverySystem
 import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
@@ -20,7 +19,7 @@ import java.io.File
 
 
 
-class OtaUpdater(private val context: Context) : Updater {
+class OtaUpdater(context: Context) : AndroidUpdater(context) {
 
     companion object {
         val TAG:String = OtaUpdater::class.java.simpleName
@@ -37,7 +36,7 @@ class OtaUpdater(private val context: Context) : Updater {
                                 it.artifacts.map { a -> a.hashes }.toSet()) }.toSet())
     }
 
-    override fun apply(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
+    override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
         val currentUpdateState = CurrentUpdateState(context)
         return modules.dropWhile {
             Log.d(TAG, "apply module ${it.name} ${it.version} of type ${it.type}")

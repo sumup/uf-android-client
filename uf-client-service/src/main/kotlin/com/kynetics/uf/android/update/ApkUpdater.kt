@@ -21,7 +21,7 @@ import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.util.concurrent.CountDownLatch
 
-class ApkUpdater(private val context: Context) : Updater {
+class ApkUpdater(context: Context) : AndroidUpdater(context) {
 
     companion object {
         val TAG:String = ApkUpdater::class.java.simpleName
@@ -44,7 +44,7 @@ class ApkUpdater(private val context: Context) : Updater {
     }
 
 
-    override fun apply(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
+    override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
         if(android.os.Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP) {
             val errorMessage = "Installation of apk is not supported from device with android system " +
                     "com.kynetics.uf.android.api lower than ${Build.VERSION_CODES.LOLLIPOP} (current is ${android.os.Build.VERSION.SDK_INT})"
