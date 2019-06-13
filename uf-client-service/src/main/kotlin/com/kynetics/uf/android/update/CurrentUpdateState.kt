@@ -12,18 +12,16 @@
 package com.kynetics.uf.android.update
 
 import android.content.Context
-import android.content.SharedPreferences
-
-import java.util.HashSet
-
 import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import android.os.Environment
 import android.os.SystemProperties
 import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
-import java.lang.IllegalStateException
+import java.util.*
 
+//todo ask update at register time if update is pending
 class CurrentUpdateState(context: Context) {
 
     private val sharedPreferences: SharedPreferences
@@ -66,7 +64,7 @@ class CurrentUpdateState(context: Context) {
 
     fun lastIntallationResult(artifact: Updater.SwModuleWithPath.Artifact):InstallationResult{
         return try {
-            val result = File("cache/recovery/last_install").readLines()[1].trim()
+            val result = File(LAST_INSTALL_FILE).readLines()[1].trim()
             val response = when (result) {
                 "1" -> InstallationResult()
                 else -> InstallationResult(listOf("last_install result code: $result"))
@@ -82,7 +80,6 @@ class CurrentUpdateState(context: Context) {
 
     fun addPendingInstallation(artifact: Updater.SwModuleWithPath.Artifact){
         val file = getPendingInstallationFile(artifact)
-
         if(!file.exists()){
             file.parentFile.mkdirs()
             file.createNewFile()
@@ -104,10 +101,11 @@ class CurrentUpdateState(context: Context) {
     }
 
     fun artifactInstallationState(artifact: Updater.SwModuleWithPath.Artifact): ArtifacInstallationState{
+        val pendingInstallationFile = getPendingInstallationFile(artifact)
         return when{
-            getPendingInstallationFile(artifact).exists() -> ArtifacInstallationState.PENDING
-            File("${getPendingInstallationFile(artifact).absolutePath}.$SUCCESS_EXTENSION").exists() -> ArtifacInstallationState.SUCCESS
-            File("${getPendingInstallationFile(artifact).absolutePath}.$ERROR_EXTENSION").exists() -> ArtifacInstallationState.ERROR
+            pendingInstallationFile.exists() -> ArtifacInstallationState.PENDING
+            File("${pendingInstallationFile.absolutePath}.$SUCCESS_EXTENSION").exists() -> ArtifacInstallationState.SUCCESS
+            File("${pendingInstallationFile.absolutePath}.$ERROR_EXTENSION").exists() -> ArtifacInstallationState.ERROR
             else -> ArtifacInstallationState.NONE
         }
     }
@@ -160,6 +158,7 @@ class CurrentUpdateState(context: Context) {
     }
 
     companion object {
+        private const val LAST_INSTALL_FILE = "cache/recovery/last_install"
         private const val LAST_LOST_NAME_PROPERTY_KEY = "ro.boot.slot_suffix"
         private const val LAST_SLOT_NAME_SHAREDPREFERENCES_KEY = "slot_suffix"
         private const val TAG = "CurrentUpdateState"

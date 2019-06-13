@@ -150,7 +150,9 @@ public class MainActivity extends AppCompatActivity
             case R.id.force_ping:
                 Log.d(TAG, "Force Ping Request");
                 try {
-                    mService.send(Message.obtain(null, UFServiceCommunicationConstants.MSG_FORCE_PING));
+                    if(mService!= null){
+                        mService.send(Message.obtain(null, UFServiceCommunicationConstants.MSG_FORCE_PING));
+                    }
                 } catch (RemoteException e) {
                     Log.d(TAG, "Failed to send force ping", e);
                 }
