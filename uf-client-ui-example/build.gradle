@@ -38,11 +38,32 @@ android {
         }
     }
 
+    signingConfigs{
+        signingConfigs {
+            debug {
+                keyAlias project.properties['uf-android-client-ui.keyAlias']
+                keyPassword project.properties['uf-android-client-ui.keyPassword']
+                storeFile file(project.properties['uf-android-client-ui.storePath'])
+                storePassword project.properties['uf-android-client-ui.storePassword']
+                v2SigningEnabled true
+                v1SigningEnabled true
+            }
+        }
+    }
+
     buildTypes {
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
+        debug{
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+
         if (isRunningOnTravis) {
             kynetics_key {
                 signingConfig signingConfigs.kynetics

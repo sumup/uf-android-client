@@ -58,10 +58,29 @@ android {
         }
     }
 
+    signingConfigs{
+        signingConfigs {
+            debug {
+                keyAlias project.properties['uf-android-client-service.keyAlias']
+                keyPassword project.properties['uf-android-client-service.keyPassword']
+                storeFile file(project.properties['uf-android-client-service.storePath'])
+                storePassword project.properties['uf-android-client-service.storePassword']
+                v2SigningEnabled true
+                v1SigningEnabled true
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug{
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
 
         if (isRunningOnTravis) {
@@ -82,8 +101,8 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "com.kynetics.updatefactory.uf-ddiclient:core:1.0.0-SNAPSHOST"
-    implementation "com.kynetics.updatefactory.uf-ddiclient.core:core-api:1.0.0-SNAPSHOST"
+    implementation "com.kynetics.updatefactory.uf-ddiclient:core:1.0.0-rc1"
+    implementation "com.kynetics.updatefactory.uf-ddiclient.core:core-api:1.0.0-rc1"
 //    implementation "org.slf4j:slf4j-android:1.7.26"
     implementation "com.android.support:support-v4:$supportLibraryVersion"
     implementation "com.android.support:design:$supportLibraryVersion"
