@@ -47,12 +47,13 @@ class CurrentUpdateState(context: Context) {
         this.sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE_NAME, MODE_PRIVATE)
     }
 
-
+    //fixme fix update of uf--android-client with other applications
     fun setUFUpdated() {
         val file = currentInstallationDir()
                 .listFiles()
                 ?.firstOrNull { it.name.endsWith(SUCCESS_EXTENSION) || it.name.endsWith(ERROR_EXTENSION) }
         file?.renameTo(File("${file.absolutePath}.$SUCCESS_EXTENSION"))
+        addSuccessMessageToRepor("uf-client-service update successfully") //todo add apk file name
     }
 
     fun rootDir():File = File(Environment.getDownloadCacheDirectory(), "update_factory")

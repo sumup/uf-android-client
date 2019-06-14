@@ -14,13 +14,14 @@ package com.kynetics.uf.android.receiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import com.kynetics.uf.android.UpdateFactoryService;
 import com.kynetics.uf.android.apicomptibility.ApiVersion;
 import com.kynetics.uf.android.update.CurrentUpdateState;
 
 public class StartServiceReceiver extends BroadcastReceiver {
-
+    private static final String TAG = StartServiceReceiver.class.getSimpleName();
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -30,6 +31,7 @@ public class StartServiceReceiver extends BroadcastReceiver {
         final String action = intent.getAction();
         final boolean ufServiceIsUpdated = Intent.ACTION_MY_PACKAGE_REPLACED.equals(action);
         if(ufServiceIsUpdated){
+            Log.d(TAG, "Uf service is updated");
             new CurrentUpdateState(context).setUFUpdated();
         }
         if (ufServiceIsUpdated || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
