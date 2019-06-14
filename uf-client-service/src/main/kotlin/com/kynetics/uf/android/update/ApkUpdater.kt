@@ -73,7 +73,7 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
 
 
         messenger.sendMessageToServer(*(currentUpdateState.distributionReportError +
-                currentUpdateState.distributionReportError).toTypedArray())
+                currentUpdateState.distributionReportSuccess).toTypedArray())
 
         val result = currentUpdateState.distributionReportError.isEmpty()
         return result
