@@ -44,13 +44,16 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
     }
 
 
-    override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
+    override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Updater.UpdateResult {
         if(android.os.Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP) {
             val errorMessage = "Installation of apk is not supported from device with android system " +
                     "com.kynetics.uf.android.api lower than ${Build.VERSION_CODES.LOLLIPOP} (current is ${android.os.Build.VERSION.SDK_INT})"
             messenger.sendMessageToServer(errorMessage)
             Log.w(TAG,errorMessage)
-            return false
+            return Updater.UpdateResult(
+                    success = false,
+                    details = listOf(errorMessage)
+            )
         }
 
         val currentUpdateState = CurrentUpdateState(context)
@@ -71,12 +74,8 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
                     }
                 }
 
-
-        messenger.sendMessageToServer(*(currentUpdateState.distributionReportError +
-                currentUpdateState.distributionReportSuccess).toTypedArray())
-
-        val result = currentUpdateState.distributionReportError.isEmpty()
-        return result
+        return Updater.UpdateResult(success = currentUpdateState.distributionReportError.isEmpty(),
+                details = (currentUpdateState.distributionReportError + currentUpdateState.distributionReportSuccess).toList())
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)

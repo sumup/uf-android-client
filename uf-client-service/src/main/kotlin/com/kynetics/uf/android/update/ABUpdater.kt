@@ -62,14 +62,20 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                         }.toSet())
     }
 
-    override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
-        return modules.dropWhile {
+    override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Updater.UpdateResult {
+        val updateDetails = mutableListOf<String>()
+        val success =  modules.dropWhile {
             Log.d(TAG, "apply module ${it.name} ${it.version} of type ${it.type}")
             it.artifacts.dropWhile { a ->
                 Log.d(TAG, "install artifact ${a.filename} from file ${a.path}")
-                installOta(a, currentUpdateState, messenger).success
+                val updateResult = installOta(a, currentUpdateState, messenger)
+                updateDetails.addAll(updateResult.errors)
+                updateResult.success
             }.isEmpty()
         }.isEmpty()
+
+        return Updater.UpdateResult(success = success,
+                details = updateDetails)
     }
 
     class MyUpdateEngineCallback(

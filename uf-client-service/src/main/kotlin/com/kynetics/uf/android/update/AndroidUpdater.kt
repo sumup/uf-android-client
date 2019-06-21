@@ -17,12 +17,12 @@ import com.kynetics.updatefactory.ddiclient.core.api.Updater
 abstract class AndroidUpdater(protected val context: Context):Updater {
     protected val currentUpdateState:CurrentUpdateState = CurrentUpdateState(context)
 
-    final override fun apply(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
+    final override fun apply(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Updater.UpdateResult {
         currentUpdateState.startUpdate()
         return applyUpdate(modules, messenger)
     }
 
-    abstract fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger) : Boolean
+    abstract fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger) : Updater.UpdateResult
 
     override fun updateIsCancellable(): Boolean {
         return !currentUpdateState.isUpdateStart()

@@ -36,15 +36,19 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                                 it.artifacts.map { a -> a.hashes }.toSet()) }.toSet())
     }
 
-    override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Boolean {
+    override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Updater.UpdateResult {
         val currentUpdateState = CurrentUpdateState(context)
-        return modules.dropWhile {
+        val updateDetails = mutableListOf<String>()
+        val success = modules.dropWhile {
             Log.d(TAG, "apply module ${it.name} ${it.version} of type ${it.type}")
             it.artifacts.dropWhile { a ->
                 Log.d(TAG,"install artifact ${a.filename} from file ${a.path}")
-                installOta(a, currentUpdateState, messenger).success
+                val updateResult = installOta(a, currentUpdateState, messenger)
+                updateDetails.addAll(updateResult.errors)
+                updateResult.success
             }.isEmpty()
         }.isEmpty()
+        return Updater.UpdateResult(success = success, details = updateDetails)
     }
 
     private fun verify(artifact: Updater.SwModuleWithPath.Artifact): Boolean {
