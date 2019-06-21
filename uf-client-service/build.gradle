@@ -101,8 +101,8 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "com.kynetics.updatefactory.uf-ddiclient:core:1.0.0-rc1"
-    implementation "com.kynetics.updatefactory.uf-ddiclient.core:core-api:1.0.0-rc1"
+    implementation "com.kynetics.updatefactory.uf-ddiclient:core:1.0.0-rc2"
+    implementation "com.kynetics.updatefactory.uf-ddiclient.core:core-api:1.0.0-rc2"
 //    implementation "org.slf4j:slf4j-android:1.7.26"
     implementation "com.android.support:support-v4:$supportLibraryVersion"
     implementation "com.android.support:design:$supportLibraryVersion"
