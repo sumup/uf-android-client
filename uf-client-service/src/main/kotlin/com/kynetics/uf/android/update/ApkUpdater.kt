@@ -14,7 +14,6 @@ package com.kynetics.uf.android.update
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.StatFs
 import android.support.annotation.RequiresApi
 import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
@@ -45,9 +44,9 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
 
 
     override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Updater.UpdateResult {
-        if(android.os.Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP) {
+        if(Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP) {
             val errorMessage = "Installation of apk is not supported from device with android system " +
-                    "com.kynetics.uf.android.api lower than ${Build.VERSION_CODES.LOLLIPOP} (current is ${android.os.Build.VERSION.SDK_INT})"
+                    "com.kynetics.uf.android.api lower than ${Build.VERSION_CODES.LOLLIPOP} (current is ${Build.VERSION.SDK_INT})"
             messenger.sendMessageToServer(errorMessage)
             Log.w(TAG,errorMessage)
             return Updater.UpdateResult(
@@ -116,19 +115,6 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
             }
         }
 
-        //new client handler response
-        /*val freeSpace = getFreeSpace( Environment.getDataDirectory())
-
-        Log.i(TAG, String.format("FreeSpace: %s; Space needed: %s", freeSpace, artifact.size));
-        if(artifact.size * 2 > freeSpace){
-            val errorMessage = "Not enough space available"
-            Log.w(TAG,errorMessage)
-            currentUpdateState.addErrorToRepor(errorMessage)
-            return
-        }*/
-
-
-
     }
 
 
@@ -141,8 +127,4 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
         return null
     }
 
-    private fun getFreeSpace(path: File): Long {
-        val stat = StatFs(path.path)
-        return stat.availableBlocksLong * stat.blockSizeLong
-    }
 }
