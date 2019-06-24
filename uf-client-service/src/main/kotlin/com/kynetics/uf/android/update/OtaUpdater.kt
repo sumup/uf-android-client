@@ -16,7 +16,7 @@ import android.os.RecoverySystem
 import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
-
+import java.io.IOException
 
 
 class OtaUpdater(context: Context) : AndroidUpdater(context) {
@@ -88,8 +88,13 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                 val packageFile = File(artifact.path)
                 currentUpdateState.addPendingInstallation(artifact)//todo handle error on file creation
                 messenger.sendMessageToServer("Applying ota update (${artifact.filename})...")
-                RecoverySystem.installPackage(context, packageFile)
-                CurrentUpdateState.InstallationResult(listOf("Error, installation package don't return"))
+                return try {
+                    RecoverySystem.installPackage(context, packageFile)
+                    CurrentUpdateState.InstallationResult(listOf("Error, installation package doesn't return"))
+                }catch (ioe:IOException){
+                    CurrentUpdateState.InstallationResult(listOf("Error, unable to reboot in recovery mode",
+                            ioe.message ?: ""))
+                }
             }
 
             else ->{
