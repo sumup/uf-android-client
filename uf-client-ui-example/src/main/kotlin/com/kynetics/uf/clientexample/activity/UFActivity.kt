@@ -9,13 +9,13 @@
  *
  */
 
-package com.kynetics.uf.clientexample.activity;
+package com.kynetics.uf.clientexample.activity
 
-import android.os.Bundle;
+import android.os.Bundle
 
 /**
  * @author Daniele Sergio
  */
-public interface UFActivity {
-    void registerToService(Bundle data);
+interface UFActivity {
+    fun registerToService(data: Bundle)
 }
