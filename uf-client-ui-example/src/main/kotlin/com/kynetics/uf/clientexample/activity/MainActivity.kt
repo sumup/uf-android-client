@@ -15,22 +15,14 @@ import android.app.Dialog
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
+import android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES
 import android.content.ServiceConnection
-import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.os.BatteryManager
-import android.os.Bundle
-import android.os.Handler
-import android.os.IBinder
-import android.os.Message
-import android.os.Messenger
-import android.os.RemoteException
+import android.os.*
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
 import android.support.v4.app.DialogFragment
 import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentTransaction
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
@@ -42,23 +34,14 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
-
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.*
 import com.kynetics.uf.android.api.UFServiceConfiguration
-import com.kynetics.uf.android.api.UFServiceMessage
+import com.kynetics.uf.android.api.v1.UFMessage
 import com.kynetics.uf.clientexample.BuildConfig
 import com.kynetics.uf.clientexample.R
 import com.kynetics.uf.clientexample.fragment.LogFragment
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment
-
-import java.io.Serializable
-
-import android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.ACTION_SETTINGS
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_RESPONSE
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_CONFIGURATION_STATUS
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNC_REQUEST
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY
 
 /**
  * @author Daniele Sergio
@@ -226,24 +209,38 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         override fun handleMessage(msg: Message) {
             when (msg.what) {
 
-                UFServiceCommunicationConstants.MSG_SERVICE_STATUS -> {
-                    val messageObj = msg.data.getSerializable(SERVICE_DATA_KEY) as UFServiceMessage
-                    val messageString = String.format(MESSAGE_TEMPLATE,
-                            messageObj.dateTime,
-                            messageObj.currentState)
-                    (this@MainActivity.supportFragmentManager.findFragmentById(R.id.fragment_content) as UFServiceInteractionFragment)
-                            .onMessageReceived(messageString)
-                    when (messageObj.suspend) {
-                        UFServiceMessage.Suspend.NONE -> mResumeUpdateFab!!.hide()
-                        UFServiceMessage.Suspend.DOWNLOAD -> {
-                            mResumeUpdateFab!!.setImageResource(R.drawable.ic_get_app_black_48dp)
-                            mResumeUpdateFab!!.show()
+                UFServiceCommunicationConstants.MSG_SERVICE_MESSAGE ->{
+                    val messageContent = UFMessage.fromJson(msg.data.getString(SERVICE_DATA_KEY))
+                    val defaultMessage = """
+                                $messageContent
+                                ${messageContent.description}
+                            """.trimIndent()
+                    when(messageContent){
+                        is UFMessage.Event ->{
+                            Toast.makeText(this@MainActivity, defaultMessage, Toast.LENGTH_LONG).show()
                         }
-                        UFServiceMessage.Suspend.UPDATE -> {
-                            mResumeUpdateFab!!.setImageResource(R.drawable.ic_loop_black_48dp)
-                            mResumeUpdateFab!!.show()
+
+                        is UFMessage.State->{
+                            (this@MainActivity.supportFragmentManager.findFragmentById(R.id.fragment_content) as UFServiceInteractionFragment)
+                                    .onMessageReceived(if(messageContent.toString().length > defaultMessage.length) messageContent.toString() else defaultMessage )
+
+                            when (messageContent) {
+                                is UFMessage.State.WaitingDownloadAuthorization -> {
+                                    mResumeUpdateFab!!.setImageResource(R.drawable.ic_get_app_black_48dp)
+                                    mResumeUpdateFab!!.show()
+                                }
+
+                                is UFMessage.State.WaitingUpdateAuthorization -> {
+                                    mResumeUpdateFab!!.setImageResource(R.drawable.ic_loop_black_48dp)
+                                    mResumeUpdateFab!!.show()
+                                }
+
+                                else -> mResumeUpdateFab!!.hide()
+                            }
                         }
                     }
+
+
                 }
 
                 UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST -> {
