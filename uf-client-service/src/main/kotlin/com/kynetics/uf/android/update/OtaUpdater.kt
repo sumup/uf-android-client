@@ -16,6 +16,7 @@ import android.os.RecoverySystem
 import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 
 
@@ -43,9 +44,14 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
             Log.d(TAG, "apply module ${it.name} ${it.version} of type ${it.type}")
             it.artifacts.dropWhile { a ->
                 Log.d(TAG,"install artifact ${a.filename} from file ${a.path}")
-                val updateResult = installOta(a, currentUpdateState, messenger)
-                updateDetails.addAll(updateResult.errors)
-                updateResult.success
+                    val updateResult = installOta(a, currentUpdateState, messenger)
+                    updateDetails.addAll(updateResult.errors)
+                    if(currentUpdateState.lastInstallFile().exists()){
+                        updateDetails.add("START ${CurrentUpdateState.LAST_LOG_FILE_NAME}")
+                        updateDetails.add(currentUpdateState.parseLastLogFile())
+                        updateDetails.add("FINISH ${CurrentUpdateState.LAST_LOG_FILE_NAME}")
+                    }
+                    updateResult.success
             }.isEmpty()
         }.isEmpty()
         return Updater.UpdateResult(success = success, details = updateDetails)
@@ -62,7 +68,6 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
         }
     }
 
-    //new client add check of memory space  before download the system
     private fun installOta(artifact: Updater.SwModuleWithPath.Artifact,
                            currentUpdateState:CurrentUpdateState,
                            messenger: Updater.Messenger):CurrentUpdateState.InstallationResult{

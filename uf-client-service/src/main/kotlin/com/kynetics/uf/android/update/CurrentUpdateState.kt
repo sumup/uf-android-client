@@ -19,6 +19,7 @@ import android.os.SystemProperties
 import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
+import java.io.FileNotFoundException
 import java.util.*
 
 class CurrentUpdateState(context: Context) {
@@ -64,7 +65,7 @@ class CurrentUpdateState(context: Context) {
 
     fun lastIntallationResult(artifact: Updater.SwModuleWithPath.Artifact):InstallationResult{
         return try {
-            val result = File(LAST_INSTALL_FILE).readLines()[1].trim()
+            val result = lastInstallFile().readLines()[1].trim()
             val response = when (result) {
                 "1" -> InstallationResult()
                 else -> InstallationResult(listOf("last_install result code: $result"))
@@ -74,8 +75,17 @@ class CurrentUpdateState(context: Context) {
             response
         } catch (e:Throwable){
             Log.e(TAG, e.message, e)
-            InstallationResult(listOf("Installation fails with exception: ${e.message}"))
+            when(e){
+                is FileNotFoundException -> {
+                    InstallationResult(listOf("File $LAST_INSTALL_FILE_NAME not found"))
+                }
+                else -> InstallationResult(listOf("Installation fails with exception: ${e.message}"))
+            }
         }
+    }
+
+    fun lastInstallFile():File{
+        return File(recoveryDir, LAST_INSTALL_FILE_NAME)
     }
 
     fun startUpdate(){
@@ -93,6 +103,10 @@ class CurrentUpdateState(context: Context) {
         if(!file.exists()){
             file.parentFile.mkdirs()
             file.createNewFile()
+        }
+        val lastInstallFile = lastInstallFile()
+        if(lastInstallFile.exists() && !lastInstallFile.delete()){
+            Log.w(TAG, "cant delete ${lastInstallFile.name}")
         }
 
     }
@@ -168,9 +182,17 @@ class CurrentUpdateState(context: Context) {
         }
     }
 
+    fun parseLastLogFile():String{
+        return try{
+            val lastLogFile = File(recoveryDir, LAST_LOG_FILE_NAME)
+            lastLogFile.readLines().joinToString("\n")
+        } catch (e:Throwable){
+            Log.w(TAG, "cant part $LAST_LOG_FILE_NAME", e)
+            "Can't read $LAST_LOG_FILE_NAME, the notifications message could be unreliable"        }
+    }
+
     companion object {
         private const val UPDATE_IS_STARTED_KEY = "UPDATE_IS_STARTED"
-        private const val LAST_INSTALL_FILE = "cache/recovery/last_install"
         private const val LAST_LOST_NAME_PROPERTY_KEY = "ro.boot.slot_suffix"
         private const val LAST_SLOT_NAME_SHAREDPREFERENCES_KEY = "slot_suffix"
         private const val TAG = "CurrentUpdateState"
@@ -181,6 +203,10 @@ class CurrentUpdateState(context: Context) {
         private val APK_DISTRIBUTION_REPORT_ERROR_KEY = "APK_DISTRIBUTION_REPORT_ERROR"
         private const val SUCCESS_EXTENSION = "OK"
         private const val ERROR_EXTENSION = "KO"
+
+        private val recoveryDir = File("cache/recovery")
+        const val LAST_LOG_FILE_NAME = "last_log"
+        private const val LAST_INSTALL_FILE_NAME = "last_install"
     }
 
 }
