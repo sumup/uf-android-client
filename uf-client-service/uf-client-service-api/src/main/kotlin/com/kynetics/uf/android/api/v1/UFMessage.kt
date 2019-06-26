@@ -28,7 +28,7 @@ sealed class UFMessage {
 
     @Serializable
     sealed class State(override val description: String):UFMessage(){
-        object Downloading: State("Client are downloading artifacts from server")
+        object Downloading: State("Client is downloading artifacts from server")
         object Updating: State("The update process is started. Any request to cancel an update will be rejected")
         object CancellingUpdate: State("Last update request is being cancelled")
         object WaitingDownloadAuthorization: State("Waiting authorization to start download")
@@ -50,7 +50,7 @@ sealed class UFMessage {
 
     @Serializable
     sealed class Event(override val description: String):UFMessage(){
-        object Polling: Event("Client are contacting server to retrieve new action to execute")
+        object Polling: Event("Client is contacting server to retrieve new action to execute")
         @Serializable
         data class StartDownloadFile(val fileName: String): Event("A file downloading is started"){
             @UseExperimental(ImplicitReflectionSerializer::class)
