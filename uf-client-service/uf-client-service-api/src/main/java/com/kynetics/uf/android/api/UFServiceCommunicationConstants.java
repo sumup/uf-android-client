@@ -31,10 +31,6 @@ public class UFServiceCommunicationConstants {
      */
     public static final int MSG_UNREGISTER_CLIENT = 3;
 
-    /**
-     * @deprecated  As of release 1.0.0 replaced by {@link #MSG_SERVICE_MESSAGE}
-     */
-    @Deprecated
     public static final int MSG_SERVICE_STATUS = 4;
 
     public static final int MSG_AUTHORIZATION_REQUEST = 5;
@@ -49,13 +45,13 @@ public class UFServiceCommunicationConstants {
 
     public static final int MSG_FORCE_PING = 10;
 
-    public static final int MSG_SERVICE_MESSAGE = 11;
-
     public static final String SERVICE_PACKAGE_NAME = "com.kynetics.uf.service";
 
     public static final String SERVICE_ACTION = "com.kynetics.action.BIND_UF_SERVICE";
 
     public static final String SERVICE_DATA_KEY = "DATA_KEY";
+
+    public static final String SERVICE_API_VERSION_KEY = "API_VERSION_KEY";
 
     public static final String ACTION_SETTINGS = "com.kynetics.action.SETTINGS";
 

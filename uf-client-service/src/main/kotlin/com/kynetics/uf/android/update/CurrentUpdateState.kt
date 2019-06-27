@@ -197,7 +197,7 @@ class CurrentUpdateState(context: Context) {
             lastLogFile.readLines().map { it.substring(0, min(it.length, 512)) }
         } catch (e:Throwable){
             Log.w(TAG, "cant part $LAST_LOG_FILE_NAME", e)
-            listOf("Can't read $LAST_LOG_FILE_NAME, the notifications message could be unreliable")
+            listOf("Can't read $LAST_LOG_FILE_NAME, the notifications messageToSendOnSync could be unreliable")
         }
     }
 

@@ -15,11 +15,10 @@ import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.stringify
 import java.lang.IllegalArgumentException
 
 @Serializable
-sealed class UFMessage {
+sealed class UFServiceMessageV1 {
 
     enum class MessageName{
         DOWNLOADING,
@@ -44,7 +43,7 @@ sealed class UFMessage {
     abstract val description: String
     abstract val name: MessageName
     @Serializable
-    sealed class State(override val name: MessageName, override val description: String):UFMessage(){
+    sealed class State(override val name: MessageName, override val description: String):UFServiceMessageV1(){
         object Downloading: State(MessageName.DOWNLOADING,"Client is downloading artifacts from server")
         object Updating: State(MessageName.UPDATING,"The update process is started. Any request to cancel an update will be rejected")
         object CancellingUpdate: State(MessageName.CANCELLING_UPDATE, "Last update request is being cancelled")
@@ -66,7 +65,7 @@ sealed class UFMessage {
     }
 
     @Serializable
-    sealed class Event(override val name: MessageName, override val description: String):UFMessage(){
+    sealed class Event(override val name: MessageName, override val description: String):UFServiceMessageV1(){
         object Polling: Event(MessageName.POLLING, "Client is contacting server to retrieve new action to execute")
         @Serializable
         data class StartDownloadFile(val fileName: String): Event(MessageName.START_DOWNLOAD_FILE, "A file downloading is started"){
@@ -109,7 +108,7 @@ sealed class UFMessage {
 
     companion object{
         @UseExperimental(ImplicitReflectionSerializer::class)
-        fun fromJson(jsonContent:String):UFMessage {
+        fun fromJson(jsonContent:String):UFServiceMessageV1 {
             val json = Json(JsonConfiguration.Stable.copy(strictMode = false))
             val jsonElement = json.parseJson(jsonContent)
             return when (jsonElement.jsonObject["name"]?.primitive?.content) {
@@ -128,7 +127,7 @@ sealed class UFMessage {
                 MessageName.POLLING.name -> Event.Polling
                 MessageName.ALL_FILES_DOWNLOADED.name -> Event.AllFilesDownloaded
 
-                else -> throw IllegalArgumentException("$jsonContent is not obtained by toJson method of ${UFMessage::class.java.simpleName}")
+                else -> throw IllegalArgumentException("$jsonContent is not obtained by toJson method of ${UFServiceMessageV1::class.java.simpleName}")
 
             }
         }

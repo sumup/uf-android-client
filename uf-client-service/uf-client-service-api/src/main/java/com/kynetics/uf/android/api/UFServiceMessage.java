@@ -18,7 +18,7 @@ import java.util.Date;
 
 /**
  * @author Daniele Sergio
- * @deprecated  As of release 1.0.0 replaced by {@link com.kynetics.uf.android.api.v1.UFMessage}
+ * @deprecated  As of release 1.0.0 replaced by {@link com.kynetics.uf.android.api.v1.UFServiceMessageV1}
  * )}
  */
 @Deprecated

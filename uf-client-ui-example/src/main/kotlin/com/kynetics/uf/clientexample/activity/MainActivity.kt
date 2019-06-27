@@ -21,6 +21,7 @@ import android.content.pm.PackageManager
 import android.os.*
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
+import android.support.design.widget.Snackbar
 import android.support.v4.app.DialogFragment
 import android.support.v4.app.Fragment
 import android.support.v4.view.GravityCompat
@@ -34,14 +35,16 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
+import com.kynetics.uf.android.api.ApiCommunicationVersion
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants.*
 import com.kynetics.uf.android.api.UFServiceConfiguration
-import com.kynetics.uf.android.api.v1.UFMessage
+import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.clientexample.BuildConfig
 import com.kynetics.uf.clientexample.R
 import com.kynetics.uf.clientexample.fragment.LogFragment
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment
+import java.util.*
 
 /**
  * @author Daniele Sergio
@@ -69,12 +72,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             Toast.makeText(this@MainActivity, R.string.connected,
                     Toast.LENGTH_SHORT).show()
             try {
-                var msg = Message.obtain(null,
-                        UFServiceCommunicationConstants.MSG_REGISTER_CLIENT)
+                var msg = Message.obtain(null, MSG_REGISTER_CLIENT)
                 msg.replyTo = mMessenger
+                val bundleWithApiVersion = Bundle()
+                bundleWithApiVersion.putInt(SERVICE_API_VERSION_KEY, ApiCommunicationVersion.V1.versionCode)
+                msg.data = bundleWithApiVersion
                 mService!!.send(msg)
                 msg = Message.obtain(null, MSG_SYNC_REQUEST)
                 msg.replyTo = mMessenger
+                msg.data = bundleWithApiVersion
                 mService!!.send(msg)
             } catch (e: RemoteException) {
                 Toast.makeText(this@MainActivity, "service communication error",
@@ -110,6 +116,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         Toast.LENGTH_SHORT).show()
             }
         }
+
+        snackbar = Snackbar.make(findViewById<View>(R.id.coordinatorLayout).rootView, "Annotations", Snackbar.LENGTH_INDEFINITE)
 
         val drawer = findViewById<DrawerLayout>(R.id.drawer_layout)
         val toggle = ActionBarDrawerToggle(
@@ -170,7 +178,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Log.d(TAG, "Force Ping Request")
                 try {
                     if (mService != null) {
-                        mService!!.send(Message.obtain(null, UFServiceCommunicationConstants.MSG_FORCE_PING))
+                        mService!!.send(Message.obtain(null, MSG_FORCE_PING))
                     }
                 } catch (e: RemoteException) {
                     Log.d(TAG, "Failed to send force ping", e)
@@ -186,10 +194,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun registerToService(data: Bundle) {
         try {
-            val msg = Message.obtain(null,
-                    UFServiceCommunicationConstants.MSG_CONFIGURE_SERVICE)
+            val msg = Message.obtain(null, MSG_CONFIGURE_SERVICE)
             msg.replyTo = mMessenger
-
+            data.putInt(SERVICE_API_VERSION_KEY, ApiCommunicationVersion.V1.versionCode)
             msg.data = data
             mService!!.send(msg)
 
@@ -201,6 +208,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     }
 
+    var snackbar:Snackbar? = null
 
     /**
      * Handler of incoming messages from service.
@@ -209,28 +217,29 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         override fun handleMessage(msg: Message) {
             when (msg.what) {
 
-                UFServiceCommunicationConstants.MSG_SERVICE_MESSAGE ->{
-                    val messageContent = UFMessage.fromJson(msg.data.getString(SERVICE_DATA_KEY))
+                MSG_SERVICE_STATUS ->{
+                    val messageContent = UFServiceMessageV1.fromJson(msg.data.getString(SERVICE_DATA_KEY))
                     val defaultMessage = """
-                                $messageContent
+                                $messageContent ( ${if(messageContent is UFServiceMessageV1.Event) Date() else ""} )
                                 ${messageContent.description}
                             """.trimIndent()
                     when(messageContent){
-                        is UFMessage.Event ->{
+                        is UFServiceMessageV1.Event ->{
                             Toast.makeText(this@MainActivity, defaultMessage, Toast.LENGTH_LONG).show()
+                            snackbar?.setText(defaultMessage)
                         }
 
-                        is UFMessage.State->{
+                        is UFServiceMessageV1.State->{
                             (this@MainActivity.supportFragmentManager.findFragmentById(R.id.fragment_content) as UFServiceInteractionFragment)
                                     .onMessageReceived(if(messageContent.toString().length > defaultMessage.length) messageContent.toString() else defaultMessage )
 
                             when (messageContent) {
-                                is UFMessage.State.WaitingDownloadAuthorization -> {
+                                is UFServiceMessageV1.State.WaitingDownloadAuthorization -> {
                                     mResumeUpdateFab!!.setImageResource(R.drawable.ic_get_app_black_48dp)
                                     mResumeUpdateFab!!.show()
                                 }
 
-                                is UFMessage.State.WaitingUpdateAuthorization -> {
+                                is UFServiceMessageV1.State.WaitingUpdateAuthorization -> {
                                     mResumeUpdateFab!!.setImageResource(R.drawable.ic_loop_black_48dp)
                                     mResumeUpdateFab!!.show()
                                 }
@@ -243,7 +252,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 }
 
-                UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST -> {
+                MSG_AUTHORIZATION_REQUEST -> {
                     val newFragment = MyAlertDialogFragment.newInstance(
                             msg.data.getString(SERVICE_DATA_KEY))
                     newFragment.show(supportFragmentManager, null)
