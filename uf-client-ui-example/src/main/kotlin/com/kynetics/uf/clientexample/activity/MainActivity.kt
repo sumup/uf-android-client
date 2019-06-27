@@ -117,7 +117,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        snackbar = Snackbar.make(findViewById<View>(R.id.coordinatorLayout).rootView, "Annotations", Snackbar.LENGTH_INDEFINITE)
+        snackbar = Snackbar.make(findViewById<View>(R.id.coordinatorLayout), "Annotations", Snackbar.LENGTH_INDEFINITE)
 
         val drawer = findViewById<DrawerLayout>(R.id.drawer_layout)
         val toggle = ActionBarDrawerToggle(
@@ -220,13 +220,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 MSG_SERVICE_STATUS ->{
                     val messageContent = UFServiceMessageV1.fromJson(msg.data.getString(SERVICE_DATA_KEY))
                     val defaultMessage = """
-                                $messageContent ( ${if(messageContent is UFServiceMessageV1.Event) Date() else ""} )
+                                ${Date()} - $messageContent
                                 ${messageContent.description}
                             """.trimIndent()
+
                     when(messageContent){
                         is UFServiceMessageV1.Event ->{
-                            Toast.makeText(this@MainActivity, defaultMessage, Toast.LENGTH_LONG).show()
-                            snackbar?.setText(defaultMessage)
+                            if(this@MainActivity.supportFragmentManager.findFragmentById(R.id.fragment_content) is LogFragment) {
+                                Toast.makeText(this@MainActivity, defaultMessage, Toast.LENGTH_LONG).show()
+                                snackbar?.setText(defaultMessage)
+                                    ?.show()
+                            }
                         }
 
                         is UFServiceMessageV1.State->{
