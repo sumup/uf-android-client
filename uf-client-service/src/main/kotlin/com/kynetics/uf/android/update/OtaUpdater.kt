@@ -52,7 +52,7 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                         val lastLog = currentUpdateState.parseLastLogFile()
                         sendLastLogAsFeedback(lastLog, messenger, installationResult)
                     } else {
-                        updateDetails.add("Can't read ${CurrentUpdateState.LAST_LOG_FILE_NAME}, the final feedback messageToSendOnSync could be unreliable")
+                        updateDetails.add("Can't read ${CurrentUpdateState.LAST_LOG_FILE_NAME}, the final feedback message could be unreliable")
                     }
                     installationResult.success
             }.isEmpty()

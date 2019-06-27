@@ -219,40 +219,25 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 MSG_SERVICE_STATUS ->{
                     val messageContent = UFServiceMessageV1.fromJson(msg.data.getString(SERVICE_DATA_KEY))
-                    val defaultMessage = """
-                                ${Date()} - $messageContent
-                                ${messageContent.description}
-                            """.trimIndent()
 
-                    when(messageContent){
-                        is UFServiceMessageV1.Event ->{
-                            if(this@MainActivity.supportFragmentManager.findFragmentById(R.id.fragment_content) is LogFragment) {
-                                Toast.makeText(this@MainActivity, defaultMessage, Toast.LENGTH_LONG).show()
-                                snackbar?.setText(defaultMessage)
-                                    ?.show()
-                            }
+                    (this@MainActivity.supportFragmentManager.findFragmentById(R.id.fragment_content) as UFServiceInteractionFragment)
+                            .onMessageReceived(messageContent)
+
+                    when (messageContent) {
+                        is UFServiceMessageV1.State.WaitingDownloadAuthorization -> {
+                            mResumeUpdateFab!!.setImageResource(R.drawable.ic_get_app_black_48dp)
+                            mResumeUpdateFab!!.show()
                         }
 
-                        is UFServiceMessageV1.State->{
-                            (this@MainActivity.supportFragmentManager.findFragmentById(R.id.fragment_content) as UFServiceInteractionFragment)
-                                    .onMessageReceived(if(messageContent.toString().length > defaultMessage.length) messageContent.toString() else defaultMessage )
-
-                            when (messageContent) {
-                                is UFServiceMessageV1.State.WaitingDownloadAuthorization -> {
-                                    mResumeUpdateFab!!.setImageResource(R.drawable.ic_get_app_black_48dp)
-                                    mResumeUpdateFab!!.show()
-                                }
-
-                                is UFServiceMessageV1.State.WaitingUpdateAuthorization -> {
-                                    mResumeUpdateFab!!.setImageResource(R.drawable.ic_loop_black_48dp)
-                                    mResumeUpdateFab!!.show()
-                                }
-
-                                else -> mResumeUpdateFab!!.hide()
-                            }
+                        is UFServiceMessageV1.State.WaitingUpdateAuthorization -> {
+                            mResumeUpdateFab!!.setImageResource(R.drawable.ic_loop_black_48dp)
+                            mResumeUpdateFab!!.show()
                         }
+
+                        is UFServiceMessageV1.State -> { mResumeUpdateFab!!.hide()}
+
+                        else -> {}
                     }
-
 
                 }
 
