@@ -48,7 +48,7 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                     val installationResult = installOta(a, currentUpdateState, messenger)
                     updateDetails.addAll(installationResult.errors)
                     if(currentUpdateState.isFeebackReliable()){
-                        updateDetails.add("Final feedback messageToSendOnSync is reliable")
+                        updateDetails.add("Final feedback message is reliable")
                         val lastLog = currentUpdateState.parseLastLogFile()
                         sendLastLogAsFeedback(lastLog, messenger, installationResult)
                     } else {
