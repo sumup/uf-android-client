@@ -16,7 +16,6 @@ import android.os.RecoverySystem
 import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.IOException
 
 
@@ -37,6 +36,8 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                                 it.artifacts.map { a -> a.hashes }.toSet()) }.toSet())
     }
 
+    private val maxMessageForState = 49
+
     override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Updater.UpdateResult {
         val currentUpdateState = CurrentUpdateState(context)
         val updateDetails = mutableListOf<String>()
@@ -44,17 +45,29 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
             Log.d(TAG, "apply module ${it.name} ${it.version} of type ${it.type}")
             it.artifacts.dropWhile { a ->
                 Log.d(TAG,"install artifact ${a.filename} from file ${a.path}")
-                    val updateResult = installOta(a, currentUpdateState, messenger)
-                    updateDetails.addAll(updateResult.errors)
-                    if(currentUpdateState.lastInstallFile().exists()){
-                        updateDetails.add("START ${CurrentUpdateState.LAST_LOG_FILE_NAME}")
-                        updateDetails.add(currentUpdateState.parseLastLogFile())
-                        updateDetails.add("FINISH ${CurrentUpdateState.LAST_LOG_FILE_NAME}")
+                    val installationResult = installOta(a, currentUpdateState, messenger)
+                    updateDetails.addAll(installationResult.errors)
+                    if(currentUpdateState.isFeebackReliable()){
+                        updateDetails.add("Final feedback message is reliable")
+                        val lastLog = currentUpdateState.parseLastLogFile()
+                        sendLastLogAsFeedback(lastLog, messenger, installationResult)
+                    } else {
+                        updateDetails.add("Can't read ${CurrentUpdateState.LAST_LOG_FILE_NAME}, the final feedback message could be unreliable")
                     }
-                    updateResult.success
+                    installationResult.success
             }.isEmpty()
         }.isEmpty()
         return Updater.UpdateResult(success = success, details = updateDetails)
+    }
+
+    private fun sendLastLogAsFeedback(lastLog: List<String>, messenger: Updater.Messenger, installationResult: CurrentUpdateState.InstallationResult) {
+        if(installationResult.success){
+            return
+        }
+        for (i in 0..lastLog.size / maxMessageForState) {
+            val message = lastLog.subList(i * maxMessageForState, Math.min(i * maxMessageForState + maxMessageForState, lastLog.size))
+            messenger.sendMessageToServer("${CurrentUpdateState.LAST_LOG_FILE_NAME} - $i", *message.toTypedArray())
+        }
     }
 
     private fun verify(artifact: Updater.SwModuleWithPath.Artifact): Boolean {

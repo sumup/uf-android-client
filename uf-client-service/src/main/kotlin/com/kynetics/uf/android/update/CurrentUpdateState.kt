@@ -21,6 +21,7 @@ import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.*
+import kotlin.math.min
 
 class CurrentUpdateState(context: Context) {
 
@@ -86,6 +87,14 @@ class CurrentUpdateState(context: Context) {
 
     fun lastInstallFile():File{
         return File(recoveryDir, LAST_INSTALL_FILE_NAME)
+    }
+
+    fun lastLogFile():File{
+        return File(recoveryDir, LAST_LOG_FILE_NAME)
+    }
+
+    fun isFeebackReliable():Boolean{
+        return lastInstallFile().canWrite() && lastLogFile().canRead()
     }
 
     fun startUpdate(){
@@ -182,13 +191,14 @@ class CurrentUpdateState(context: Context) {
         }
     }
 
-    fun parseLastLogFile():String{
+    fun parseLastLogFile():List<String>{
         return try{
             val lastLogFile = File(recoveryDir, LAST_LOG_FILE_NAME)
-            lastLogFile.readLines().joinToString("\n")
+            lastLogFile.readLines().map { it.substring(0, min(it.length, 512)) }
         } catch (e:Throwable){
             Log.w(TAG, "cant part $LAST_LOG_FILE_NAME", e)
-            "Can't read $LAST_LOG_FILE_NAME, the notifications message could be unreliable"        }
+            listOf("Can't read $LAST_LOG_FILE_NAME, the notifications message could be unreliable")
+        }
     }
 
     companion object {
