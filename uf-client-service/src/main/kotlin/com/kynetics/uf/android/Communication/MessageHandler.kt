@@ -48,7 +48,7 @@ data class V0(
     }
 
     override fun onMessage(msg: MessageListener.Message): MessageHandler<UFServiceMessage?> {
-        return copy(currentMessage = UFServiceMessage("", "", currentMessage.toString(), suspend))
+        return copy(currentMessage = UFServiceMessage("", "", msg.toString(), suspend))
     }
 }
 
