@@ -1,4 +1,4 @@
-package com.kynetics.uf.android.Communication
+package com.kynetics.uf.android.communication
 
 import android.os.Bundle
 import android.os.Message
@@ -11,9 +11,9 @@ import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
 import java.io.Serializable
 
 
-object ComunicationHandler {
+object MessangerHandler {
 
-    private val TAG = ComunicationHandler::class.java.simpleName
+    private val TAG = MessangerHandler::class.java.simpleName
 
     private val lastSharedMessagesByVersion = mutableMapOf(
             ApiCommunicationVersion.V0_1 to V0(),

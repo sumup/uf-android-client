@@ -1,4 +1,4 @@
-package com.kynetics.uf.android.Communication
+package com.kynetics.uf.android.communication
 
 import com.kynetics.uf.android.api.ApiCommunicationVersion
 import com.kynetics.uf.android.api.UFServiceMessage
