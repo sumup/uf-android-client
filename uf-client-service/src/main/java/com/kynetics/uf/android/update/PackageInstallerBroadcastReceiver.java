@@ -32,6 +32,8 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
     private final int sessionId;
     private final CountDownLatch countDownLatch;
     private final CurrentUpdateState currentUpdateState;
+    private final Long packageVersion;
+    private final String packageName;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -46,7 +48,7 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
 
         final int result = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, SESSION_ID_NOT_FOUND);
 
-        final String packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME);
+        final String currentPackage = intent.getStringExtra(EXTRA_PACKAGE_NAME);
 
         switch (result){
             case PackageInstaller.STATUS_FAILURE:
@@ -60,24 +62,26 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
                 messages.add(String.format("Installation of %s fails with error code %s", packageName, result));
                 currentUpdateState.setDistributionReportError(messages);
             case PackageInstaller.STATUS_SUCCESS:
-                currentUpdateState.incrementApkAlreadyInstalled();
+                currentUpdateState.packageInstallationTerminated(packageName, packageVersion);
                 countDownLatch.countDown();
                 context.unregisterReceiver(this);
                 break;
             default:
                 Log.w(TAG, String.format("Status (%s) of package installation (%s) not handle",
                         result,
-                        packageName));
+                        currentPackage));
                 break;
         }
 
-        Log.d(TAG, String.format("Result code of %s installation: %s", packageName,result));
+        Log.d(TAG, String.format("Result code of %s installation: %s", currentPackage,result));
     }
 
 
-    PackageInstallerBroadcastReceiver(int sessionId, CountDownLatch countDownLatch, CurrentUpdateState currentUpdateState) {
+    PackageInstallerBroadcastReceiver(int sessionId, CountDownLatch countDownLatch, CurrentUpdateState currentUpdateState, String packageName, Long packageVersion) {
         this.sessionId = sessionId;
         this.countDownLatch = countDownLatch;
         this.currentUpdateState = currentUpdateState;
+        this.packageVersion = packageVersion;
+        this.packageName = packageName;
     }
 }

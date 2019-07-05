@@ -69,16 +69,13 @@ public class AndroidSystemOperation implements SystemOperation {
     public void executeUpdate(long updateId) {
         if(currentUpdateState.getApkIsFound() && currentUpdateState.getOtaIsFound()){
             updateStatus = UpdateStatus.newFailureStatus(new String[]{"Update os with application is not yet supported"});
-        } else if(currentUpdateState.isUfServiceUpdated()){
-            currentUpdateState.incrementApkAlreadyInstalled();
-            currentUpdateState.setUFUpdated(false);
-            updateApp();
-        } else if(UpdateSystem.apkToInstall(context)) {
+        } else if(UpdateSystem.apkToInstall(context) || currentUpdateState.existPackgeKey()) {
             updateApp();
         } else {
             updateOta(updateId);
         }
 
+        Log.i(TAG, "Clearing update state");
         currentUpdateState.clearState();
 
         clearOtaUpdate();

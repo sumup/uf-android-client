@@ -17,9 +17,13 @@ import android.util.ArraySet;
 
 import com.kynetics.uf.android.BuildConfig;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_PACKAGE_NAME;
@@ -33,6 +37,8 @@ public class CurrentUpdateState {
     private static final String APK_ALREADY_INSTALLED_KEY = "APK_ALREADY_INSTALLED";
     private static final String APK_DISTRIBUTION_REPORT_SUCCESS_KEY = "APK_DISTRIBUTION_REPORT_SUCCESS";
     private static final String APK_DISTRIBUTION_REPORT_ERROR_KEY = "APK_DISTRIBUTION_REPORT_ERROR";
+    private static final String APK_PACKAGE_START_KEY = "APK_PACKAGE";
+    private static final String APK_PACKAGE_TEMPLATE_KEY = "APK_PACKAGE_%s_KEY";
 
     private final SharedPreferences sharedPreferences;
 
@@ -57,22 +63,6 @@ public class CurrentUpdateState {
         sharedPreferences.edit().putBoolean(APK_IS_FOUND_KEY, true).apply();
     }
 
-    public boolean isUfServiceUpdated(){
-        return sharedPreferences.getBoolean(UF_SERVICE_IS_UPDATED_KEY, false);
-    }
-
-    public void setUFUpdated(boolean isUpdated){
-        sharedPreferences.edit().putBoolean(UF_SERVICE_IS_UPDATED_KEY,isUpdated).apply();
-    }
-
-    public void incrementApkAlreadyInstalled(){
-        sharedPreferences.edit().putInt(APK_ALREADY_INSTALLED_KEY, getApkAlreadyInstalled() + 1).apply();
-    }
-
-    public int getApkAlreadyInstalled(){
-        return sharedPreferences.getInt(APK_ALREADY_INSTALLED_KEY, 0);
-    }
-
     public Set<String> getDistributionReportError(){
         return sharedPreferences.getStringSet(APK_DISTRIBUTION_REPORT_ERROR_KEY, new HashSet<>());
     }
@@ -90,10 +80,48 @@ public class CurrentUpdateState {
     }
 
 
+    public Boolean isPackageInstallationTerminated(String packageName, Long versionCode){
+        final String key = String.format(APK_PACKAGE_TEMPLATE_KEY, getPackageKey(packageName));
+        final Long version = getVersion(versionCode);
+        return sharedPreferences.getLong(key, version + 1) <= version;
+    }
 
+    @NotNull
+    private String getPackageKey(String packageName) {
+        return packageName == null ? "NULL" : packageName.replaceAll(".", "_");
+    }
+
+    @NotNull
+    private Long getVersion(Long versionCode) {
+        return versionCode == null ? 0 : versionCode;
+    }
+
+    public void packageInstallationTerminated(String packageName, Long versionCode){
+        final String key = String.format(APK_PACKAGE_TEMPLATE_KEY, getPackageKey(packageName));
+        sharedPreferences.edit()
+                .putLong(key, getVersion(versionCode))
+                .apply();
+    }
+
+    public boolean existPackgeKey(){
+        for(String key: sharedPreferences.getAll().keySet()){
+            if(key.startsWith(APK_PACKAGE_START_KEY)){
+                return true;
+            }
+        }
+        return false;
+    }
 
     public void clearState(){
-        sharedPreferences.edit()
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        final Set<String> keys = sharedPreferences.getAll().keySet();
+        for(String key: keys){
+            if(key.startsWith(APK_PACKAGE_START_KEY)){
+                editor.remove(key);
+            }
+        }
+        editor
                 .remove(OTA_IS_FOUND_KEY)
                 .remove(APK_IS_FOUND_KEY)
                 .remove(UF_SERVICE_IS_UPDATED_KEY)

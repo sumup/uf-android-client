@@ -40,9 +40,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -178,6 +176,16 @@ public class UpdateSystem {
         }
     }
 
+    static boolean checkSpace(File[] files){
+        long memoryNeeded = 0;
+        for (File file : files) {
+            memoryNeeded += file.length();
+        }
+
+        final long freeSpace = getFreeSpace( Environment.getDataDirectory());
+        Log.i(TAG, String.format("FreeSpace: %s; Space needed: %s", freeSpace, memoryNeeded));
+        return memoryNeeded * 2 <= freeSpace;
+    }
 
     static SystemOperation.UpdateStatus installApk(Context context, CurrentUpdateState currentUpdateState) throws InterruptedException {
         if(android.os.Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP){
@@ -191,55 +199,30 @@ public class UpdateSystem {
         }
 
         final File[] files = updateDirectory.listFiles();
-        final int numberOfApkToInstall = files.length - currentUpdateState.getApkAlreadyInstalled();
-        if(numberOfApkToInstall < 1){
-            return  getDistributionInstalletionResponse(currentUpdateState);
-        }
 
-        long memoryNeeded = 0;
-        for(int i =0; i< files.length; i++){
-            if(i>=currentUpdateState.getApkAlreadyInstalled()){
-                memoryNeeded += files[i].length();
-            }
-        }
-
-        final long freeSpace = getFreeSpace( Environment.getDataDirectory());
-        Log.i(TAG, String.format("FreeSpace: %s; Space needed: %s", freeSpace, memoryNeeded));
-        if(memoryNeeded * 2 > freeSpace){
+        if(currentUpdateState.existPackgeKey() && !checkSpace(files)){
             return newFailureStatus(new String[]{"Not enough space available"});
         }
 
-
-        final CountDownLatch countDownLatch = new CountDownLatch(numberOfApkToInstall);
-        final TreeSet<File> fileOrdered = new TreeSet<>();
-        fileOrdered.addAll(Arrays.asList(files));
-        final Iterator<File> fileIterator = fileOrdered.iterator();
-        for(int i=0; i<currentUpdateState.getApkAlreadyInstalled(); i++){
-            if(fileIterator.hasNext()){
-                fileIterator.next();
-            }
-        }
-        while (fileIterator.hasNext()){
-            final File file = fileIterator.next();
-            if(file.getName().endsWith("apk")){
+        final CountDownLatch countDownLatch = new CountDownLatch(files.length);
+        final TreeSet<File> fileOrdered = new TreeSet<>(Arrays.asList(files));
+        for (File file : fileOrdered) {
+            final String packageName = getPackageFromApk(context, file.getAbsolutePath());
+            final Long packageVersion = getVersionFromApk(context, file.getAbsolutePath());
+            if (file.getName().endsWith("apk") && !currentUpdateState.isPackageInstallationTerminated(packageName, packageVersion)) {
                 try {
                     Log.d(TAG, String.format("installing apk named %s", file.getName()));
-                    installPackage(context, file, getPackageFromApk(context, file.getAbsolutePath()), countDownLatch, currentUpdateState);
+                    installPackage(context, file, packageName, packageVersion, countDownLatch, currentUpdateState);
                 } catch (IOException | IllegalArgumentException e) {
                     addErrorMessage(currentUpdateState, String.format("%s installation fails with error %s", file.getName(), e.getMessage()));
-                    currentUpdateState.incrementApkAlreadyInstalled();
+                    currentUpdateState.packageInstallationTerminated(packageName, packageVersion);
                     countDownLatch.countDown();
                     Log.d(TAG, String.format("Failed to install %s", file.getName()));
                     Log.d(TAG, e.getMessage(), e);
                 }
             } else {
-                currentUpdateState.incrementApkAlreadyInstalled();
                 countDownLatch.countDown();
             }
-        }
-
-        for(File file : files) {
-            file.delete();
         }
 
         final UpdateConfirmationTimeoutProvider.Timeout timeout = UpdateConfirmationTimeoutProvider
@@ -288,7 +271,7 @@ public class UpdateSystem {
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    static void installPackage(Context context, File file, String packageName, CountDownLatch countDownLatch, CurrentUpdateState currentUpdateState)
+    static void installPackage(Context context, File file, String packageName, Long packageCode, CountDownLatch countDownLatch, CurrentUpdateState currentUpdateState)
             throws IOException {
         try{
             Looper.prepare();
@@ -300,6 +283,7 @@ public class UpdateSystem {
                 context,
                 countDownLatch,
                 packageName,
+                packageCode,
                 currentUpdateState
         );
         installerSession.writeSession(file,  packageName);
@@ -315,4 +299,12 @@ public class UpdateSystem {
         return null;
     }
 
+    private static Long getVersionFromApk(Context context, String apkPath){
+        PackageInfo packageInfo = context.getPackageManager().getPackageArchiveInfo(apkPath,PackageManager.GET_ACTIVITIES);
+        if(packageInfo != null) {
+            ApplicationInfo appInfo = packageInfo.applicationInfo;
+            return Long.valueOf(appInfo.versionCode);
+        }
+        return null;
+    }
 }

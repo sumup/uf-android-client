@@ -37,6 +37,7 @@ public class InstallerSession {
     public static InstallerSession newInstance(Context context,
                                                CountDownLatch countDownLatch,
                                                String packageName,
+                                               Long packageVersion,
                                                CurrentUpdateState currentUpdateState) throws IOException {
         final PackageInstaller packageInstaller = context.getPackageManager()
                 .getPackageInstaller();
@@ -47,7 +48,9 @@ public class InstallerSession {
         context.registerReceiver(new PackageInstallerBroadcastReceiver(
                         sessionId,
                         countDownLatch,
-                        currentUpdateState),
+                        currentUpdateState,
+                        packageName,
+                        packageVersion),
                 new IntentFilter(InstallerSession.ACTION_INSTALL_COMPLETE));
         return new InstallerSession(context, packageInstaller, sessionId);
     }
