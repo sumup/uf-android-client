@@ -21,10 +21,7 @@ import android.util.Log;
 
 import com.kynetics.updatefactory.ddiclient.core.api.Updater;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import static android.content.pm.PackageInstaller.EXTRA_PACKAGE_NAME;
@@ -39,6 +36,8 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
     private final CurrentUpdateState currentUpdateState;
     private final Updater.SwModuleWithPath.Artifact artifact;
     private final Updater.Messenger messenger;
+    private final Long packageVersion;
+    private final String packageName;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -53,7 +52,7 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
 
         final int result = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, SESSION_ID_NOT_FOUND);
 
-        final String packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME);
+        final String currentPackage = intent.getStringExtra(EXTRA_PACKAGE_NAME);
 
         switch (result){
             case PackageInstaller.STATUS_FAILURE:
@@ -65,8 +64,8 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
             case PackageInstaller.STATUS_FAILURE_STORAGE:
                 final String errorMessage = String.format("Installation of %s (%s) fails with error code %s", artifact.getFilename(), packageName, result);
                 currentUpdateState.addErrorToRepor(errorMessage);
-                currentUpdateState.persistArtifactInstallationResult(artifact, new CurrentUpdateState.InstallationResult(Collections.singletonList(errorMessage)));
                 messenger.sendMessageToServer(errorMessage);
+                currentUpdateState.packageInstallationTerminated(packageName, packageVersion);
                 countDownLatch.countDown();
                 context.unregisterReceiver(this);
                 break;
@@ -74,8 +73,8 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
             case PackageInstaller.STATUS_SUCCESS:
                 final String message = String.format("%s (%s) installed", artifact.getFilename(), packageName);
                 currentUpdateState.addSuccessMessageToRepor(message);
-                currentUpdateState.persistArtifactInstallationResult(artifact, new CurrentUpdateState.InstallationResult());
                 messenger.sendMessageToServer(message);
+                currentUpdateState.packageInstallationTerminated(packageName, packageVersion);
                 countDownLatch.countDown();
                 context.unregisterReceiver(this);
                 break;
@@ -94,11 +93,15 @@ public class PackageInstallerBroadcastReceiver extends BroadcastReceiver {
                                       CountDownLatch countDownLatch,
                                       Updater.SwModuleWithPath.Artifact artifact,
                                       CurrentUpdateState currentUpdateState,
-                                      Updater.Messenger messenger) {
+                                      Updater.Messenger messenger,
+                                      String packageName,
+                                      Long packageVersion) {
         this.sessionId = sessionId;
         this.countDownLatch = countDownLatch;
         this.currentUpdateState = currentUpdateState;
         this.artifact = artifact;
         this.messenger = messenger;
+        this.packageVersion = packageVersion;
+        this.packageName = packageName;
     }
 }

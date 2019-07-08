@@ -19,6 +19,10 @@ import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.util.concurrent.CountDownLatch
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
+
+
 
 class ApkUpdater(context: Context) : AndroidUpdater(context) {
 
@@ -57,17 +61,16 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
 
         val currentUpdateState = CurrentUpdateState(context)
 
+
         modules.flatMap { it.artifacts }
-                .filter { currentUpdateState.artifactInstallationState(it) == CurrentUpdateState.ArtifacInstallationState.NONE }
-                .forEach{a ->
+                .filter { !currentUpdateState.isPackageInstallationTerminated(getPackageFromApk(context,it.path), getVersionFromApk(context, it.path)) }.forEach{a ->
                     Log.d(TAG,"install artifact ${a.filename} from file ${a.path}")
                     try {
-                        currentUpdateState.addPendingInstallation(a)
                         installApk(a, messenger)
                     } catch (t: Throwable){ //new client replace with IOException | IllegalArgumentException e
                         val error = "${a.filename} installation fails with error ${t.message}"
                         currentUpdateState.addErrorToRepor(error)
-                        currentUpdateState.persistArtifactInstallationResult(a, CurrentUpdateState.InstallationResult(listOf(error)))
+                        currentUpdateState.packageInstallationTerminated(getPackageFromApk(context, a.path), getVersionFromApk(context, a.path))
                         Log.d(TAG, "Failed to install ${a.filename}")
                         Log.d(TAG, t.message, t)
                     }
@@ -93,10 +96,12 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
             else ->{
                 val countDownLatch = CountDownLatch(1)
                 val packageName = getPackageFromApk(context, apk.absolutePath)
+                val packageVersion = getVersionFromApk(context, apk.absolutePath)
                 val installerSession = InstallerSession.newInstance(
                         context,
                         countDownLatch,
                         packageName,
+                        packageVersion,
                         artifact,
                         messenger,
                         currentUpdateState)
@@ -123,6 +128,15 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
         if (packageInfo != null) {
             val appInfo = packageInfo.applicationInfo
             return appInfo.packageName
+        }
+        return null
+    }
+
+    private fun getVersionFromApk(context: Context, apkPath: String): Long? {
+        val packageInfo = context.packageManager.getPackageArchiveInfo(apkPath, PackageManager.GET_ACTIVITIES)
+        if (packageInfo != null) {
+            val appInfo = packageInfo.applicationInfo
+            return java.lang.Long.valueOf(appInfo.versionCode.toLong())
         }
         return null
     }

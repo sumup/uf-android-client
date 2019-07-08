@@ -85,8 +85,9 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                            currentUpdateState:CurrentUpdateState,
                            messenger: Updater.Messenger):CurrentUpdateState.InstallationResult{
 
+        val installationState = currentUpdateState.getOtaInstallationState(artifact)
         return when{
-            currentUpdateState.artifactInstallationState(artifact) == CurrentUpdateState.ArtifacInstallationState.PENDING ->{
+            installationState == CurrentUpdateState.InstallationState.PENDING ->{
                 val result = currentUpdateState.lastIntallationResult(artifact)
                 val message = "Installation result of Ota named ${artifact.filename} is ${if(result.success) "success" else "failure"}"
                 messenger.sendMessageToServer(message + result.errors)
@@ -94,17 +95,17 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                 result
             }
 
-            currentUpdateState.artifactInstallationState(artifact) == CurrentUpdateState.ArtifacInstallationState.SUCCESS ->{
+            installationState == CurrentUpdateState.InstallationState.SUCCESS ->{
                 CurrentUpdateState.InstallationResult()
             }
 
-            currentUpdateState.artifactInstallationState(artifact) == CurrentUpdateState.ArtifacInstallationState.ERROR ->{
+            installationState == CurrentUpdateState.InstallationState.ERROR ->{
                 CurrentUpdateState.InstallationResult(listOf("Installation of ${artifact.filename} is failed"))
             }
 
             verify(artifact) ->{
                 val packageFile = File(artifact.path)
-                currentUpdateState.addPendingInstallation(artifact)//todo handle error on file creation
+                currentUpdateState.addPendingOTAInstallation(artifact)//todo handle error on file creation
                 messenger.sendMessageToServer("Applying ota update (${artifact.filename})...")
                 return try {
                     RecoverySystem.installPackage(context, packageFile)

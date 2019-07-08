@@ -39,6 +39,7 @@ public class InstallerSession {
     public static InstallerSession newInstance(Context context,
                                                CountDownLatch countDownLatch,
                                                String packageName,
+                                               Long packageVersion,
                                                Updater.SwModuleWithPath.Artifact artifact,
                                                Updater.Messenger messenger,
                                                CurrentUpdateState currentUpdateState) throws IOException {
@@ -53,7 +54,9 @@ public class InstallerSession {
                         countDownLatch,
                         artifact,
                         currentUpdateState,
-                        messenger),
+                        messenger,
+                        packageName,
+                        packageVersion),
                 new IntentFilter(InstallerSession.ACTION_INSTALL_COMPLETE));
         return new InstallerSession(context, packageInstaller, sessionId);
     }

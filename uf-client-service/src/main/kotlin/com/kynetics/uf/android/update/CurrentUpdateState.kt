@@ -49,20 +49,12 @@ class CurrentUpdateState(context: Context) {
         this.sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE_NAME, MODE_PRIVATE)
     }
 
-    //fixme fix update of uf--android-client with other applications
-    fun setUFUpdated() {
-        val file = currentInstallationDir()
-                .listFiles()
-                ?.firstOrNull { it.name.endsWith(SUCCESS_EXTENSION) || it.name.endsWith(ERROR_EXTENSION) }
-        file?.renameTo(File("${file.absolutePath}.$SUCCESS_EXTENSION"))
-        addSuccessMessageToRepor("uf-client-service update successfully") //todo add apk file name
-    }
 
     fun rootDir():File = File(Environment.getDownloadCacheDirectory(), "update_factory")
 
     private fun currentInstallationDir():File = File(rootDir(), "current_installation")
 
-    private fun previousInstallationDir():File = File(rootDir(), "last_installation")
+//    private fun previousInstallationDir():File = File(rootDir(), "last_installation")
 
     fun lastIntallationResult(artifact: Updater.SwModuleWithPath.Artifact):InstallationResult{
         return try {
@@ -72,7 +64,7 @@ class CurrentUpdateState(context: Context) {
                 else -> InstallationResult(listOf("last_install result code: $result"))
             }
 
-            persistArtifactInstallationResult(artifact, response)
+//            persistArtifactInstallationResult(artifact, response)
             response
         } catch (e:Throwable){
             Log.e(TAG, e.message, e)
@@ -86,11 +78,11 @@ class CurrentUpdateState(context: Context) {
     }
 
     fun lastInstallFile():File{
-        return File(recoveryDir, LAST_INSTALL_FILE_NAME)
+        return File(RECOVERY_CACHE, LAST_INSTALL_FILE_NAME)
     }
 
     fun lastLogFile():File{
-        return File(recoveryDir, LAST_LOG_FILE_NAME)
+        return File(RECOVERY_CACHE, LAST_LOG_FILE_NAME)
     }
 
     fun isFeebackReliable():Boolean{
@@ -107,8 +99,8 @@ class CurrentUpdateState(context: Context) {
         return sharedPreferences.getBoolean(UPDATE_IS_STARTED_KEY, false)
     }
 
-    fun addPendingInstallation(artifact: Updater.SwModuleWithPath.Artifact){
-        val file = getPendingInstallationFile(artifact)
+    fun addPendingOTAInstallation(artifact: Updater.SwModuleWithPath.Artifact){
+        val file = File(CACHE_UF, artifact.filename)
         if(!file.exists()){
             file.parentFile.mkdirs()
             file.createNewFile()
@@ -120,46 +112,58 @@ class CurrentUpdateState(context: Context) {
 
     }
 
-    fun persistArtifactInstallationResult(artifact: Updater.SwModuleWithPath.Artifact,
-                                          result: InstallationResult){
-        val file = getPendingInstallationFile(artifact)
-        if(!file.exists()){
-            throw IllegalStateException("File named ${file.name} must exist")
-        }
-
-        val destinationFile = File(file.parentFile,"${file.name}.${if(result.success) SUCCESS_EXTENSION else ERROR_EXTENSION}")
-        file.renameTo(destinationFile)
-        result.errors.forEach { destinationFile.appendText(it) }
-
-    }
-
-    fun artifactInstallationState(artifact: Updater.SwModuleWithPath.Artifact): ArtifacInstallationState{
-        val pendingInstallationFile = getPendingInstallationFile(artifact)
-        return when{
-            pendingInstallationFile.exists() -> ArtifacInstallationState.PENDING
-            File("${pendingInstallationFile.absolutePath}.$SUCCESS_EXTENSION").exists() -> ArtifacInstallationState.SUCCESS
-            File("${pendingInstallationFile.absolutePath}.$ERROR_EXTENSION").exists() -> ArtifacInstallationState.ERROR
-            else -> ArtifacInstallationState.NONE
+    fun getOtaInstallationState(artifact: Updater.SwModuleWithPath.Artifact):InstallationState{
+        val pendingInstallationFile = File(CACHE_UF, artifact.filename)
+        return when {
+            pendingInstallationFile.exists() -> InstallationState.PENDING
+            File("${pendingInstallationFile.absolutePath}.$SUCCESS_EXTENSION").exists() -> InstallationState.SUCCESS
+            File("${pendingInstallationFile.absolutePath}.$ERROR_EXTENSION").exists() -> InstallationState.ERROR
+            else -> InstallationState.NONE
         }
     }
 
-    enum class ArtifacInstallationState{
+    enum class InstallationState{
         PENDING, NONE, SUCCESS, ERROR
     }
-
-    private fun getPendingInstallationFile(artifact: Updater.SwModuleWithPath.Artifact) =
-            File(currentInstallationDir(), artifact.hashes.md5)
 
 
     data class InstallationResult(val errors:List<String> = emptyList()){
         val success = errors.isEmpty()
     }
 
-    fun clearState() {
-        previousInstallationDir().deleteRecursively()
-        currentInstallationDir().renameTo(previousInstallationDir())
+    fun isPackageInstallationTerminated(packageName: String?, versionCode: Long?): Boolean {
+        val key = String.format(APK_PACKAGE_TEMPLATE_KEY, getPackageKey(packageName))
+        val version = getVersion(versionCode)
+        return sharedPreferences.getLong(key, version + 1) <= version
+    }
+
+    private fun getPackageKey(packageName: String?): String {
+        return packageName?.replace(".".toRegex(), "_") ?: "NULL"
+    }
+
+    private fun getVersion(versionCode: Long?): Long {
+        return versionCode ?: 0
+    }
+
+    fun packageInstallationTerminated(packageName: String?, versionCode: Long?) {
+        val key = String.format(APK_PACKAGE_TEMPLATE_KEY, getPackageKey(packageName))
         sharedPreferences.edit()
-                .remove(UF_SERVICE_IS_UPDATED_KEY)
+                .putLong(key, getVersion(versionCode))
+                .apply()
+    }
+
+    fun clearState() {
+        currentInstallationDir().deleteRecursively()
+        CACHE_UF.deleteRecursively()
+        val editor = sharedPreferences.edit()
+
+        for (key in sharedPreferences.all.keys) {
+            if (key.startsWith(APK_PACKAGE_START_KEY)) {
+                editor.remove(key)
+            }
+        }
+
+        editor
                 .remove(APK_DISTRIBUTION_REPORT_SUCCESS_KEY)
                 .remove(APK_DISTRIBUTION_REPORT_ERROR_KEY)
                 .remove(LAST_SLOT_NAME_SHAREDPREFERENCES_KEY)
@@ -175,7 +179,7 @@ class CurrentUpdateState(context: Context) {
                 .apply()
     }
 
-    //todo refactor
+    //todo refactor use pending file to store last installation  slot name
     fun lastABIntallationResult(artifact: Updater.SwModuleWithPath.Artifact):InstallationResult{
         return try {
             val currentSlotName = SystemProperties.get(LAST_LOST_NAME_PROPERTY_KEY)
@@ -183,7 +187,6 @@ class CurrentUpdateState(context: Context) {
             Log.d(TAG, "(current slot named, previous slot name) ($currentSlotName,$previousSlotName)")
             val success = previousSlotName !=  currentSlotName
             val response = if(success){InstallationResult()} else { InstallationResult(listOf("System reboot on the same partition"))}
-            persistArtifactInstallationResult(artifact, response)
             response
         } catch (e:Throwable){
             Log.e(TAG, e.message, e)
@@ -193,7 +196,7 @@ class CurrentUpdateState(context: Context) {
 
     fun parseLastLogFile():List<String>{
         return try{
-            val lastLogFile = File(recoveryDir, LAST_LOG_FILE_NAME)
+            val lastLogFile = File(RECOVERY_CACHE, LAST_LOG_FILE_NAME)
             lastLogFile.readLines().map { it.substring(0, min(it.length, 512)) }
         } catch (e:Throwable){
             Log.w(TAG, "cant part $LAST_LOG_FILE_NAME", e)
@@ -207,14 +210,15 @@ class CurrentUpdateState(context: Context) {
         private const val LAST_SLOT_NAME_SHAREDPREFERENCES_KEY = "slot_suffix"
         private const val TAG = "CurrentUpdateState"
         private val SHARED_PREFERENCES_FILE_NAME = "CURRENT_UPDATE_STATE"
-        private val UF_SERVICE_IS_UPDATED_KEY = "UF_SERVICE_IS_UPDATED"
-        private val APK_ALREADY_INSTALLED_KEY = "APK_ALREADY_INSTALLED"
         private val APK_DISTRIBUTION_REPORT_SUCCESS_KEY = "APK_DISTRIBUTION_REPORT_SUCCESS"
         private val APK_DISTRIBUTION_REPORT_ERROR_KEY = "APK_DISTRIBUTION_REPORT_ERROR"
         private const val SUCCESS_EXTENSION = "OK"
         private const val ERROR_EXTENSION = "KO"
-
-        private val recoveryDir = File("cache/recovery")
+        private const val APK_PACKAGE_START_KEY = "APK_PACKAGE"
+        private const val APK_PACKAGE_TEMPLATE_KEY = "APK_PACKAGE_%s_KEY"
+        private val CACHE = File("cache")
+        private val CACHE_UF = File(CACHE,"update_factory")
+        private val RECOVERY_CACHE = File(CACHE,"recovery")
         const val LAST_LOG_FILE_NAME = "last_log"
         private const val LAST_INSTALL_FILE_NAME = "last_install"
     }

@@ -22,7 +22,6 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipFile
 import kotlin.streams.toList
-import android.support.v4.content.ContextCompat.getSystemService
 import android.os.PowerManager
 
 
@@ -108,7 +107,7 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                            currentUpdateState: CurrentUpdateState,
                            messenger: Updater.Messenger): CurrentUpdateState.InstallationResult {
 
-        if(currentUpdateState.artifactInstallationState(artifact) == CurrentUpdateState.ArtifacInstallationState.PENDING){
+        if(currentUpdateState.getOtaInstallationState(artifact) == CurrentUpdateState.InstallationState.PENDING){ // todo use shared preferences
             val result = currentUpdateState.lastABIntallationResult(artifact)
             val message = "Installation result of Ota named ${artifact.filename} is ${if(result.success) "success" else "failure"}"
             messenger.sendMessageToServer(message + result.errors)
@@ -134,7 +133,7 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
         Log.d(TAG, prop.joinToString())
 
         updateEngine.bind(MyUpdateEngineCallback(context, messenger, updateStatus))
-        currentUpdateState.addPendingInstallation(artifact)//todo handle error on file creation
+        currentUpdateState.addPendingOTAInstallation(artifact)
         messenger.sendMessageToServer("Applying A/B ota update (${artifact.filename})...")
         val payloadPath = "file://${File(updateDir, PAYLOAD_FILE).absolutePath}"
         Log.d(TAG, payloadPath)
