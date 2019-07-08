@@ -54,10 +54,27 @@ android {
         }
     }
 
+    signingConfigs {
+        debug {
+            keyAlias project.properties['uf-android-client-service.keyAlias']
+            keyPassword project.properties['uf-android-client-service.keyPassword']
+            storeFile file(project.properties['uf-android-client-service.storePath'])
+            storePassword project.properties['uf-android-client-service.storePassword']
+            v2SigningEnabled true
+            v1SigningEnabled true
+        }
+    }
+
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
         }
 
         if (isRunningOnTravis) {
