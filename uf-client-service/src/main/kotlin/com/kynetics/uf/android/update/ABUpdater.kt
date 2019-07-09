@@ -125,7 +125,7 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
         if (payloadEntry == null || propEntry == null) {
             Log.d(TAG, "Malformed AB ota")
             return CurrentUpdateState.InstallationResult(listOf("Malformed ota for AB update.",
-                    "An AB ota update must contains a payload file named $PAYLOAD_FILE and a property file named $PROPERTY_FILE"))
+                    "An AB ota update must contain a payload file named $PAYLOAD_FILE and a property file named $PROPERTY_FILE"))
         }
 
         zipFile.getInputStream(payloadEntry)
