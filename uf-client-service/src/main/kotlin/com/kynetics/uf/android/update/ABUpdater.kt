@@ -51,7 +51,7 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
     override fun requiredSoftwareModulesAndPriority(swModules: Set<Updater.SwModule>): Updater.SwModsApplication {
         return Updater.SwModsApplication(0,
                 swModules
-                        .filter { it.type == "os" /*&& it.metadata?.contains(Updater.SwModule.Metadata("UpdateType", "AB")) ?: false */}
+                        .filter { it.type == "os" /*&& it.metadata?.contains(Updater.SwModule.Metadata("UpdateType", "AB")) ?: false */ }
                         .map {
                             Updater.SwModsApplication.SwModule(
                                     it.type,
@@ -63,7 +63,7 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
 
     override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Updater.UpdateResult {
         val updateDetails = mutableListOf<String>()
-        val success =  modules.dropWhile {
+        val success = modules.dropWhile {
             Log.d(TAG, "apply module ${it.name} ${it.version} of type ${it.type}")
             it.artifacts.dropWhile { a ->
                 Log.d(TAG, "install artifact ${a.filename} from file ${a.path}")
@@ -86,12 +86,12 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
         override fun onStatusUpdate(i: Int, v: Float) {  //i==status  v==percent
             Log.d(TAG, "status:$i")
             Log.d(TAG, "percent:$v")
-            if(previosState != i){
+            if (previosState != i) {
                 previosState = i
                 messenger.sendMessageToServer(UPDATE_STATUS.getValue(i))
             }
             //todo ask authorization before reboot (if not forced)
-            if(i == UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT){
+            if (i == UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT) {
                 val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
                 pm!!.reboot(null)
             }
@@ -107,9 +107,9 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                            currentUpdateState: CurrentUpdateState,
                            messenger: Updater.Messenger): CurrentUpdateState.InstallationResult {
 
-        if(currentUpdateState.isABInstallationPending(artifact)){
+        if (currentUpdateState.isABInstallationPending(artifact)) {
             val result = currentUpdateState.lastABIntallationResult(artifact)
-            val message = "Installation result of Ota named ${artifact.filename} is ${if(result.success) "success" else "failure"}"
+            val message = "Installation result of Ota named ${artifact.filename} is ${if (result.success) "success" else "failure"}"
             messenger.sendMessageToServer(message + result.errors)
             Log.i(TAG, message)
             return result
@@ -120,8 +120,16 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
         val updateDir = File(artifact.path).parentFile
         val zipFile = ZipFile(artifact.path)
 
-        zipFile.getInputStream(zipFile.getEntry(PAYLOAD_FILE))
-                .use{ input ->
+        val payloadEntry = zipFile.getEntry(PAYLOAD_FILE)
+        val propEntry = zipFile.getEntry(PROPERTY_FILE)
+        if (payloadEntry == null || propEntry == null) {
+            Log.d(TAG, "Malformed AB ota")
+            return CurrentUpdateState.InstallationResult(listOf("Malformed ota for AB update.",
+                    "An AB ota update must contains a payload file named $PAYLOAD_FILE and a property file named $PROPERTY_FILE"))
+        }
+
+        zipFile.getInputStream(payloadEntry)
+                .use { input ->
                     File(updateDir, PAYLOAD_FILE).outputStream().use { output ->
                         input.copyTo(output)
                     }
@@ -160,7 +168,5 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
             Log.w(TAG, "Exception on apply AB update (${artifact.filename})", e)
             CurrentUpdateState.InstallationResult(listOf("error: ${e.message}"))
         }
-
-
     }
 }
