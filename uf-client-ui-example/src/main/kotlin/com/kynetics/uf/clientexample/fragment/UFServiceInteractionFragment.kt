@@ -9,13 +9,13 @@
  *
  */
 
-package com.kynetics.uf.clientexample.fragment;
+package com.kynetics.uf.clientexample.fragment
 
-import com.kynetics.uf.android.api.v1.UFServiceMessageV1;
+import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 
 /**
  * @author Daniele Sergio
  */
-public interface UFServiceInteractionFragment {
-    void onMessageReceived(UFServiceMessageV1 message);
+interface UFServiceInteractionFragment {
+    fun onMessageReceived(message: UFServiceMessageV1)
 }
