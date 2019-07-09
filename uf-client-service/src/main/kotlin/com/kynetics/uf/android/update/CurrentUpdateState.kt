@@ -122,6 +122,16 @@ class CurrentUpdateState(context: Context) {
         }
     }
 
+
+
+    fun isABInstallationPending(artifact: Updater.SwModuleWithPath.Artifact):Boolean{
+        return sharedPreferences.getString(PENDING_AB_SHAREDPREFERENCES_KEY, "") == artifact.hashes.md5
+    }
+
+    fun addPendingABInstallation(artifact: Updater.SwModuleWithPath.Artifact){
+        sharedPreferences.edit().putString(PENDING_AB_SHAREDPREFERENCES_KEY, artifact.hashes.md5).apply()
+    }
+
     enum class InstallationState{
         PENDING, NONE, SUCCESS, ERROR
     }
@@ -167,6 +177,7 @@ class CurrentUpdateState(context: Context) {
                 .remove(APK_DISTRIBUTION_REPORT_SUCCESS_KEY)
                 .remove(APK_DISTRIBUTION_REPORT_ERROR_KEY)
                 .remove(LAST_SLOT_NAME_SHAREDPREFERENCES_KEY)
+                .remove(PENDING_AB_SHAREDPREFERENCES_KEY)
                 .remove(UPDATE_IS_STARTED_KEY)
                 .apply()
     }
@@ -208,6 +219,7 @@ class CurrentUpdateState(context: Context) {
         private const val UPDATE_IS_STARTED_KEY = "UPDATE_IS_STARTED"
         private const val LAST_LOST_NAME_PROPERTY_KEY = "ro.boot.slot_suffix"
         private const val LAST_SLOT_NAME_SHAREDPREFERENCES_KEY = "slot_suffix"
+        private const val PENDING_AB_SHAREDPREFERENCES_KEY = "PENDING_AB_OTA_KEY"
         private const val TAG = "CurrentUpdateState"
         private val SHARED_PREFERENCES_FILE_NAME = "CURRENT_UPDATE_STATE"
         private val APK_DISTRIBUTION_REPORT_SUCCESS_KEY = "APK_DISTRIBUTION_REPORT_SUCCESS"

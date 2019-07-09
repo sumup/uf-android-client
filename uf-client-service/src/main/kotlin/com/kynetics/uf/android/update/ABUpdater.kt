@@ -107,7 +107,7 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                            currentUpdateState: CurrentUpdateState,
                            messenger: Updater.Messenger): CurrentUpdateState.InstallationResult {
 
-        if(currentUpdateState.getOtaInstallationState(artifact) == CurrentUpdateState.InstallationState.PENDING){ // todo use shared preferences
+        if(currentUpdateState.isABInstallationPending(artifact)){
             val result = currentUpdateState.lastABIntallationResult(artifact)
             val message = "Installation result of Ota named ${artifact.filename} is ${if(result.success) "success" else "failure"}"
             messenger.sendMessageToServer(message + result.errors)
@@ -133,29 +133,34 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
         Log.d(TAG, prop.joinToString())
 
         updateEngine.bind(MyUpdateEngineCallback(context, messenger, updateStatus))
-        currentUpdateState.addPendingOTAInstallation(artifact)
+        currentUpdateState.addPendingABInstallation(artifact)
         messenger.sendMessageToServer("Applying A/B ota update (${artifact.filename})...")
         val payloadPath = "file://${File(updateDir, PAYLOAD_FILE).absolutePath}"
         Log.d(TAG, payloadPath)
         updateEngine.applyPayload(payloadPath, 0, 0, prop)
-        val result: Int = updateStatus.get(30, TimeUnit.MINUTES)
-        updateEngine.unbind()
 
+        return try {
+            val result: Int = updateStatus.get(30, TimeUnit.MINUTES)
+            updateEngine.unbind()
 
-        return when(result){
+            when (result) {
 
-             SUCCESS, UPDATED_BUT_NOT_ACTIVE -> {
-                Log.d(TAG, "result: $result")
-                CurrentUpdateState.InstallationResult()
+                SUCCESS, UPDATED_BUT_NOT_ACTIVE -> {
+                    Log.d(TAG, "result: $result")
+                    CurrentUpdateState.InstallationResult()
 
+                }
+
+                else -> {
+                    Log.d(TAG, "result: $result")
+                    CurrentUpdateState.InstallationResult(listOf("error code: $result"))
+                }
             }
-
-            else -> {
-                Log.d(TAG, "result: $result")
-                CurrentUpdateState.InstallationResult(listOf("error code: $result"))
-            }
-
+        } catch (e:Throwable){
+            Log.w(TAG, "Exception on apply AB update (${artifact.filename})", e)
+            CurrentUpdateState.InstallationResult(listOf("error: ${e.message}"))
         }
+
 
     }
 }
