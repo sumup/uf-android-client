@@ -302,8 +302,7 @@ public class UpdateSystem {
     private static Long getVersionFromApk(Context context, String apkPath){
         PackageInfo packageInfo = context.getPackageManager().getPackageArchiveInfo(apkPath,PackageManager.GET_ACTIVITIES);
         if(packageInfo != null) {
-            ApplicationInfo appInfo = packageInfo.applicationInfo;
-            return Long.valueOf(appInfo.versionCode);
+            return Long.valueOf(packageInfo.versionCode);
         }
         return null;
     }
