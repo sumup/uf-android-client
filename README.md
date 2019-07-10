@@ -5,7 +5,7 @@ UFAndroidClient is an Android application that apply software update received fr
 Links to official documentation:
 - [installation](https://docs.updatefactory.io/devices/android/android-client-packages/)
 - [configuration file](https://docs.updatefactory.io/devices/android/android-config-files/)
-- [third-party integration](https://docs.updatefactory.io/devices/android/android-config-files/)
+- [third-party integration](https://docs.updatefactory.io/devices/android/third-party-integration/)
 
 build: ![build status status](https://travis-ci.org/Kynetics/uf-android-client.svg?branch=master)
 
