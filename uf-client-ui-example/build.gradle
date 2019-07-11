@@ -30,8 +30,9 @@ android {
 
     def isRunningOnTravis = System.getenv("CI") == "true"
 
-    if (isRunningOnTravis) {
-        signingConfigs {
+    signingConfigs{
+
+        if (isRunningOnTravis) {
             kynetics {
                 storePassword System.getenv("uf_store_password")
                 keyAlias System.getenv("kynetics_alias")
@@ -40,11 +41,8 @@ android {
                 v2SigningEnabled true
                 v1SigningEnabled true
             }
-        }
-    }
 
-    signingConfigs{
-        signingConfigs {
+        } else {
             debug {
                 keyAlias project.properties['uf-android-client-ui.keyAlias']
                 keyPassword project.properties['uf-android-client-ui.keyPassword']
@@ -63,17 +61,19 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
-        debug{
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
-        }
-
         if (isRunningOnTravis) {
             kynetics_key {
                 signingConfig signingConfigs.kynetics
                 minifyEnabled false
                 proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            }
+        } else {
+            debug{
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                if(isRunningOnTravis){
+                    signingConfig signingConfigs.debug
+                }
             }
         }
     }

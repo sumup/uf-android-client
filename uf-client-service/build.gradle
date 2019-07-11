@@ -55,16 +55,18 @@ android {
                 v2SigningEnabled true
                 v1SigningEnabled true
             }
+        } else {
+            debug {
+                keyAlias project.properties['uf-android-client-service.keyAlias']
+                keyPassword project.properties['uf-android-client-service.keyPassword']
+                storeFile file(project.properties['uf-android-client-service.storePath'])
+                storePassword project.properties['uf-android-client-service.storePassword']
+                v2SigningEnabled true
+                v1SigningEnabled true
+            }
+
         }
 
-        debug {
-            keyAlias project.properties['uf-android-client-service.keyAlias']
-            keyPassword project.properties['uf-android-client-service.keyPassword']
-            storeFile file(project.properties['uf-android-client-service.storePath'])
-            storePassword project.properties['uf-android-client-service.storePassword']
-            v2SigningEnabled true
-            v1SigningEnabled true
-        }
     }
 
 
@@ -72,12 +74,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-
-        debug{
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
         }
 
         if (isRunningOnTravis) {
@@ -91,6 +87,12 @@ android {
                 signingConfig signingConfigs.aosp_platform
                 minifyEnabled false
                 proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            }
+        } else {
+            debug{
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                signingConfig signingConfigs.debug
             }
         }
     }
