@@ -135,8 +135,7 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
     private fun getVersionFromApk(context: Context, apkPath: String): Long? {
         val packageInfo = context.packageManager.getPackageArchiveInfo(apkPath, PackageManager.GET_ACTIVITIES)
         if (packageInfo != null) {
-            val appInfo = packageInfo.applicationInfo
-            return java.lang.Long.valueOf(appInfo.versionCode.toLong())
+            return java.lang.Long.valueOf(packageInfo.versionCode.toLong())
         }
         return null
     }
