@@ -44,18 +44,20 @@ sealed class UFServiceMessageV1 {
     abstract val name: MessageName
     @Serializable
     sealed class State(override val name: MessageName, override val description: String):UFServiceMessageV1(){
-        object Downloading: State(MessageName.DOWNLOADING,"Client is downloading artifacts from server")
-        object Updating: State(MessageName.UPDATING,"The update process is started. Any request to cancel an update will be rejected")
-        object CancellingUpdate: State(MessageName.CANCELLING_UPDATE, "Last update request is being cancelled")
-        object WaitingDownloadAuthorization: State(MessageName.WAITING_DOWNLOAD_AUTHORIZATION, "Waiting authorization to start download")
-        object WaitingUpdateAuthorization: State(MessageName.WAITING_UPDATE_AUTHORIZATION,"Waiting authorization to start update")
         @Serializable
-        data class Error(val details:List<String> = emptyList()) : State(MessageName.ERROR, "An error is occurred"){
+        data class Downloading(val artifacts:List<Artifact>): State(MessageName.DOWNLOADING,"Client is downloading artifacts from server"){
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson():String{
                 return Json(JsonConfiguration.Stable).stringify(serializer(), this)
             }
+
+            @Serializable
+            data class Artifact(val name:String, val size:Long, val md5:String)
         }
+        object Updating: State(MessageName.UPDATING,"The update process is started. Any request to cancel an update will be rejected")
+        object CancellingUpdate: State(MessageName.CANCELLING_UPDATE, "Last update request is being cancelled")
+        object WaitingDownloadAuthorization: State(MessageName.WAITING_DOWNLOAD_AUTHORIZATION, "Waiting authorization to start download")
+        object WaitingUpdateAuthorization: State(MessageName.WAITING_UPDATE_AUTHORIZATION,"Waiting authorization to start update")
         object Waiting: State(MessageName.WAITING, "There isn't any request from server")
 
         @UseExperimental(ImplicitReflectionSerializer::class)
@@ -98,8 +100,17 @@ sealed class UFServiceMessageV1 {
             }
         }
 
+        @Serializable
+        data class Error(val details:List<String> = emptyList()) : Event(MessageName.ERROR, "An error is occurred"){
+            @UseExperimental(ImplicitReflectionSerializer::class)
+            override fun toJson():String{
+                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+            }
+        }
+
         @UseExperimental(ImplicitReflectionSerializer::class)
         override fun toJson():String{
+            println(Json(JsonConfiguration.Stable).stringify(serializer(), this))
             return Json(JsonConfiguration.Stable).stringify(serializer(), this)
         }
     }
@@ -112,14 +123,14 @@ sealed class UFServiceMessageV1 {
             val json = Json(JsonConfiguration.Stable.copy(strictMode = false))
             val jsonElement = json.parseJson(jsonContent)
             return when (jsonElement.jsonObject["name"]?.primitive?.content) {
-                MessageName.DOWNLOADING.name -> State.Downloading
-                MessageName.ERROR.name -> json.fromJson<State.Error>(jsonElement)
+                MessageName.DOWNLOADING.name -> json.fromJson<State.Downloading>(jsonElement)
                 MessageName.UPDATING.name -> State.Updating
                 MessageName.CANCELLING_UPDATE.name -> State.CancellingUpdate
                 MessageName.WAITING_DOWNLOAD_AUTHORIZATION.name -> State.WaitingDownloadAuthorization
                 MessageName.WAITING_UPDATE_AUTHORIZATION.name -> State.WaitingUpdateAuthorization
                 MessageName.WAITING.name -> State.Waiting
 
+                MessageName.ERROR.name -> json.fromJson<Event.Error>(jsonElement)
                 MessageName.START_DOWNLOAD_FILE.name -> json.fromJson<Event.StartDownloadFile>(jsonElement)
                 MessageName.DOWNLOAD_PROGRESS.name -> json.fromJson<Event.DownloadProgress>(jsonElement)
                 MessageName.FILE_DOWNLOADED.name -> json.fromJson<Event.FileDownloaded>(jsonElement)
