@@ -42,14 +42,17 @@ import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.clientexample.BuildConfig
 import com.kynetics.uf.clientexample.R
-import com.kynetics.uf.clientexample.fragment.LogFragment
+import com.kynetics.uf.clientexample.dummy.MessageHistory
+import com.kynetics.uf.clientexample.fragment.ListStateFragment
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment
-import java.util.*
+import kotlinx.android.synthetic.main.state_list.*
 
 /**
  * @author Daniele Sergio
  */
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, UFActivity {
+
+    private var twoPane: Boolean = false
 
     /** Messenger for communicating with service.  */
     internal var mService: Messenger? = null
@@ -130,8 +133,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         mNavigationView = navigationViewWrapper.findViewById(R.id.nav_view)
         mNavigationView!!.setCheckedItem(R.id.menu_settings)
         mNavigationView!!.setNavigationItemSelectedListener(this)
-        changePage(LogFragment.newInstance())
-        mNavigationView!!.setCheckedItem(R.id.menu_log)
+//        changePage(LogFragment.newInstance())
+//        mNavigationView!!.setCheckedItem(R.id.menu_log)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         val textViewUiVersion = navigationViewWrapper.findViewById<TextView>(R.id.ui_version)
         val textViewServiceVersion = navigationViewWrapper.findViewById<TextView>(R.id.service_version)
@@ -142,6 +145,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } catch (e: PackageManager.NameNotFoundException) {
             textViewServiceVersion.visibility = View.GONE
         }
+
+        twoPane = state_detail_container != null
+        val listStateFragment = ListStateFragment().apply {
+            arguments = Bundle().apply {
+                putBoolean(ListStateFragment.ARG_TWO_PANE, this@MainActivity.twoPane)
+            }
+        }
+        if (twoPane) {
+            this.supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.state_list_container, listStateFragment)
+                    .commit()
+        }  else {
+            changePage(listStateFragment, false)
+        }
+
+
+
 
     }
 
@@ -157,13 +178,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onBackPressed() {
         val drawer = findViewById<View>(R.id.drawer_layout) as DrawerLayout
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
+        when{
+            drawer.isDrawerOpen(GravityCompat.START) ->  drawer.closeDrawer(GravityCompat.START)
+            !twoPane -> onBackPressedWithOnePane()
+            else ->  super.onBackPressed()
+
         }
+
     }
 
+
+    private fun onBackPressedWithOnePane(){
+        val count = supportFragmentManager.backStackEntryCount
+        if (count == 0) {
+            super.onBackPressed()
+        } else {
+            supportFragmentManager.popBackStack()
+        }
+    }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // Handle navigation view item clicks here.
@@ -173,7 +205,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val settingsIntent = Intent(ACTION_SETTINGS)
                 startActivity(settingsIntent)
             }
-            R.id.menu_log -> changePage(LogFragment.newInstance())
+//            R.id.menu_log -> changePage(LogFragment.newInstance())
             R.id.force_ping -> {
                 Log.d(TAG, "Force Ping Request")
                 try {
@@ -185,6 +217,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
 
             }
+
+            R.id.menu_back -> onBackPressedWithOnePane()
         }
 
         val drawer = findViewById<View>(R.id.drawer_layout) as DrawerLayout
@@ -220,8 +254,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 MSG_SERVICE_STATUS ->{
                     val messageContent = UFServiceMessageV1.fromJson(msg.data.getString(SERVICE_DATA_KEY))
 
-                    (this@MainActivity.supportFragmentManager.findFragmentById(R.id.fragment_content) as UFServiceInteractionFragment)
-                            .onMessageReceived(messageContent)
+                    when(messageContent){
+                        is UFServiceMessageV1.Event ->{
+                            MessageHistory.appendEvent(messageContent)
+                        }
+                        is UFServiceMessageV1.State ->{
+                            MessageHistory.addState(MessageHistory.StateEntry(state = messageContent))
+                        }
+                    }
+
+                    this@MainActivity.supportFragmentManager.fragments
+                            .filterIsInstance<UFServiceInteractionFragment>()
+                            .forEach { fragment -> fragment.onMessageReceived(messageContent) }
 
                     when (messageContent) {
                         is UFServiceMessageV1.State.WaitingDownloadAuthorization -> {
@@ -366,9 +410,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun changePage(fragment: Fragment) {
+    fun changePage(fragment: Fragment, addToBackStack:Boolean = true) {
         val tx = supportFragmentManager.beginTransaction()
-        tx.replace(R.id.fragment_content, fragment)
+                .replace(R.id.main_content, fragment)
+
+        if(addToBackStack){
+            tx.addToBackStack(null)
+        }
+
         tx.commit()
     }
 

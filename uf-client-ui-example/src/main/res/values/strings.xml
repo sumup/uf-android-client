@@ -38,5 +38,11 @@
     <string name="service_version">Service version: %s</string>
     <string name="nav_header_title">Update Factory</string>
     <string name="label_force_ping">Force ping</string>
+    <string name="title_state_list">States</string>
+    <string name="title_state_detail">State Detail</string>
+    <string name="label_events">Events</string>
+    <string name="details">Details</string>
+    <string name="states_label">States</string>
+    <string name="label_back">Back</string>
 
 </resources>
