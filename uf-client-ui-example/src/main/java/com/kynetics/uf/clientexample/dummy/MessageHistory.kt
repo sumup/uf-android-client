@@ -64,7 +64,8 @@ object MessageHistory {
                 is UFServiceMessageV1.Event.FileDownloaded -> "$baseMessage \nFile Name: ${event.fileDownloaded}"
                 is UFServiceMessageV1.Event.UpdateFinished -> "$baseMessage \nUpdate Result: ${if (event.successApply) "applied" else "not applied" }\n${event.details.joinToString("\n")}"
                 is UFServiceMessageV1.Event.Error -> "$baseMessage \n${event.details.joinToString("\n")}"
-                is UFServiceMessageV1.Event.DownloadProgress -> "$baseMessage \n${event.fileName}is downloaded at ${event.percentage.format(1)}"
+                is UFServiceMessageV1.Event.DownloadProgress -> "$baseMessage \n${event.fileName} is downloaded at ${event.percentage.format(2)}"
+                is UFServiceMessageV1.Event.UpdateProgress -> "$baseMessage \nPhase name:${event.phaseName} is at ${event.percentage.format(2)}"
                 else -> return baseMessage
             }
         }

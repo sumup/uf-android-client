@@ -23,7 +23,10 @@ import java.util.concurrent.TimeUnit
 import java.util.zip.ZipFile
 import kotlin.streams.toList
 import android.os.PowerManager
-
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants
+import com.kynetics.uf.android.api.v1.UFServiceMessageV1
+import com.kynetics.uf.android.communication.MessangerHandler
+import java.util.concurrent.ArrayBlockingQueue
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -82,14 +85,32 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
             private val messenger: Updater.Messenger,
             private val updateStatus: CompletableFuture<Int>) : UpdateEngineCallback() {
         var previosState = Int.MAX_VALUE
+        val queue = ArrayBlockingQueue<Double>(10, true)
 
         override fun onStatusUpdate(i: Int, v: Float) {  //i==status  v==percent
             Log.d(TAG, "status:$i")
             Log.d(TAG, "percent:$v")
-            if (previosState != i) {
+            val currentPhaseProgress = if (v.isNaN()) 0.0 else v.toDouble()
+            var newPhase = previosState != i
+            if (newPhase) {
                 previosState = i
                 messenger.sendMessageToServer(UPDATE_STATUS.getValue(i))
+                queue.clear()
+                queue.addAll((1..9).map { it.toDouble() / 10 })
             }
+
+
+            val limit = queue.peek() ?: 1.0
+            if(currentPhaseProgress > limit || currentPhaseProgress == 1.0 || newPhase) {
+                MessangerHandler.sendMessage(UFServiceCommunicationConstants.MSG_SERVICE_STATUS, UFServiceMessageV1.Event.UpdateProgress(
+                        phaseName = UPDATE_STATUS.getValue(i),
+                        percentage = currentPhaseProgress).toJson())
+                while(currentPhaseProgress >= queue.peek() ?: 1.0 && queue.isNotEmpty()){
+                    queue.poll()
+                }
+            }
+
+
             //todo ask authorization before reboot (if not forced)
             if (i == UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT) {
                 val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager?

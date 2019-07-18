@@ -30,6 +30,7 @@ sealed class UFServiceMessageV1 {
         WAITING,
         START_DOWNLOAD_FILE,
         DOWNLOAD_PROGRESS,
+        UPDATE_PROGRESS,
         FILE_DOWNLOADED,
         UPDATE_FINISHED,
         POLLING,
@@ -108,6 +109,14 @@ sealed class UFServiceMessageV1 {
             }
         }
 
+        @Serializable
+        data class UpdateProgress(val phaseName:String, val phaseDescription:String = "", val percentage: Double = 0.0) : Event(MessageName.UPDATE_PROGRESS, "Phase of update"){
+            @UseExperimental(ImplicitReflectionSerializer::class)
+            override fun toJson():String{
+                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+            }
+        }
+
         @UseExperimental(ImplicitReflectionSerializer::class)
         override fun toJson():String{
             println(Json(JsonConfiguration.Stable).stringify(serializer(), this))
@@ -132,6 +141,7 @@ sealed class UFServiceMessageV1 {
 
                 MessageName.ERROR.name -> json.fromJson<Event.Error>(jsonElement)
                 MessageName.START_DOWNLOAD_FILE.name -> json.fromJson<Event.StartDownloadFile>(jsonElement)
+                MessageName.UPDATE_PROGRESS.name -> json.fromJson<Event.UpdateProgress>(jsonElement)
                 MessageName.DOWNLOAD_PROGRESS.name -> json.fromJson<Event.DownloadProgress>(jsonElement)
                 MessageName.FILE_DOWNLOADED.name -> json.fromJson<Event.FileDownloaded>(jsonElement)
                 MessageName.UPDATE_FINISHED.name -> json.fromJson<Event.UpdateFinished>(jsonElement)
