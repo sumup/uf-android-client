@@ -26,8 +26,10 @@ import android.widget.Toast;
 
 import com.kynetics.uf.android.R;
 import com.kynetics.uf.android.UpdateFactoryService;
+import com.kynetics.uf.android.api.ApiCommunicationVersion;
+import com.kynetics.uf.android.api.v1.UFServiceMessageV1;
 import com.kynetics.uf.android.apicomptibility.ApiVersion;
-import com.kynetics.uf.android.content.SharedPreferencesWithObject;
+import com.kynetics.uf.android.communication.MessangerHandler;
 
 /**
  * A simple {@link PreferenceFragmentCompat} subclass.
@@ -149,8 +151,8 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
         }
 
         if(key.equals(getString(R.string.shared_preferences_current_state_key))){
-            //new client
-//            preference.setSummary(getStateName(key, sharedPrefs));
+            final UFServiceMessageV1 messageV1 = UFServiceMessageV1.Companion.fromJson((String) MessangerHandler.INSTANCE.getlastSharedMessage(ApiCommunicationVersion.V1).getMessageToSendOnSync());
+            preference.setSummary(messageV1.getName().name());
             return;
         }
 
@@ -164,16 +166,6 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
         }
 
     }
-
-    //new client
-    /*private String getStateName(String key, SharedPreferences sharedPreferences){
-        final SharedPreferencesWithObject sharedPrefs = new SharedPreferencesWithObject(sharedPreferences);
-        AbstractState state = sharedPrefs.getObject(key, AbstractState.class);
-        if(state != null){
-            return state.getStateName().name();
-        }
-        return "";
-    }*/
 
     @Override
     public void onPause() {
