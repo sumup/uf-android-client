@@ -49,6 +49,62 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                 UpdateEngine.UpdateStatusConstants.REPORTING_ERROR_EVENT to "Reporting error event",
                 UpdateEngine.UpdateStatusConstants.ATTEMPTING_ROLLBACK to "Attempting rollback",
                 UpdateEngine.UpdateStatusConstants.DISABLED to "Disable")
+
+
+        private val errorCodeToDescription = mapOf(
+                0 to "Success",
+                1 to "Error",
+                2 to "Omaha request error",
+                3 to "Omaha response handler error",
+                4 to "Filesystem copier error",
+                5 to "Postinstall runner error",
+                6 to "Payload mismatched type",
+                7 to "Install device open error",
+                8 to "Kernel device open error",
+                9 to "Download transfer error",
+                10 to "Payload hash mismatch error",
+                11 to "Payload size mismatch error",
+                12 to "Download payload verification error",
+                13 to "Download new partition info error",
+                14 to "Download write error",
+                15 to "New rootfs verification error",
+                16 to "New kernel verification error",
+                17 to "Signed delta payload expected error",
+                18 to "Download payload pub key verification error",
+                19 to "Postinstall booted from firmware b",
+                20 to "Download state initialization error",
+                21 to "Download invalid metadata magic string",
+                22 to "Download signature missing in manifest",
+                23 to "Download manifest parse error",
+                24 to "Download metadata signature error",
+                25 to "Download metadata signature verification error",
+                26 to "Download metadata signature mismatch",
+                27 to "Download operation hash verification error",
+                28 to "Download operation execution error",
+                29 to "Download operation hash mismatch",
+                30 to "Omaha request empty response error",
+                31 to "Omaha request xmlparse error",
+                32 to "Download invalid metadata size",
+                33 to "Download invalid metadata signature",
+                34 to "Omaha response invalid",
+                35 to "Omaha update ignored per policy",
+                36 to "Omaha update deferred per policy",
+                37 to "Omaha error in httpresponse",
+                38 to "Download operation hash missing error",
+                39 to "Download metadata signature missing error",
+                40 to "Omaha update deferred for backoff",
+                41 to "Postinstall powerwash error",
+                42 to "Update canceled by channel change",
+                43 to "Postinstall firmware ronot updatable",
+                44 to "Unsupported major payload version",
+                45 to "Unsupported minor payload version",
+                46 to "Omaha request xmlhas entity decl",
+                47 to "Filesystem verifier error",
+                48 to "User canceled",
+                49 to "Non critical update in oobe",
+                50 to "Omaha update ignored over cellular",
+                51 to "Payload timestamp error",
+                52 to "Updated but not active")
     }
 
     override fun requiredSoftwareModulesAndPriority(swModules: Set<Updater.SwModule>): Updater.SwModsApplication {
@@ -171,7 +227,8 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
         return try {
             val result: Int = updateStatus.get(30, TimeUnit.MINUTES)
             updateEngine.unbind()
-
+            val messages = listOf("result: $result", errorCodeToDescription[result] ?: "")
+            Log.d(TAG, "result: ${messages.joinToString(" ")}")
             when (result) {
 
                 SUCCESS, UPDATED_BUT_NOT_ACTIVE -> {
