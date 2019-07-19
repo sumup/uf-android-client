@@ -19,8 +19,6 @@ import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import android.support.annotation.RequiresApi
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
 import java.util.zip.ZipFile
 import kotlin.streams.toList
 import android.os.PowerManager
@@ -28,8 +26,7 @@ import android.os.UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.android.communication.MessangerHandler
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.TimeoutException
+import java.util.concurrent.*
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -169,6 +166,13 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                 }
             }
 
+            if(i == UPDATED_NEED_REBOOT)  {
+                val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
+                pm!!.reboot(null)
+                Log.w(TAG, "Reboot fail")
+                messenger.sendMessageToServer(*listOf("Update is successfully applied but system failed to reboot", "Waiting manual reboot").toTypedArray())
+                updateStatus.complete(UPDATED_NEED_REBOOT)
+            }
         }
 
         override fun onPayloadApplicationComplete(errorNum: Int) {
@@ -228,11 +232,8 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
             when (result) {
 
                 UPDATED_NEED_REBOOT -> {
-                    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
-                    pm!!.reboot(null)
-                    Log.w(TAG, "Reboot fail")
-                    messenger.sendMessageToServer(*listOf("Update is successfully applied but system failed to reboot", "Waiting manual reboot").toTypedArray())
-
+                    Log.w(TAG, "Reboot fail, waiting for a manual reboot")
+                    CountDownLatch(1).await()
                     CurrentUpdateState.InstallationResult.Error(listOf("Update is successfully applied but system failed to reboot", "Installation status unknown"))
                 }
 
