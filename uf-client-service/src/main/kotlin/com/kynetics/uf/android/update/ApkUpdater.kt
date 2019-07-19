@@ -19,9 +19,6 @@ import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.util.concurrent.CountDownLatch
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageInfo
-
 
 
 class ApkUpdater(context: Context) : AndroidUpdater(context) {
@@ -113,9 +110,9 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
                         .FixedTimeProvider.ofSeconds(1800).getTimeout(null)
 
                 if(!countDownLatch.await(timeout.value, timeout.timeUnit)){
-                    val message = "Time to update exceeds the timeout"
-                    currentUpdateState.addSuccessMessageToRepor(message)
-                    Log.w(TAG,message)
+                    val messages = listOf("Time to update exceeds the timeout", "Package manager timeout expired, package installation status unknown").toTypedArray()
+                    currentUpdateState.addSuccessMessageToRepor(*messages)
+                    Log.w(TAG,messages.joinToString("\n"))
                 }
             }
         }
