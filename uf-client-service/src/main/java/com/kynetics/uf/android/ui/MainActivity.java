@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTitle(R.string.update_factory_label);
         final Intent intent =  getIntent();
         final int type = intent.getIntExtra(INTENT_TYPE_EXTRA_VARIABLE, 0);
         switch (type){
