@@ -60,19 +60,19 @@ class CurrentUpdateState(context: Context) {
         return try {
             val result = lastInstallFile().readLines()[1].trim()
             val response = when (result) {
-                "1" -> InstallationResult()
-                else -> InstallationResult(listOf("last_install result code: $result"))
+                "1" -> InstallationResult.Success()
+                else -> InstallationResult.Error(listOf("last_install result code: $result"))
             }
 
-//            persistArtifactInstallationResult(artifact, response)
+//            persistArtifactInstallationResult.Error(artifact, response)
             response
         } catch (e:Throwable){
             Log.e(TAG, e.message, e)
             when(e){
                 is FileNotFoundException -> {
-                    InstallationResult(listOf("File $LAST_INSTALL_FILE_NAME not found"))
+                    InstallationResult.Error(listOf("File $LAST_INSTALL_FILE_NAME not found"))
                 }
-                else -> InstallationResult(listOf("Installation fails with exception: ${e.message}"))
+                else -> InstallationResult.Error(listOf("Installation fails with exception: ${e.message}"))
             }
         }
     }
@@ -137,9 +137,13 @@ class CurrentUpdateState(context: Context) {
     }
 
 
-    data class InstallationResult(val errors:List<String> = emptyList()){
-        val success = errors.isEmpty()
+    sealed class InstallationResult{
+        abstract val details:List<String>
+
+        data class Success(override val details: List<String> = emptyList()):InstallationResult()
+        data class Error(override val details: List<String> = emptyList()):InstallationResult()
     }
+
 
     fun isPackageInstallationTerminated(packageName: String?, versionCode: Long?): Boolean {
         val key = String.format(APK_PACKAGE_TEMPLATE_KEY, getPackageKey(packageName))
@@ -197,11 +201,11 @@ class CurrentUpdateState(context: Context) {
             val previousSlotName =  sharedPreferences.getString(LAST_SLOT_NAME_SHAREDPREFERENCES_KEY, "")
             Log.d(TAG, "(current slot named, previous slot name) ($currentSlotName,$previousSlotName)")
             val success = previousSlotName !=  currentSlotName
-            val response = if(success){InstallationResult()} else { InstallationResult(listOf("System reboot on the same partition"))}
+            val response = if(success){InstallationResult.Success()} else { InstallationResult.Error(listOf("System reboot on the same partition"))}
             response
         } catch (e:Throwable){
             Log.e(TAG, e.message, e)
-            InstallationResult(listOf("Installation fails with exception: ${e.message}"))
+            InstallationResult.Error(listOf("Installation fails with exception: ${e.message}"))
         }
     }
 

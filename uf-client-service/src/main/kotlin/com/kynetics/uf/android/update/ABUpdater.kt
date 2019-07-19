@@ -12,6 +12,7 @@
 package com.kynetics.uf.android.update
 
 import android.content.Context
+import android.content.pm.PackageInstaller
 import android.os.*
 import android.os.UpdateEngine.ErrorCodeConstants.*
 import android.util.Log
@@ -23,10 +24,12 @@ import java.util.concurrent.TimeUnit
 import java.util.zip.ZipFile
 import kotlin.streams.toList
 import android.os.PowerManager
+import android.os.UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.android.communication.MessangerHandler
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.TimeoutException
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -127,8 +130,8 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
             it.artifacts.dropWhile { a ->
                 Log.d(TAG, "install artifact ${a.filename} from file ${a.path}")
                 val updateResult = installOta(a, currentUpdateState, messenger)
-                updateDetails.addAll(updateResult.errors)
-                updateResult.success
+                updateDetails.addAll(updateResult.details)
+                updateResult is CurrentUpdateState.InstallationResult.Success
             }.isEmpty()
         }.isEmpty()
 
@@ -166,12 +169,6 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                 }
             }
 
-
-            //todo ask authorization before reboot (if not forced)
-            if (i == UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT) {
-                val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
-                pm!!.reboot(null)
-            }
         }
 
         override fun onPayloadApplicationComplete(errorNum: Int) {
@@ -186,8 +183,8 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
 
         if (currentUpdateState.isABInstallationPending(artifact)) {
             val result = currentUpdateState.lastABIntallationResult(artifact)
-            val message = "Installation result of Ota named ${artifact.filename} is ${if (result.success) "success" else "failure"}"
-            messenger.sendMessageToServer(message + result.errors)
+            val message = "Installation result of Ota named ${artifact.filename} is ${if (result is CurrentUpdateState.InstallationResult.Success) "success" else "failure"}"
+            messenger.sendMessageToServer(message + result.details)
             Log.i(TAG, message)
             return result
         }
@@ -201,7 +198,7 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
         val propEntry = zipFile.getEntry(PROPERTY_FILE)
         if (payloadEntry == null || propEntry == null) {
             Log.d(TAG, "Malformed AB ota")
-            return CurrentUpdateState.InstallationResult(listOf("Malformed ota for AB update.",
+            return CurrentUpdateState.InstallationResult.Error(listOf("Malformed ota for AB update.",
                     "An AB ota update must contain a payload file named $PAYLOAD_FILE and a property file named $PROPERTY_FILE"))
         }
 
@@ -223,28 +220,47 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
         val payloadPath = "file://${File(updateDir, PAYLOAD_FILE).absolutePath}"
         Log.d(TAG, payloadPath)
         updateEngine.applyPayload(payloadPath, 0, 0, prop)
-
         return try {
-            val result: Int = updateStatus.get(30, TimeUnit.MINUTES)
+            val result: Int = updateStatus.get(3, TimeUnit.HOURS)
             updateEngine.unbind()
             val messages = listOf("result: $result", errorCodeToDescription[result] ?: "")
             Log.d(TAG, "result: ${messages.joinToString(" ")}")
             when (result) {
 
-                SUCCESS, UPDATED_BUT_NOT_ACTIVE -> {
-                    Log.d(TAG, "result: $result")
-                    CurrentUpdateState.InstallationResult()
+                UPDATED_NEED_REBOOT -> {
+                    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
+                    pm!!.reboot(null)
+                    Log.w(TAG, "Reboot fail")
+                    messenger.sendMessageToServer(*listOf("Update is successfully applied but system failed to reboot", "Waiting manual reboot").toTypedArray())
 
+                    CurrentUpdateState.InstallationResult.Error(listOf("Update is successfully applied but system failed to reboot", "Installation status unknown"))
+                }
+
+
+                UPDATED_BUT_NOT_ACTIVE ->{
+                    messenger.sendMessageToServer("Update is successfully applied but system failed to reboot")
+                    CurrentUpdateState.InstallationResult.Success()
+                }
+                SUCCESS, UPDATED_BUT_NOT_ACTIVE -> {
+                    CurrentUpdateState.InstallationResult.Success()
                 }
 
                 else -> {
-                    Log.d(TAG, "result: $result")
-                    CurrentUpdateState.InstallationResult(listOf("error code: $result"))
+                    CurrentUpdateState.InstallationResult.Error(messages)
                 }
             }
         } catch (e:Throwable){
-            Log.w(TAG, "Exception on apply AB update (${artifact.filename})", e)
-            CurrentUpdateState.InstallationResult(listOf("error: ${e.message}"))
+            when (e) {
+                is TimeoutException -> {
+                    val messages = listOf("Time to update exceeds the timeout", "Package manager timeout expired, package installation status unknown")
+                    CurrentUpdateState.InstallationResult.Error(messages)
+                }
+                else -> {
+                    Log.w(TAG, "Exception on apply AB update (${artifact.filename})", e)
+                    CurrentUpdateState.InstallationResult.Error(listOf("error: ${e.message}"))
+                }
+            }
+
         }
     }
 }

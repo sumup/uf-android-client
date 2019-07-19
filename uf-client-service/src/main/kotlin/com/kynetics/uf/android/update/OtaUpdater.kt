@@ -46,7 +46,7 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
             it.artifacts.dropWhile { a ->
                 Log.d(TAG,"install artifact ${a.filename} from file ${a.path}")
                     val installationResult = installOta(a, currentUpdateState, messenger)
-                    updateDetails.addAll(installationResult.errors)
+                    updateDetails.addAll(installationResult.details)
                     if(currentUpdateState.isFeebackReliable()){
                         updateDetails.add("Final feedback message is reliable")
                         val lastLog = currentUpdateState.parseLastLogFile()
@@ -54,14 +54,14 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                     } else {
                         updateDetails.add("Can't read ${CurrentUpdateState.LAST_LOG_FILE_NAME}, the final feedback message could be unreliable")
                     }
-                    installationResult.success
+                    installationResult is CurrentUpdateState.InstallationResult.Success
             }.isEmpty()
         }.isEmpty()
         return Updater.UpdateResult(success = success, details = updateDetails)
     }
 
     private fun sendLastLogAsFeedback(lastLog: List<String>, messenger: Updater.Messenger, installationResult: CurrentUpdateState.InstallationResult) {
-        if(installationResult.success){
+        if(installationResult is CurrentUpdateState.InstallationResult.Success){
             return
         }
         for (i in 0..lastLog.size / maxMessageForState) {
@@ -89,18 +89,18 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
         return when{
             installationState == CurrentUpdateState.InstallationState.PENDING ->{
                 val result = currentUpdateState.lastIntallationResult(artifact)
-                val message = "Installation result of Ota named ${artifact.filename} is ${if(result.success) "success" else "failure"}"
-                messenger.sendMessageToServer(message + result.errors)
+                val message = "Installation result of Ota named ${artifact.filename} is ${if(result is CurrentUpdateState.InstallationResult.Success) "success" else "failure"}"
+                messenger.sendMessageToServer(message + result.details)
                 Log.i(TAG, message)
                 result
             }
 
             installationState == CurrentUpdateState.InstallationState.SUCCESS ->{
-                CurrentUpdateState.InstallationResult()
+                CurrentUpdateState.InstallationResult.Success()
             }
 
             installationState == CurrentUpdateState.InstallationState.ERROR ->{
-                CurrentUpdateState.InstallationResult(listOf("Installation of ${artifact.filename} is failed"))
+                CurrentUpdateState.InstallationResult.Error(listOf("Installation of ${artifact.filename} is failed"))
             }
 
             verify(artifact) ->{
@@ -109,9 +109,9 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                 messenger.sendMessageToServer("Applying ota update (${artifact.filename})...")
                 return try {
                     RecoverySystem.installPackage(context, packageFile)
-                    CurrentUpdateState.InstallationResult(listOf("Error, installation package doesn't return"))
+                    CurrentUpdateState.InstallationResult.Error(listOf("Error, installation package doesn't return"))
                 }catch (ioe:IOException){
-                    CurrentUpdateState.InstallationResult(listOf("Error, unable to reboot in recovery mode",
+                    CurrentUpdateState.InstallationResult.Error(listOf("Error, unable to reboot in recovery mode",
                             ioe.message ?: ""))
                 }
             }
@@ -120,7 +120,7 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                 val message = "Wrong ota signature"
                 messenger.sendMessageToServer(message)
                 Log.w(TAG, message)
-                CurrentUpdateState.InstallationResult(listOf(message))
+                CurrentUpdateState.InstallationResult.Error(listOf(message))
             }
         }
 
