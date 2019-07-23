@@ -12,7 +12,13 @@ build: ![build status status](https://travis-ci.org/Kynetics/uf-android-client.s
 ## uf-client-service
 uf-client-service is an android service that run in background and manage the updates.
 
-uf-client-service must be install as **SYSTEM** application.
+uf-client-service must be install as **SYSTEM** application. [Android hidden api](https://github.com/anggrayudi/android-hidden-api).
+are used from the version 1.0 to support update of sytems with double partitions
+
+### State diagrams
+![UF STM Main](https://drive.google.com/uc?export=view&id=1g8r0gk7tNlrCbquzMlhXmDDGMxYc6kxT)
+
+![UF STM Update](https://drive.google.com/uc?export=view&id=1-EWX7pIpEWcBf3RFFW8MBhleooD8Nbp8)
 
 ## uf-client-ui-example
 Uf-client-ui-example is an example of application that use the uf-client-service
