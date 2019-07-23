@@ -25,7 +25,7 @@ fun MessageListener.Message.toUFMessage(): UFServiceMessageV1 {
         is MessageListener.Message.State.CancellingUpdate -> UFServiceMessageV1.State.CancellingUpdate
         is MessageListener.Message.State.WaitingDownloadAuthorization -> UFServiceMessageV1.State.WaitingDownloadAuthorization
         is MessageListener.Message.State.WaitingUpdateAuthorization -> UFServiceMessageV1.State.WaitingUpdateAuthorization
-        is MessageListener.Message.State.Waiting -> UFServiceMessageV1.State.Waiting
+        is MessageListener.Message.State.Idle -> UFServiceMessageV1.State.Idle
 
         is MessageListener.Message.Event.Error -> UFServiceMessageV1.Event.Error(details)
         is MessageListener.Message.Event.Polling -> UFServiceMessageV1.Event.Polling

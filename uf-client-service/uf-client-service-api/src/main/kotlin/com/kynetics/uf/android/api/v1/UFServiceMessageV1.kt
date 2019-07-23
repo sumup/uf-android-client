@@ -27,7 +27,7 @@ sealed class UFServiceMessageV1 {
         CANCELLING_UPDATE,
         WAITING_DOWNLOAD_AUTHORIZATION,
         WAITING_UPDATE_AUTHORIZATION,
-        WAITING,
+        IDLE,
         START_DOWNLOAD_FILE,
         DOWNLOAD_PROGRESS,
         UPDATE_PROGRESS,
@@ -59,7 +59,7 @@ sealed class UFServiceMessageV1 {
         object CancellingUpdate: State(MessageName.CANCELLING_UPDATE, "Last update request is being cancelled")
         object WaitingDownloadAuthorization: State(MessageName.WAITING_DOWNLOAD_AUTHORIZATION, "Waiting authorization to start download")
         object WaitingUpdateAuthorization: State(MessageName.WAITING_UPDATE_AUTHORIZATION,"Waiting authorization to start update")
-        object Waiting: State(MessageName.WAITING, "There isn't any request from server")
+        object Idle: State(MessageName.IDLE, "Client is waiting for new requests from server")
 
         @UseExperimental(ImplicitReflectionSerializer::class)
         override fun toJson():String{
@@ -137,7 +137,7 @@ sealed class UFServiceMessageV1 {
                 MessageName.CANCELLING_UPDATE.name -> State.CancellingUpdate
                 MessageName.WAITING_DOWNLOAD_AUTHORIZATION.name -> State.WaitingDownloadAuthorization
                 MessageName.WAITING_UPDATE_AUTHORIZATION.name -> State.WaitingUpdateAuthorization
-                MessageName.WAITING.name -> State.Waiting
+                MessageName.IDLE.name -> State.Idle
 
                 MessageName.ERROR.name -> json.fromJson<Event.Error>(jsonElement)
                 MessageName.START_DOWNLOAD_FILE.name -> json.fromJson<Event.StartDownloadFile>(jsonElement)
