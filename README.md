@@ -22,9 +22,11 @@ Uf-client-ui-example is an example of application that use the uf-client-service
 
 ## Authors
 * **Daniele Sergio** - *Initial work* - [danielesergio](https://github.com/danielesergio)
+* **Andrea Zoleo** 
+* **Diego Rondini**
 
 See also the list of [contributors](https://github.com/Kynetics/UfAndroidClient/graphs/contributors) who participated in this project.
 
 ## License
-Copyright © 2017-2018, [Kynetics LLC](https://www.kynetics.com).
+Copyright © 2017-2019, [Kynetics LLC](https://www.kynetics.com).
 Released under the [EPLv1 License](http://www.eclipse.org/legal/epl-v10.html).
