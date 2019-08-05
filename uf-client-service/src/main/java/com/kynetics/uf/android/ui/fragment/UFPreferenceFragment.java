@@ -22,6 +22,7 @@ import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.PreferenceGroup;
 import android.support.v7.preference.SwitchPreferenceCompat;
+import android.telecom.Log;
 import android.widget.Toast;
 
 import com.kynetics.uf.android.R;
@@ -35,6 +36,8 @@ import com.kynetics.uf.android.communication.MessangerHandler;
  * A simple {@link PreferenceFragmentCompat} subclass.
  */
 public class UFPreferenceFragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
+
+    private static final String TAG = UFPreferenceFragment.class.getSimpleName();
 
     public UFPreferenceFragment() {
     }
@@ -151,8 +154,12 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
         }
 
         if(key.equals(getString(R.string.shared_preferences_current_state_key))){
-            final UFServiceMessageV1 messageV1 = UFServiceMessageV1.Companion.fromJson((String) MessangerHandler.INSTANCE.getlastSharedMessage(ApiCommunicationVersion.V1).getMessageToSendOnSync());
-            preference.setSummary(messageV1.getName().name());
+            try {
+                final UFServiceMessageV1 messageV1 = UFServiceMessageV1.Companion.fromJson((String) MessangerHandler.INSTANCE.getlastSharedMessage(ApiCommunicationVersion.V1).getMessageToSendOnSync());
+                preference.setSummary(messageV1.getName().name());
+            }catch(IllegalArgumentException error){
+                Log.w(TAG, "Error setting current state", error);
+            }
             return;
         }
 
