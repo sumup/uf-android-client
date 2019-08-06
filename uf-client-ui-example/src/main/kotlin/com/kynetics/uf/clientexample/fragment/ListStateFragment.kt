@@ -17,7 +17,6 @@ import com.kynetics.uf.clientexample.dummy.toDate
 import kotlinx.android.synthetic.main.state_list_content.view.*
 import kotlinx.android.synthetic.main.state_list_fragment.view.*
 
-
 class ListStateFragment : Fragment(), UFServiceInteractionFragment {
 
     var twoPane = false
@@ -35,8 +34,11 @@ class ListStateFragment : Fragment(), UFServiceInteractionFragment {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
 
         val rootView = inflater.inflate(R.layout.state_list_fragment, container, false)
 
@@ -44,22 +46,23 @@ class ListStateFragment : Fragment(), UFServiceInteractionFragment {
         return rootView
     }
 
-
     override fun onAttachFragment(childFragment: Fragment?) {
         super.onAttachFragment(childFragment)
         adapter?.notifyDataSetChanged()
     }
 
-    var adapter : SimpleItemRecyclerViewAdapter?  = null
+    var adapter: SimpleItemRecyclerViewAdapter? = null
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         adapter = SimpleItemRecyclerViewAdapter(this.activity!!, MessageHistory.ITEMS, twoPane)
         recyclerView.adapter = adapter
     }
 
-    inner class SimpleItemRecyclerViewAdapter(private val parentActivity: FragmentActivity,
-                                        private val values: List<MessageHistory.StateEntry>,
-                                        private val twoPane: Boolean) :
+    inner class SimpleItemRecyclerViewAdapter(
+        private val parentActivity: FragmentActivity,
+        private val values: List<MessageHistory.StateEntry>,
+        private val twoPane: Boolean
+    ) :
             RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
         private val onClickListener: View.OnClickListener
@@ -81,10 +84,7 @@ class ListStateFragment : Fragment(), UFServiceInteractionFragment {
 
                 if (twoPane) {
 
-                    selectedItem = if (itemIndex == selectedItem ) -1 else itemIndex
-
-
-
+                    selectedItem = if (itemIndex == selectedItem) -1 else itemIndex
 
                     parentActivity.supportFragmentManager
                             .beginTransaction()
@@ -107,14 +107,14 @@ class ListStateFragment : Fragment(), UFServiceInteractionFragment {
             val item = values[position]
             holder.idView.text = item.id.toDate()
             holder.contentView.text = item.state.name.toString()
-            holder.badge.visibility = if(item.unread == 0) View.GONE else View.VISIBLE
+            holder.badge.visibility = if (item.unread == 0) View.GONE else View.VISIBLE
             holder.badge.text = item.unread.toString()
             with(holder.itemView) {
                 tag = item
                 setOnClickListener(onClickListener)
             }
 
-            if(selectedItem == position){
+            if (selectedItem == position) {
                 (holder.contentView.parent.parent as ViewGroup).setBackgroundColor(Color.LTGRAY)
             } else {
                 (holder.contentView.parent.parent as ViewGroup).setBackgroundColor(Color.WHITE)
@@ -126,14 +126,12 @@ class ListStateFragment : Fragment(), UFServiceInteractionFragment {
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val idView: TextView = view.date_text
             val contentView: TextView = view.state_name
-            val badge:TextView = view.unread_event
-
+            val badge: TextView = view.unread_event
         }
-
     }
 
     override fun onMessageReceived(message: UFServiceMessageV1) {
-        if(selectedItem >= 0){
+        if (selectedItem >= 0) {
             MessageHistory.ITEMS[selectedItem].unread = 0
         }
         adapter?.notifyDataSetChanged()
@@ -146,5 +144,4 @@ class ListStateFragment : Fragment(), UFServiceInteractionFragment {
          */
         const val ARG_TWO_PANE = "two_pane"
     }
-
 }

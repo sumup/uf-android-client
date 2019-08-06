@@ -5,18 +5,20 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 
 @Serializable
-data class UFServiceConfiguration(val tenant: String,
-                                   val controllerId: String,
-                                   val retryDelay: Long,
-                                   val url: String,
-                                   val targetToken: String,
-                                   val gatewayToken: String,
-                                   val isApiMode: Boolean,
-                                   val isEnable: Boolean,
-                                   val isUpdateFactoryServe: Boolean,
-                                   val targetAttributes: Map<String, String>):java.io.Serializable{
+data class UFServiceConfiguration(
+    val tenant: String,
+    val controllerId: String,
+    val retryDelay: Long,
+    val url: String,
+    val targetToken: String,
+    val gatewayToken: String,
+    val isApiMode: Boolean,
+    val isEnable: Boolean,
+    val isUpdateFactoryServe: Boolean,
+    val targetAttributes: Map<String, String>
+) : java.io.Serializable {
 
-    fun toJson():String{
+    fun toJson(): String {
         return json.stringify(serializer(), this)
     }
 
@@ -67,12 +69,10 @@ data class UFServiceConfiguration(val tenant: String,
             return this
         }
 
-
         @Deprecated("As of release 0.3.4, replaced by {@link #withEnable(boolean)}")
         fun witEnable(enable: Boolean): Builder {
             return withEnable(enable)
         }
-
 
         @Deprecated("As of release 0.3.4, replaced by {@link #withTargetAttributes(Map<String,String>)}")
         fun witArgs(args: Map<String, String>): Builder {
@@ -108,10 +108,10 @@ data class UFServiceConfiguration(val tenant: String,
         }
 
         fun configurationIsValid(): Boolean {
-            return (notEmptyString(tenant)
-                    && notEmptyString(controllerId)
-                    && notEmptyString(url)
-                    && retryDelay > 0)
+            return (notEmptyString(tenant) &&
+                    notEmptyString(controllerId) &&
+                    notEmptyString(url) &&
+                    retryDelay > 0)
         }
 
         private fun notEmptyString(stringToTest: String?): Boolean {
@@ -119,10 +119,9 @@ data class UFServiceConfiguration(val tenant: String,
         }
     }
 
-
-    companion object{
+    companion object {
         private val json = Json(JsonConfiguration.Stable.copy(strictMode = false))
-        private const val  serialVersionUID = -6025361892414738765L
+        private const val serialVersionUID = -6025361892414738765L
 
         @JvmStatic
         fun builder(): Builder {
@@ -130,15 +129,13 @@ data class UFServiceConfiguration(val tenant: String,
         }
 
         @JvmStatic
-        fun fromJson(data:String):UFServiceConfiguration{
+        fun fromJson(data: String): UFServiceConfiguration {
             return json.parse(serializer(), data)
         }
     }
-
 
     @Deprecated("As of release 0.3.4, replaced by {@link #getTargetAttributes()}")
     fun getArgs(): Map<String, String> {
         return this.targetAttributes
     }
-
 }

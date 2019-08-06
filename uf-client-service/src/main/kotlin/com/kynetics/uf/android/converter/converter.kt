@@ -14,12 +14,12 @@ package com.kynetics.uf.android.converter
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
 
-fun MessageListener.Message.State.Downloading.Artifact.toUFArtifact(): UFServiceMessageV1.State.Downloading.Artifact{
+fun MessageListener.Message.State.Downloading.Artifact.toUFArtifact(): UFServiceMessageV1.State.Downloading.Artifact {
     return UFServiceMessageV1.State.Downloading.Artifact(name, size, md5)
 }
 
 fun MessageListener.Message.toUFMessage(): UFServiceMessageV1 {
-    return when(this){
+    return when (this) {
         is MessageListener.Message.State.Downloading -> UFServiceMessageV1.State.Downloading(artifacts.map { it.toUFArtifact() })
         is MessageListener.Message.State.Updating -> UFServiceMessageV1.State.Updating
         is MessageListener.Message.State.CancellingUpdate -> UFServiceMessageV1.State.CancellingUpdate

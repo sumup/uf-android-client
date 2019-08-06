@@ -13,7 +13,6 @@ package com.kynetics.uf.android.configuration;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import com.kynetics.uf.android.api.UFServiceConfiguration;
 
 import java.io.BufferedReader;

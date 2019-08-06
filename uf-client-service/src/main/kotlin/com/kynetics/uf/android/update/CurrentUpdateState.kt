@@ -20,7 +20,7 @@ import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.io.FileNotFoundException
-import java.util.*
+import java.util.HashSet
 import kotlin.math.min
 
 class CurrentUpdateState(context: Context) {
@@ -33,13 +33,13 @@ class CurrentUpdateState(context: Context) {
     val distributionReportSuccess: Set<String>
         get() = sharedPreferences.getStringSet(APK_DISTRIBUTION_REPORT_SUCCESS_KEY, HashSet())!!
 
-    fun addErrorToRepor(vararg errors:String){
+    fun addErrorToRepor(vararg errors: String) {
         val newDistReportError = distributionReportError.toMutableSet()
         newDistReportError.addAll(errors)
         sharedPreferences.edit().putStringSet(APK_DISTRIBUTION_REPORT_ERROR_KEY, newDistReportError).apply()
     }
 
-    fun addSuccessMessageToRepor(vararg messages:String){
+    fun addSuccessMessageToRepor(vararg messages: String) {
         val newDistReportSuccess = distributionReportSuccess.toMutableSet()
         newDistReportSuccess.addAll(messages)
         sharedPreferences.edit().putStringSet(APK_DISTRIBUTION_REPORT_SUCCESS_KEY, newDistReportSuccess).apply()
@@ -49,14 +49,13 @@ class CurrentUpdateState(context: Context) {
         this.sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE_NAME, MODE_PRIVATE)
     }
 
+    fun rootDir(): File = File(Environment.getDownloadCacheDirectory(), "update_factory")
 
-    fun rootDir():File = File(Environment.getDownloadCacheDirectory(), "update_factory")
-
-    private fun currentInstallationDir():File = File(rootDir(), "current_installation")
+    private fun currentInstallationDir(): File = File(rootDir(), "current_installation")
 
 //    private fun previousInstallationDir():File = File(rootDir(), "last_installation")
 
-    fun lastIntallationResult(artifact: Updater.SwModuleWithPath.Artifact):InstallationResult{
+    fun lastIntallationResult(artifact: Updater.SwModuleWithPath.Artifact): InstallationResult {
         return try {
             val result = lastInstallFile().readLines()[1].trim()
             val response = when (result) {
@@ -66,9 +65,9 @@ class CurrentUpdateState(context: Context) {
 
 //            persistArtifactInstallationResult.Error(artifact, response)
             response
-        } catch (e:Throwable){
+        } catch (e: Throwable) {
             Log.e(TAG, e.message, e)
-            when(e){
+            when (e) {
                 is FileNotFoundException -> {
                     InstallationResult.Error(listOf("File $LAST_INSTALL_FILE_NAME not found"))
                 }
@@ -77,42 +76,41 @@ class CurrentUpdateState(context: Context) {
         }
     }
 
-    fun lastInstallFile():File{
+    fun lastInstallFile(): File {
         return File(RECOVERY_CACHE, LAST_INSTALL_FILE_NAME)
     }
 
-    fun lastLogFile():File{
+    fun lastLogFile(): File {
         return File(RECOVERY_CACHE, LAST_LOG_FILE_NAME)
     }
 
-    fun isFeebackReliable():Boolean{
+    fun isFeebackReliable(): Boolean {
         return lastInstallFile().canWrite() && lastLogFile().canRead()
     }
 
-    fun startUpdate(){
+    fun startUpdate() {
         sharedPreferences.edit()
                 .putBoolean(UPDATE_IS_STARTED_KEY, true)
                 .apply()
     }
 
-    fun isUpdateStart():Boolean{
+    fun isUpdateStart(): Boolean {
         return sharedPreferences.getBoolean(UPDATE_IS_STARTED_KEY, false)
     }
 
-    fun addPendingOTAInstallation(artifact: Updater.SwModuleWithPath.Artifact){
+    fun addPendingOTAInstallation(artifact: Updater.SwModuleWithPath.Artifact) {
         val file = File(CACHE_UF, artifact.filename)
-        if(!file.exists()){
+        if (!file.exists()) {
             file.parentFile.mkdirs()
             file.createNewFile()
         }
         val lastInstallFile = lastInstallFile()
-        if(lastInstallFile.exists() && !lastInstallFile.delete()){
+        if (lastInstallFile.exists() && !lastInstallFile.delete()) {
             Log.w(TAG, "cant delete ${lastInstallFile.name}")
         }
-
     }
 
-    fun getOtaInstallationState(artifact: Updater.SwModuleWithPath.Artifact):InstallationState{
+    fun getOtaInstallationState(artifact: Updater.SwModuleWithPath.Artifact): InstallationState {
         val pendingInstallationFile = File(CACHE_UF, artifact.filename)
         return when {
             pendingInstallationFile.exists() -> InstallationState.PENDING
@@ -122,28 +120,24 @@ class CurrentUpdateState(context: Context) {
         }
     }
 
-
-
-    fun isABInstallationPending(artifact: Updater.SwModuleWithPath.Artifact):Boolean{
+    fun isABInstallationPending(artifact: Updater.SwModuleWithPath.Artifact): Boolean {
         return sharedPreferences.getString(PENDING_AB_SHAREDPREFERENCES_KEY, "") == artifact.hashes.md5
     }
 
-    fun addPendingABInstallation(artifact: Updater.SwModuleWithPath.Artifact){
+    fun addPendingABInstallation(artifact: Updater.SwModuleWithPath.Artifact) {
         sharedPreferences.edit().putString(PENDING_AB_SHAREDPREFERENCES_KEY, artifact.hashes.md5).apply()
     }
 
-    enum class InstallationState{
+    enum class InstallationState {
         PENDING, NONE, SUCCESS, ERROR
     }
 
+    sealed class InstallationResult {
+        abstract val details: List<String>
 
-    sealed class InstallationResult{
-        abstract val details:List<String>
-
-        data class Success(override val details: List<String> = emptyList()):InstallationResult()
-        data class Error(override val details: List<String> = emptyList()):InstallationResult()
+        data class Success(override val details: List<String> = emptyList()) : InstallationResult()
+        data class Error(override val details: List<String> = emptyList()) : InstallationResult()
     }
-
 
     fun isPackageInstallationTerminated(packageName: String?, versionCode: Long?): Boolean {
         val key = String.format(APK_PACKAGE_TEMPLATE_KEY, getPackageKey(packageName))
@@ -186,7 +180,7 @@ class CurrentUpdateState(context: Context) {
                 .apply()
     }
 
-    fun saveSlotName(){
+    fun saveSlotName() {
         val partionSlotName = SystemProperties.get(LAST_LOST_NAME_PROPERTY_KEY)
         Log.d(TAG, "Using slot named: $partionSlotName")
         sharedPreferences.edit()
@@ -194,26 +188,26 @@ class CurrentUpdateState(context: Context) {
                 .apply()
     }
 
-    //todo refactor use pending file to store last installation  slot name
-    fun lastABIntallationResult(artifact: Updater.SwModuleWithPath.Artifact):InstallationResult{
+    // todo refactor use pending file to store last installation  slot name
+    fun lastABIntallationResult(artifact: Updater.SwModuleWithPath.Artifact): InstallationResult {
         return try {
             val currentSlotName = SystemProperties.get(LAST_LOST_NAME_PROPERTY_KEY)
-            val previousSlotName =  sharedPreferences.getString(LAST_SLOT_NAME_SHAREDPREFERENCES_KEY, "")
+            val previousSlotName = sharedPreferences.getString(LAST_SLOT_NAME_SHAREDPREFERENCES_KEY, "")
             Log.d(TAG, "(current slot named, previous slot name) ($currentSlotName,$previousSlotName)")
-            val success = previousSlotName !=  currentSlotName
-            val response = if(success){InstallationResult.Success()} else { InstallationResult.Error(listOf("System reboot on the same partition"))}
+            val success = previousSlotName != currentSlotName
+            val response = if (success) { InstallationResult.Success() } else { InstallationResult.Error(listOf("System reboot on the same partition")) }
             response
-        } catch (e:Throwable){
+        } catch (e: Throwable) {
             Log.e(TAG, e.message, e)
             InstallationResult.Error(listOf("Installation fails with exception: ${e.message}"))
         }
     }
 
-    fun parseLastLogFile():List<String>{
-        return try{
+    fun parseLastLogFile(): List<String> {
+        return try {
             val lastLogFile = File(RECOVERY_CACHE, LAST_LOG_FILE_NAME)
             lastLogFile.readLines().map { it.substring(0, min(it.length, 512)) }
-        } catch (e:Throwable){
+        } catch (e: Throwable) {
             Log.w(TAG, "cant part $LAST_LOG_FILE_NAME", e)
             listOf("Can't read $LAST_LOG_FILE_NAME, the notifications messageToSendOnSync could be unreliable")
         }
@@ -233,10 +227,9 @@ class CurrentUpdateState(context: Context) {
         private const val APK_PACKAGE_START_KEY = "APK_PACKAGE"
         private const val APK_PACKAGE_TEMPLATE_KEY = "APK_PACKAGE_%s_KEY"
         private val CACHE = File("cache")
-        private val CACHE_UF = File(CACHE,"update_factory")
-        private val RECOVERY_CACHE = File(CACHE,"recovery")
+        private val CACHE_UF = File(CACHE, "update_factory")
+        private val RECOVERY_CACHE = File(CACHE, "recovery")
         const val LAST_LOG_FILE_NAME = "last_log"
         private const val LAST_INSTALL_FILE_NAME = "last_install"
     }
-
 }

@@ -20,16 +20,15 @@ import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.util.concurrent.CountDownLatch
 
-
 class ApkUpdater(context: Context) : AndroidUpdater(context) {
 
     companion object {
-        val TAG:String = ApkUpdater::class.java.simpleName
+        val TAG: String = ApkUpdater::class.java.simpleName
     }
 
     override fun requiredSoftwareModulesAndPriority(swModules: Set<Updater.SwModule>): Updater.SwModsApplication {
 
-        return Updater.SwModsApplication( 1,
+        return Updater.SwModsApplication(1,
                 swModules
                         .filter { it.type == "bApp" }
                         .map { Updater.SwModsApplication.SwModule(
@@ -37,19 +36,18 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
                                 it.name,
                                 it.version,
                                 it.artifacts
-                                        .filter { a->a.filename.endsWith(".apk", true) }
+                                        .filter { a -> a.filename.endsWith(".apk", true) }
                                         .map { a -> a.hashes }
                                         .toSet())
                         }.toSet())
     }
 
-
     override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Updater.UpdateResult {
-        if(Build.VERSION.SDK_INT <  Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             val errorMessage = "Installation of apk is not supported from device with android system " +
                     "com.kynetics.uf.android.api lower than ${Build.VERSION_CODES.LOLLIPOP} (current is ${Build.VERSION.SDK_INT})"
             messenger.sendMessageToServer(errorMessage)
-            Log.w(TAG,errorMessage)
+            Log.w(TAG, errorMessage)
             return Updater.UpdateResult(
                     success = false,
                     details = listOf(errorMessage)
@@ -58,13 +56,12 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
 
         val currentUpdateState = CurrentUpdateState(context)
 
-
         modules.flatMap { it.artifacts }
-                .filter { !currentUpdateState.isPackageInstallationTerminated(getPackageFromApk(context,it.path), getVersionFromApk(context, it.path)) }.forEach{a ->
-                    Log.d(TAG,"install artifact ${a.filename} from file ${a.path}")
+                .filter { !currentUpdateState.isPackageInstallationTerminated(getPackageFromApk(context, it.path), getVersionFromApk(context, it.path)) }.forEach { a ->
+                    Log.d(TAG, "install artifact ${a.filename} from file ${a.path}")
                     try {
                         installApk(a, messenger)
-                    } catch (t: Throwable){ //new client replace with IOException | IllegalArgumentException e
+                    } catch (t: Throwable) { // new client replace with IOException | IllegalArgumentException e
                         val error = "${a.filename} installation fails with error ${t.message}"
                         currentUpdateState.addErrorToRepor(error)
                         currentUpdateState.packageInstallationTerminated(getPackageFromApk(context, a.path), getVersionFromApk(context, a.path))
@@ -78,19 +75,19 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    private fun installApk(artifact: Updater.SwModuleWithPath.Artifact, messenger: Updater.Messenger){
+    private fun installApk(artifact: Updater.SwModuleWithPath.Artifact, messenger: Updater.Messenger) {
 
         val currentUpdateState = CurrentUpdateState(context)
         val apk = File(artifact.path)
 
-        when{
-            !apk.exists() ->{
+        when {
+            !apk.exists() -> {
                 val errorMessage = "Apk not found"
-                Log.w(TAG,errorMessage)
+                Log.w(TAG, errorMessage)
                 currentUpdateState.addErrorToRepor(errorMessage)
             }
 
-            else ->{
+            else -> {
                 val countDownLatch = CountDownLatch(1)
                 val packageName = getPackageFromApk(context, apk.absolutePath)
                 val packageVersion = getVersionFromApk(context, apk.absolutePath)
@@ -109,16 +106,14 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
                 val timeout = UpdateConfirmationTimeoutProvider
                         .FixedTimeProvider.ofSeconds(1800).getTimeout(null)
 
-                if(!countDownLatch.await(timeout.value, timeout.timeUnit)){
+                if (!countDownLatch.await(timeout.value, timeout.timeUnit)) {
                     val messages = listOf("Time to update exceeds the timeout", "Package manager timeout expired, package installation status unknown").toTypedArray()
                     currentUpdateState.addSuccessMessageToRepor(*messages)
-                    Log.w(TAG,messages.joinToString("\n"))
+                    Log.w(TAG, messages.joinToString("\n"))
                 }
             }
         }
-
     }
-
 
     private fun getPackageFromApk(context: Context, apkPath: String): String? {
         val packageInfo = context.packageManager.getPackageArchiveInfo(apkPath, PackageManager.GET_ACTIVITIES)
@@ -136,5 +131,4 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
         }
         return null
     }
-
 }

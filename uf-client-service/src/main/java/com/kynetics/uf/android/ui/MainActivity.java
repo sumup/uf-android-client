@@ -20,12 +20,11 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-
-import com.kynetics.uf.android.ui.fragment.UFPreferenceFragment;
 import com.kynetics.uf.android.R;
 import com.kynetics.uf.android.UpdateFactoryService;
 import com.kynetics.uf.android.ui.fragment.AuthorizationDialogFragment;
 import com.kynetics.uf.android.ui.fragment.AuthorizationDialogFragment.OnAuthorization;
+import com.kynetics.uf.android.ui.fragment.UFPreferenceFragment;
 
 /**
  * @author Daniele Sergio

@@ -15,25 +15,23 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
+import android.content.pm.PackageInstaller.EXTRA_PACKAGE_NAME
 import android.os.Build
 import android.support.annotation.RequiresApi
 import android.util.Log
-
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
-
-import java.util.Collections
 import java.util.concurrent.CountDownLatch
 
-import android.content.pm.PackageInstaller.EXTRA_PACKAGE_NAME
-
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-class PackageInstallerBroadcastReceiver internal constructor(private val sessionId: Int,
-                                                             private val countDownLatch: CountDownLatch,
-                                                             private val artifact: Updater.SwModuleWithPath.Artifact,
-                                                             private val currentUpdateState: CurrentUpdateState,
-                                                             private val messenger: Updater.Messenger,
-                                                             private val packageName: String,
-                                                             private val packageVersion: Long?) : BroadcastReceiver() {
+class PackageInstallerBroadcastReceiver internal constructor(
+    private val sessionId: Int,
+    private val countDownLatch: CountDownLatch,
+    private val artifact: Updater.SwModuleWithPath.Artifact,
+    private val currentUpdateState: CurrentUpdateState,
+    private val messenger: Updater.Messenger,
+    private val packageName: String,
+    private val packageVersion: Long?
+) : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (InstallerSession.ACTION_INSTALL_COMPLETE != intent.action) {

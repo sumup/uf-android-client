@@ -12,22 +12,27 @@
 package com.kynetics.uf.android.update
 
 import android.content.Context
-import android.content.pm.PackageInstaller
-import android.os.*
-import android.os.UpdateEngine.ErrorCodeConstants.*
-import android.util.Log
-import com.kynetics.updatefactory.ddiclient.core.api.Updater
-import java.io.File
-import android.support.annotation.RequiresApi
-import java.util.zip.ZipFile
-import kotlin.streams.toList
+import android.os.Build
 import android.os.PowerManager
+import android.os.UpdateEngine
+import android.os.UpdateEngine.ErrorCodeConstants.SUCCESS
+import android.os.UpdateEngine.ErrorCodeConstants.UPDATED_BUT_NOT_ACTIVE
 import android.os.UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT
+import android.os.UpdateEngineCallback
+import android.support.annotation.RequiresApi
+import android.util.Log
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.android.communication.MessangerHandler
-import java.util.concurrent.*
-
+import com.kynetics.updatefactory.ddiclient.core.api.Updater
+import java.io.File
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.zip.ZipFile
+import kotlin.streams.toList
 
 @RequiresApi(Build.VERSION_CODES.O)
 class ABUpdater(context: Context) : AndroidUpdater(context) {
@@ -49,7 +54,6 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                 UpdateEngine.UpdateStatusConstants.REPORTING_ERROR_EVENT to "Reporting error event",
                 UpdateEngine.UpdateStatusConstants.ATTEMPTING_ROLLBACK to "Attempting rollback",
                 UpdateEngine.UpdateStatusConstants.DISABLED to "Disable")
-
 
         private val errorCodeToDescription = mapOf(
                 0 to "Success",
@@ -137,13 +141,14 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
     }
 
     class MyUpdateEngineCallback(
-            private val context: Context,
-            private val messenger: Updater.Messenger,
-            private val updateStatus: CompletableFuture<Int>) : UpdateEngineCallback() {
+        private val context: Context,
+        private val messenger: Updater.Messenger,
+        private val updateStatus: CompletableFuture<Int>
+    ) : UpdateEngineCallback() {
         var previosState = Int.MAX_VALUE
         val queue = ArrayBlockingQueue<Double>(10, true)
 
-        override fun onStatusUpdate(i: Int, v: Float) {  //i==status  v==percent
+        override fun onStatusUpdate(i: Int, v: Float) { // i==status  v==percent
             Log.d(TAG, "status:$i")
             Log.d(TAG, "percent:$v")
             val currentPhaseProgress = if (v.isNaN()) 0.0 else v.toDouble()
@@ -155,18 +160,17 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                 queue.addAll((1..9).map { it.toDouble() / 10 })
             }
 
-
             val limit = queue.peek() ?: 1.0
-            if(currentPhaseProgress > limit || currentPhaseProgress == 1.0 || newPhase) {
+            if (currentPhaseProgress > limit || currentPhaseProgress == 1.0 || newPhase) {
                 MessangerHandler.sendMessage(UFServiceCommunicationConstants.MSG_SERVICE_STATUS, UFServiceMessageV1.Event.UpdateProgress(
                         phaseName = UPDATE_STATUS.getValue(i),
                         percentage = currentPhaseProgress).toJson())
-                while(currentPhaseProgress >= queue.peek() ?: 1.0 && queue.isNotEmpty()){
+                while (currentPhaseProgress >= queue.peek() ?: 1.0 && queue.isNotEmpty()) {
                     queue.poll()
                 }
             }
 
-            if(i == UPDATED_NEED_REBOOT)  {
+            if (i == UPDATED_NEED_REBOOT) {
                 val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
                 pm!!.reboot(null)
                 Log.w(TAG, "Reboot fail")
@@ -181,9 +185,11 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
         }
     }
 
-    private fun installOta(artifact: Updater.SwModuleWithPath.Artifact,
-                           currentUpdateState: CurrentUpdateState,
-                           messenger: Updater.Messenger): CurrentUpdateState.InstallationResult {
+    private fun installOta(
+        artifact: Updater.SwModuleWithPath.Artifact,
+        currentUpdateState: CurrentUpdateState,
+        messenger: Updater.Messenger
+    ): CurrentUpdateState.InstallationResult {
 
         if (currentUpdateState.isABInstallationPending(artifact)) {
             val result = currentUpdateState.lastABIntallationResult(artifact)
@@ -237,8 +243,7 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                     CurrentUpdateState.InstallationResult.Error(listOf("Update is successfully applied but system failed to reboot", "Installation status unknown"))
                 }
 
-
-                UPDATED_BUT_NOT_ACTIVE ->{
+                UPDATED_BUT_NOT_ACTIVE -> {
                     messenger.sendMessageToServer("Update is successfully applied but system failed to reboot")
                     CurrentUpdateState.InstallationResult.Success()
                 }
@@ -250,7 +255,7 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                     CurrentUpdateState.InstallationResult.Error(messages)
                 }
             }
-        } catch (e:Throwable){
+        } catch (e: Throwable) {
             when (e) {
                 is TimeoutException -> {
                     val messages = listOf("Time to update exceeds the timeout", "Package manager timeout expired, package installation status unknown")
@@ -261,7 +266,6 @@ class ABUpdater(context: Context) : AndroidUpdater(context) {
                     CurrentUpdateState.InstallationResult.Error(listOf("error: ${e.message}"))
                 }
             }
-
         }
     }
 }

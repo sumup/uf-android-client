@@ -18,7 +18,12 @@ import android.content.Intent
 import android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.os.*
+import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
+import android.os.Message
+import android.os.Messenger
+import android.os.RemoteException
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
@@ -37,7 +42,17 @@ import android.widget.TextView
 import android.widget.Toast
 import com.kynetics.uf.android.api.ApiCommunicationVersion
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.*
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.ACTION_SETTINGS
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_RESPONSE
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_CONFIGURE_SERVICE
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_FORCE_PING
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_REGISTER_CLIENT
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_CONFIGURATION_STATUS
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_STATUS
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNC_REQUEST
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_API_VERSION_KEY
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY
 import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.clientexample.BuildConfig
@@ -68,8 +83,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      * Class for interacting with the main interface of the service.
      */
     private val mConnection = object : ServiceConnection {
-        override fun onServiceConnected(className: ComponentName,
-                                        service: IBinder) {
+        override fun onServiceConnected(
+            className: ComponentName,
+            service: IBinder
+        ) {
             mService = Messenger(service)
 
             Toast.makeText(this@MainActivity, R.string.connected,
@@ -157,13 +174,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     .beginTransaction()
                     .replace(R.id.state_list_container, listStateFragment)
                     .commit()
-        }  else {
+        } else {
             changePage(listStateFragment, false)
         }
-
-
-
-
     }
 
     override fun onStart() {
@@ -178,17 +191,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onBackPressed() {
         val drawer = findViewById<View>(R.id.drawer_layout) as DrawerLayout
-        when{
-            drawer.isDrawerOpen(GravityCompat.START) ->  drawer.closeDrawer(GravityCompat.START)
+        when {
+            drawer.isDrawerOpen(GravityCompat.START) -> drawer.closeDrawer(GravityCompat.START)
             !twoPane -> onBackPressedWithOnePane()
-            else ->  super.onBackPressed()
-
+            else -> super.onBackPressed()
         }
-
     }
 
-
-    private fun onBackPressedWithOnePane(){
+    private fun onBackPressedWithOnePane() {
         val count = supportFragmentManager.backStackEntryCount
         if (count == 0) {
             super.onBackPressed()
@@ -215,7 +225,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 } catch (e: RemoteException) {
                     Log.d(TAG, "Failed to send force ping", e)
                 }
-
             }
 
             R.id.menu_back -> onBackPressedWithOnePane()
@@ -233,16 +242,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             data.putInt(SERVICE_API_VERSION_KEY, ApiCommunicationVersion.V1.versionCode)
             msg.data = data
             mService!!.send(msg)
-
-
         } catch (e: RemoteException) {
             Toast.makeText(this@MainActivity, "service communication error",
                     Toast.LENGTH_SHORT).show()
         }
-
     }
 
-    var snackbar:Snackbar? = null
+    var snackbar: Snackbar? = null
 
     /**
      * Handler of incoming messages from service.
@@ -251,14 +257,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         override fun handleMessage(msg: Message) {
             when (msg.what) {
 
-                MSG_SERVICE_STATUS ->{
+                MSG_SERVICE_STATUS -> {
                     val messageContent = UFServiceMessageV1.fromJson(msg.data.getString(SERVICE_DATA_KEY))
 
-                    when(messageContent){
-                        is UFServiceMessageV1.Event ->{
+                    when (messageContent) {
+                        is UFServiceMessageV1.Event -> {
                             MessageHistory.appendEvent(messageContent)
                         }
-                        is UFServiceMessageV1.State ->{
+                        is UFServiceMessageV1.State -> {
                             MessageHistory.addState(MessageHistory.StateEntry(state = messageContent))
                         }
                     }
@@ -278,11 +284,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             mResumeUpdateFab!!.show()
                         }
 
-                        is UFServiceMessageV1.State -> { mResumeUpdateFab!!.hide()}
+                        is UFServiceMessageV1.State -> { mResumeUpdateFab!!.hide() }
 
                         else -> {}
                     }
-
                 }
 
                 MSG_AUTHORIZATION_REQUEST -> {
@@ -312,7 +317,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } catch (e: RemoteException) {
             e.printStackTrace()
         }
-
     }
 
     fun checkBatteryState() {
@@ -368,7 +372,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     // There is nothing special we need to do if the service
                     // has crashed.
                 }
-
             }
 
             // Detach our existing connection.
@@ -387,7 +390,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     "string", activity!!.packageName)
 
             return AlertDialog.Builder(activity!!)
-                    //.setIcon(R.drawable.alert_dialog_icon)
+                    // .setIcon(R.drawable.alert_dialog_icon)
                     .setTitle(titleResource)
                     .setMessage(contentResource)
                     .setPositiveButton(android.R.string.ok
@@ -410,11 +413,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    fun changePage(fragment: Fragment, addToBackStack:Boolean = true) {
+    fun changePage(fragment: Fragment, addToBackStack: Boolean = true) {
         val tx = supportFragmentManager.beginTransaction()
                 .replace(R.id.main_content, fragment)
 
-        if(addToBackStack){
+        if (addToBackStack) {
             tx.addToBackStack(null)
         }
 

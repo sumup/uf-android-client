@@ -20,15 +20,9 @@ import android.content.pm.PackageInstaller;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
-
 import com.kynetics.updatefactory.ddiclient.core.api.Updater;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Set;
+import java.io.*;
 import java.util.concurrent.CountDownLatch;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

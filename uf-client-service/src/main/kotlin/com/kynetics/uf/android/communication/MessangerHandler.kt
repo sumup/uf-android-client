@@ -10,7 +10,6 @@ import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
 import java.io.Serializable
 
-
 object MessangerHandler {
 
     private val TAG = MessangerHandler::class.java.simpleName
@@ -24,18 +23,18 @@ object MessangerHandler {
 
     fun getlastSharedMessage(version: ApiCommunicationVersion) = lastSharedMessagesByVersion.getValue(version)
 
-    fun hasMessage(version:ApiCommunicationVersion):Boolean{
+    fun hasMessage(version: ApiCommunicationVersion): Boolean {
         return lastSharedMessagesByVersion.getValue(version).hasMessage()
     }
 
     fun onAction(action: MessageHandler.Action) {
-        lastSharedMessagesByVersion.forEach{
+        lastSharedMessagesByVersion.forEach {
             lastSharedMessagesByVersion[it.key] = it.value.onAction(action)
         }
     }
 
-    fun onMessageReceived(msg: MessageListener.Message){
-        lastSharedMessagesByVersion.forEach{
+    fun onMessageReceived(msg: MessageListener.Message) {
+        lastSharedMessagesByVersion.forEach {
             lastSharedMessagesByVersion[it.key] = it.value.onMessage(msg)
         }
     }
@@ -51,18 +50,17 @@ object MessangerHandler {
         } catch (e: RemoteException) {
             e.printStackTrace()
         }
-
     }
 
-    internal fun sendMessage(messageCode: Int, message:Serializable? = null) {
-        mClients.keys.filter { hasMessage(mClients.getValue(it))}
-                .forEach{messenger ->
-                    try{
+    internal fun sendMessage(messageCode: Int, message: Serializable? = null) {
+        mClients.keys.filter { hasMessage(mClients.getValue(it)) }
+                .forEach { messenger ->
+                    try {
                         val ApiCommunicationVersion = mClients.getValue(messenger)
                         messenger.send(
                                 getMessage(
-                                        message ?:
-                                        lastSharedMessagesByVersion.getValue(ApiCommunicationVersion).currentMessage, messageCode)
+                                        message
+                                        ?: lastSharedMessagesByVersion.getValue(ApiCommunicationVersion).currentMessage, messageCode)
                         )
                     } catch (e: RemoteException) {
                         mClients.remove(messenger)
@@ -70,7 +68,7 @@ object MessangerHandler {
                 }
     }
 
-    internal fun subscribeClient(messenger: Messenger?, ApiCommunicationVersion: ApiCommunicationVersion){
+    internal fun subscribeClient(messenger: Messenger?, ApiCommunicationVersion: ApiCommunicationVersion) {
         if (messenger != null) {
             mClients[messenger] = ApiCommunicationVersion
             Log.i(TAG, "client subscription")
@@ -79,7 +77,7 @@ object MessangerHandler {
         }
     }
 
-    internal fun unsubscribeClient(messenger:Messenger?){
+    internal fun unsubscribeClient(messenger: Messenger?) {
         if (messenger != null) {
             mClients.remove(messenger)
             Log.i(TAG, "client unsubscription")

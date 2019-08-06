@@ -15,7 +15,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-
 import com.kynetics.uf.android.BuildConfig;
 import com.kynetics.uf.android.UpdateFactoryService;
 import com.kynetics.uf.android.apicomptibility.ApiVersion;

@@ -18,15 +18,14 @@ import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.io.IOException
 
-
 class OtaUpdater(context: Context) : AndroidUpdater(context) {
 
     companion object {
-        val TAG:String = OtaUpdater::class.java.simpleName
+        val TAG: String = OtaUpdater::class.java.simpleName
     }
 
     override fun requiredSoftwareModulesAndPriority(swModules: Set<Updater.SwModule>): Updater.SwModsApplication {
-        return Updater.SwModsApplication( 0,
+        return Updater.SwModsApplication(0,
                 swModules
                         .filter { it.type == "os" }
                         .map { Updater.SwModsApplication.SwModule(
@@ -44,10 +43,10 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
         val success = modules.dropWhile {
             Log.d(TAG, "apply module ${it.name} ${it.version} of type ${it.type}")
             it.artifacts.dropWhile { a ->
-                Log.d(TAG,"install artifact ${a.filename} from file ${a.path}")
+                Log.d(TAG, "install artifact ${a.filename} from file ${a.path}")
                     val installationResult = installOta(a, currentUpdateState, messenger)
                     updateDetails.addAll(installationResult.details)
-                    if(currentUpdateState.isFeebackReliable()){
+                    if (currentUpdateState.isFeebackReliable()) {
                         updateDetails.add("Final feedback message is reliable")
                         val lastLog = currentUpdateState.parseLastLogFile()
                         sendLastLogAsFeedback(lastLog, messenger, installationResult)
@@ -61,7 +60,7 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
     }
 
     private fun sendLastLogAsFeedback(lastLog: List<String>, messenger: Updater.Messenger, installationResult: CurrentUpdateState.InstallationResult) {
-        if(installationResult is CurrentUpdateState.InstallationResult.Success){
+        if (installationResult is CurrentUpdateState.InstallationResult.Success) {
             return
         }
         for (i in 0..lastLog.size / maxMessageForState) {
@@ -81,49 +80,49 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
         }
     }
 
-    private fun installOta(artifact: Updater.SwModuleWithPath.Artifact,
-                           currentUpdateState:CurrentUpdateState,
-                           messenger: Updater.Messenger):CurrentUpdateState.InstallationResult{
+    private fun installOta(
+        artifact: Updater.SwModuleWithPath.Artifact,
+        currentUpdateState: CurrentUpdateState,
+        messenger: Updater.Messenger
+    ): CurrentUpdateState.InstallationResult {
 
         val installationState = currentUpdateState.getOtaInstallationState(artifact)
-        return when{
-            installationState == CurrentUpdateState.InstallationState.PENDING ->{
+        return when {
+            installationState == CurrentUpdateState.InstallationState.PENDING -> {
                 val result = currentUpdateState.lastIntallationResult(artifact)
-                val message = "Installation result of Ota named ${artifact.filename} is ${if(result is CurrentUpdateState.InstallationResult.Success) "success" else "failure"}"
+                val message = "Installation result of Ota named ${artifact.filename} is ${if (result is CurrentUpdateState.InstallationResult.Success) "success" else "failure"}"
                 messenger.sendMessageToServer(message + result.details)
                 Log.i(TAG, message)
                 result
             }
 
-            installationState == CurrentUpdateState.InstallationState.SUCCESS ->{
+            installationState == CurrentUpdateState.InstallationState.SUCCESS -> {
                 CurrentUpdateState.InstallationResult.Success()
             }
 
-            installationState == CurrentUpdateState.InstallationState.ERROR ->{
+            installationState == CurrentUpdateState.InstallationState.ERROR -> {
                 CurrentUpdateState.InstallationResult.Error(listOf("Installation of ${artifact.filename} is failed"))
             }
 
-            verify(artifact) ->{
+            verify(artifact) -> {
                 val packageFile = File(artifact.path)
-                currentUpdateState.addPendingOTAInstallation(artifact)//todo handle error on file creation
+                currentUpdateState.addPendingOTAInstallation(artifact) // todo handle error on file creation
                 messenger.sendMessageToServer("Applying ota update (${artifact.filename})...")
                 return try {
                     RecoverySystem.installPackage(context, packageFile)
                     CurrentUpdateState.InstallationResult.Error(listOf("Error, installation package doesn't return"))
-                }catch (ioe:IOException){
+                } catch (ioe: IOException) {
                     CurrentUpdateState.InstallationResult.Error(listOf("Error, unable to reboot in recovery mode",
                             ioe.message ?: ""))
                 }
             }
 
-            else ->{
+            else -> {
                 val message = "Wrong ota signature"
                 messenger.sendMessageToServer(message)
                 Log.w(TAG, message)
                 CurrentUpdateState.InstallationResult.Error(listOf(message))
             }
         }
-
     }
-
 }

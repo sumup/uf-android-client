@@ -18,13 +18,7 @@ import android.util.Base64InputStream;
 import android.util.Base64OutputStream;
 import android.util.Log;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.NotSerializableException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.util.Map;
 import java.util.Set;
 
