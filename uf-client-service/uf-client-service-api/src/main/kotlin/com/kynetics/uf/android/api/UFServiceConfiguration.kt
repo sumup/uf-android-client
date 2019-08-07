@@ -24,32 +24,32 @@ data class UFServiceConfiguration(
 
     class Builder internal constructor() {
 
-        private var tenant: String? = null
-        private var controllerId: String? = null
+        private var tenant: String? = ""
+        private var controllerId: String? = ""
         private var retryDelay: Long = 900000
-        private var url: String? = null
+        private var url: String? = ""
         private var apiMode = true
         private var enable = true
         private var isUpdateFactoryServer = true
-        private var targetToken: String? = null
-        private var gatewayToken: String? = null
+        private var targetToken: String? = ""
+        private var gatewayToken: String? = ""
         private var targetAttributes: Map<String, String> = mutableMapOf()
-        fun withTenant(tenant: String): Builder {
+        fun withTenant(tenant: String?): Builder {
             this.tenant = tenant
             return this
         }
 
-        fun withControllerId(controllerId: String): Builder {
+        fun withControllerId(controllerId: String?): Builder {
             this.controllerId = controllerId
             return this
         }
 
-        fun withGetawayToken(gatewayToken: String): Builder {
+        fun withGetawayToken(gatewayToken: String?): Builder {
             this.gatewayToken = gatewayToken
             return this
         }
 
-        fun withTargetToken(targetToken: String): Builder {
+        fun withTargetToken(targetToken: String?): Builder {
             this.targetToken = targetToken
             return this
         }
@@ -59,7 +59,7 @@ data class UFServiceConfiguration(
             return this
         }
 
-        fun withUrl(url: String): Builder {
+        fun withUrl(url: String?): Builder {
             this.url = url
             return this
         }
@@ -100,7 +100,7 @@ data class UFServiceConfiguration(
             if (retryDelay < 0) {
                 throw IllegalStateException("retryDelay must be grater than 0")
             }
-            return UFServiceConfiguration(tenant!!, controllerId!!, retryDelay, url!!,
+            return UFServiceConfiguration(tenant?: "", controllerId?: "", retryDelay, url?: "",
                     targetToken ?: "",
                     gatewayToken ?: "",
                     apiMode, enable, isUpdateFactoryServer,
