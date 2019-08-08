@@ -18,6 +18,7 @@ fun MessageListener.Message.State.Downloading.Artifact.toUFArtifact(): UFService
     return UFServiceMessageV1.State.Downloading.Artifact(name, size, md5)
 }
 
+@Suppress("ComplexMethod")
 fun MessageListener.Message.toUFMessage(): UFServiceMessageV1 {
     return when (this) {
         is MessageListener.Message.State.Downloading -> UFServiceMessageV1.State.Downloading(artifacts.map { it.toUFArtifact() })
