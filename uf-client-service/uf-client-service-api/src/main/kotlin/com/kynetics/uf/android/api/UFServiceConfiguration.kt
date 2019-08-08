@@ -100,7 +100,7 @@ data class UFServiceConfiguration(
             if (retryDelay < 0) {
                 throw IllegalStateException("retryDelay must be grater than 0")
             }
-            return UFServiceConfiguration(tenant?: "", controllerId?: "", retryDelay, url?: "",
+            return UFServiceConfiguration(tenant ?: "", controllerId ?: "", retryDelay, url ?: "",
                     targetToken ?: "",
                     gatewayToken ?: "",
                     apiMode, enable, isUpdateFactoryServer,
