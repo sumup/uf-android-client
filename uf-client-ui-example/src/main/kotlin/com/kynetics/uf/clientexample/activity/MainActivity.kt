@@ -257,54 +257,62 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         override fun handleMessage(msg: Message) {
             when (msg.what) {
 
-                MSG_SERVICE_STATUS -> {
-                    val messageContent = UFServiceMessageV1.fromJson(msg.data.getString(SERVICE_DATA_KEY))
+                MSG_SERVICE_STATUS -> handleServiceStatusMsg(msg)
 
-                    when (messageContent) {
-                        is UFServiceMessageV1.Event -> {
-                            MessageHistory.appendEvent(messageContent)
-                        }
-                        is UFServiceMessageV1.State -> {
-                            MessageHistory.addState(MessageHistory.StateEntry(state = messageContent))
-                        }
-                    }
+                MSG_AUTHORIZATION_REQUEST -> handleAuthorizationRequestMsg(msg)
 
-                    this@MainActivity.supportFragmentManager.fragments
-                            .filterIsInstance<UFServiceInteractionFragment>()
-                            .forEach { fragment -> fragment.onMessageReceived(messageContent) }
+                MSG_SERVICE_CONFIGURATION_STATUS -> handleServiceConfigurationMsg(msg)
 
-                    when (messageContent) {
-                        is UFServiceMessageV1.State.WaitingDownloadAuthorization -> {
-                            mResumeUpdateFab!!.setImageResource(R.drawable.ic_get_app_black_48dp)
-                            mResumeUpdateFab!!.show()
-                        }
-
-                        is UFServiceMessageV1.State.WaitingUpdateAuthorization -> {
-                            mResumeUpdateFab!!.setImageResource(R.drawable.ic_loop_black_48dp)
-                            mResumeUpdateFab!!.show()
-                        }
-
-                        is UFServiceMessageV1.State -> { mResumeUpdateFab!!.hide() }
-
-                        else -> {}
-                    }
-                }
-
-                MSG_AUTHORIZATION_REQUEST -> {
-                    val newFragment = MyAlertDialogFragment.newInstance(
-                            msg.data.getString(SERVICE_DATA_KEY))
-                    newFragment.show(supportFragmentManager, null)
-                }
-
-                MSG_SERVICE_CONFIGURATION_STATUS -> {
-                    val serializable = msg.data.getSerializable(SERVICE_DATA_KEY)
-                    if (serializable !is UFServiceConfiguration || !serializable.isEnable) {
-                        mNavigationView!!.setCheckedItem(R.id.menu_settings)
-                        val settingsIntent = Intent(ACTION_SETTINGS)
-                        startActivity(settingsIntent)
-                    }
-                }
                 else -> super.handleMessage(msg)
+            }
+        }
+
+        private fun handleServiceConfigurationMsg(msg: Message) {
+            val serializable = msg.data.getSerializable(SERVICE_DATA_KEY)
+            if (serializable !is UFServiceConfiguration || !serializable.isEnable) {
+                mNavigationView!!.setCheckedItem(R.id.menu_settings)
+                val settingsIntent = Intent(ACTION_SETTINGS)
+                startActivity(settingsIntent)
+            }
+        }
+
+        private fun handleAuthorizationRequestMsg(msg: Message) {
+            val newFragment = MyAlertDialogFragment.newInstance(
+                msg.data.getString(SERVICE_DATA_KEY)
+            )
+            newFragment.show(supportFragmentManager, null)
+        }
+
+        private fun handleServiceStatusMsg(msg: Message) {
+            val messageContent = UFServiceMessageV1.fromJson(msg.data.getString(SERVICE_DATA_KEY))
+
+            when (messageContent) {
+                is UFServiceMessageV1.Event -> {
+                    MessageHistory.appendEvent(messageContent)
+                }
+                is UFServiceMessageV1.State -> {
+                    MessageHistory.addState(MessageHistory.StateEntry(state = messageContent))
+                }
+            }
+
+            this@MainActivity.supportFragmentManager.fragments
+                .filterIsInstance<UFServiceInteractionFragment>()
+                .forEach { fragment -> fragment.onMessageReceived(messageContent) }
+
+            when (messageContent) {
+                is UFServiceMessageV1.State.WaitingDownloadAuthorization -> {
+                    mResumeUpdateFab!!.setImageResource(R.drawable.ic_get_app_black_48dp)
+                    mResumeUpdateFab!!.show()
+                }
+
+                is UFServiceMessageV1.State.WaitingUpdateAuthorization -> {
+                    mResumeUpdateFab!!.setImageResource(R.drawable.ic_loop_black_48dp)
+                    mResumeUpdateFab!!.show()
+                }
+
+                is UFServiceMessageV1.State -> mResumeUpdateFab!!.hide()
+
+                else -> { }
             }
         }
     }
