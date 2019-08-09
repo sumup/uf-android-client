@@ -23,75 +23,78 @@ import kotlin.streams.toList
 @RequiresApi(Build.VERSION_CODES.O)
 internal object ABOtaInstaller : OtaInstaller {
 
-        val TAG: String = ABOtaInstaller::class.java.simpleName
-        private const val PROPERTY_FILE = "payload_properties.txt"
-        private const val PAYLOAD_FILE = "payload.bin"
-        private val UPDATE_STATUS = mapOf(
-            UpdateEngine.UpdateStatusConstants.IDLE to "Idle",
-            UpdateEngine.UpdateStatusConstants.CHECKING_FOR_UPDATE to "Checking for update",
-            UpdateEngine.UpdateStatusConstants.UPDATE_AVAILABLE to "Update available",
-            UpdateEngine.UpdateStatusConstants.DOWNLOADING to "Copying file",
-            UpdateEngine.UpdateStatusConstants.VERIFYING to "Verifying",
-            UpdateEngine.UpdateStatusConstants.FINALIZING to "Finalizing",
-            UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT to "Rebooting",
-            UpdateEngine.UpdateStatusConstants.REPORTING_ERROR_EVENT to "Reporting error event",
-            UpdateEngine.UpdateStatusConstants.ATTEMPTING_ROLLBACK to "Attempting rollback",
-            UpdateEngine.UpdateStatusConstants.DISABLED to "Disable")
+    val TAG: String = ABOtaInstaller::class.java.simpleName
+    private const val PROPERTY_FILE = "payload_properties.txt"
+    private const val PAYLOAD_FILE = "payload.bin"
+    private val UPDATE_STATUS = mapOf(
+        UpdateEngine.UpdateStatusConstants.IDLE to "Idle",
+        UpdateEngine.UpdateStatusConstants.CHECKING_FOR_UPDATE to "Checking for update",
+        UpdateEngine.UpdateStatusConstants.UPDATE_AVAILABLE to "Update available",
+        UpdateEngine.UpdateStatusConstants.DOWNLOADING to "Copying file",
+        UpdateEngine.UpdateStatusConstants.VERIFYING to "Verifying",
+        UpdateEngine.UpdateStatusConstants.FINALIZING to "Finalizing",
+        UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT to "Rebooting",
+        UpdateEngine.UpdateStatusConstants.REPORTING_ERROR_EVENT to "Reporting error event",
+        UpdateEngine.UpdateStatusConstants.ATTEMPTING_ROLLBACK to "Attempting rollback",
+        UpdateEngine.UpdateStatusConstants.DISABLED to "Disable")
 
-        private val errorCodeToDescription = mapOf(
-            0 to "Success",
-            1 to "Error",
-            2 to "Omaha request error",
-            3 to "Omaha response handler error",
-            4 to "Filesystem copier error",
-            5 to "Postinstall runner error",
-            6 to "Payload mismatched type",
-            7 to "Install device open error",
-            8 to "Kernel device open error",
-            9 to "Download transfer error",
-            10 to "Payload hash mismatch error",
-            11 to "Payload size mismatch error",
-            12 to "Download payload verification error",
-            13 to "Download new partition info error",
-            14 to "Download write error",
-            15 to "New rootfs verification error",
-            16 to "New kernel verification error",
-            17 to "Signed delta payload expected error",
-            18 to "Download payload pub key verification error",
-            19 to "Postinstall booted from firmware b",
-            20 to "Download state initialization error",
-            21 to "Download invalid metadata magic string",
-            22 to "Download signature missing in manifest",
-            23 to "Download manifest parse error",
-            24 to "Download metadata signature error",
-            25 to "Download metadata signature verification error",
-            26 to "Download metadata signature mismatch",
-            27 to "Download operation hash verification error",
-            28 to "Download operation execution error",
-            29 to "Download operation hash mismatch",
-            30 to "Omaha request empty response error",
-            31 to "Omaha request xmlparse error",
-            32 to "Download invalid metadata size",
-            33 to "Download invalid metadata signature",
-            34 to "Omaha response invalid",
-            35 to "Omaha update ignored per policy",
-            36 to "Omaha update deferred per policy",
-            37 to "Omaha error in httpresponse",
-            38 to "Download operation hash missing error",
-            39 to "Download metadata signature missing error",
-            40 to "Omaha update deferred for backoff",
-            41 to "Postinstall powerwash error",
-            42 to "Update canceled by channel change",
-            43 to "Postinstall firmware ronot updatable",
-            44 to "Unsupported major payload version",
-            45 to "Unsupported minor payload version",
-            46 to "Omaha request xmlhas entity decl",
-            47 to "Filesystem verifier error",
-            48 to "User canceled",
-            49 to "Non critical update in oobe",
-            50 to "Omaha update ignored over cellular",
-            51 to "Payload timestamp error",
-            52 to "Updated but not active")
+    @Suppress("MagicNumber")
+    private val errorCodeToDescription = mapOf(
+        0 to "Success",
+        1 to "Error",
+        2 to "Omaha request error",
+        3 to "Omaha response handler error",
+        4 to "Filesystem copier error",
+        5 to "Postinstall runner error",
+        6 to "Payload mismatched type",
+        7 to "Install device open error",
+        8 to "Kernel device open error",
+        9 to "Download transfer error",
+        10 to "Payload hash mismatch error",
+        11 to "Payload size mismatch error",
+        12 to "Download payload verification error",
+        13 to "Download new partition info error",
+        14 to "Download write error",
+        15 to "New rootfs verification error",
+        16 to "New kernel verification error",
+        17 to "Signed delta payload expected error",
+        18 to "Download payload pub key verification error",
+        19 to "Postinstall booted from firmware b",
+        20 to "Download state initialization error",
+        21 to "Download invalid metadata magic string",
+        22 to "Download signature missing in manifest",
+        23 to "Download manifest parse error",
+        24 to "Download metadata signature error",
+        25 to "Download metadata signature verification error",
+        26 to "Download metadata signature mismatch",
+        27 to "Download operation hash verification error",
+        28 to "Download operation execution error",
+        29 to "Download operation hash mismatch",
+        30 to "Omaha request empty response error",
+        31 to "Omaha request xmlparse error",
+        32 to "Download invalid metadata size",
+        33 to "Download invalid metadata signature",
+        34 to "Omaha response invalid",
+        35 to "Omaha update ignored per policy",
+        36 to "Omaha update deferred per policy",
+        37 to "Omaha error in httpresponse",
+        38 to "Download operation hash missing error",
+        39 to "Download metadata signature missing error",
+        40 to "Omaha update deferred for backoff",
+        41 to "Postinstall powerwash error",
+        42 to "Update canceled by channel change",
+        43 to "Postinstall firmware ronot updatable",
+        44 to "Unsupported major payload version",
+        45 to "Unsupported minor payload version",
+        46 to "Omaha request xmlhas entity decl",
+        47 to "Filesystem verifier error",
+        48 to "User canceled",
+        49 to "Non critical update in oobe",
+        50 to "Omaha update ignored over cellular",
+        51 to "Payload timestamp error",
+        52 to "Updated but not active")
+
+    private const val HOURS_TIMEOUT_FOR_UPDATE = 3L
 
     private val updateEngine: UpdateEngine = UpdateEngine()
 
@@ -103,7 +106,8 @@ internal object ABOtaInstaller : OtaInstaller {
     ): CurrentUpdateState.InstallationResult {
         if (currentUpdateState.isABInstallationPending(artifact)) {
             val result = currentUpdateState.lastABIntallationResult(artifact)
-            val message = "Installation result of Ota named ${artifact.filename} is ${if (result is CurrentUpdateState.InstallationResult.Success) "success" else "failure"}"
+            val message = "Installation result of Ota named ${artifact.filename} is " +
+                if (result is CurrentUpdateState.InstallationResult.Success) "success" else "failure"
             messenger.sendMessageToServer(message + result.details)
             Log.i(TAG, message)
             return result
@@ -121,7 +125,8 @@ internal object ABOtaInstaller : OtaInstaller {
             return CurrentUpdateState.InstallationResult.Error(
                 listOf(
                     "Malformed ota for AB update.",
-                    "An AB ota update must contain a payload file named $PAYLOAD_FILE and a property file named $PROPERTY_FILE"
+                    "An AB ota update must contain a payload file named $PAYLOAD_FILE and a property file named " +
+                        PROPERTY_FILE
                 )
             )
         }
@@ -153,7 +158,8 @@ internal object ABOtaInstaller : OtaInstaller {
         artifact: Updater.SwModuleWithPath.Artifact
     ): CurrentUpdateState.InstallationResult {
         return try {
-            val result: Int = updateStatus.get(3, TimeUnit.HOURS)
+            @Suppress("MagicNumber")
+            val result: Int = updateStatus.get(HOURS_TIMEOUT_FOR_UPDATE, TimeUnit.HOURS)
             updateEngine.unbind()
             val messages = listOf("result: $result", errorCodeToDescription[result] ?: "")
             Log.d(TAG, "result: ${messages.joinToString(" ")}")
@@ -201,19 +207,24 @@ internal object ABOtaInstaller : OtaInstaller {
         private val messenger: Updater.Messenger,
         private val updateStatus: CompletableFuture<Int>
     ) : UpdateEngineCallback() {
-        private var previosState = Int.MAX_VALUE
-        private val queue = ArrayBlockingQueue<Double>(10, true)
+
+        companion object {
+            private const val MAX_MESSAGES_PER_PHASE = 10
+        }
+
+        private var previousState = Int.MAX_VALUE
+        private val queue = ArrayBlockingQueue<Double>(MAX_MESSAGES_PER_PHASE, true)
 
         override fun onStatusUpdate(i: Int, v: Float) { // i==status  v==percent
             Log.d(TAG, "status:$i")
             Log.d(TAG, "percent:$v")
             val currentPhaseProgress = if (v.isNaN()) 0.0 else v.toDouble()
-            val newPhase = previosState != i
+            val newPhase = previousState != i
             if (newPhase) {
-                previosState = i
+                previousState = i
                 messenger.sendMessageToServer(UPDATE_STATUS.getValue(i))
                 queue.clear()
-                queue.addAll((1..9).map { it.toDouble() / 10 })
+                queue.addAll((1 until MAX_MESSAGES_PER_PHASE).map { it.toDouble() / MAX_MESSAGES_PER_PHASE })
             }
 
             val limit = queue.peek() ?: 1.0
@@ -234,7 +245,8 @@ internal object ABOtaInstaller : OtaInstaller {
                 val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
                 pm!!.reboot(null)
                 Log.w(TAG, "Reboot fail")
-                messenger.sendMessageToServer("Update is successfully applied but system failed to reboot", "Waiting manual reboot")
+                messenger.sendMessageToServer("Update is successfully applied but system failed to reboot",
+                    "Waiting manual reboot")
                 updateStatus.complete(UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT)
             }
         }
