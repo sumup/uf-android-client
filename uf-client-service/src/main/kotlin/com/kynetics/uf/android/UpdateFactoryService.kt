@@ -343,59 +343,78 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
     private inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                MSG_CONFIGURE_SERVICE -> {
-                    Log.i(TAG, "receive configuration update request")
-                    val configuration = msg.data.getSerializable(SERVICE_DATA_KEY) as UFServiceConfiguration
-                    val currentConf = getCurrentConfiguration(getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE))
-
-                    if (currentConf != configuration) {
-                        saveServiceConfigurationToSharedPreferences(configuration)
-                        Log.i(TAG, "configuration updated")
-                    } else {
-                        Log.i(TAG, "new configuration equals to current configuration")
-                    }
-
-                    if (currentConf.copy(targetAttributes = emptyMap()) != configuration.copy(targetAttributes = emptyMap())) {
-                        buildServiceFromPreferences()
-                        Log.i(TAG, "configuration updated - restarting service")
-                    }
-                }
+                MSG_CONFIGURE_SERVICE -> configureService(msg)
 
                 MSG_REGISTER_CLIENT -> {
                     Log.i(TAG, "receive subscription request")
                     MessangerHandler.subscribeClient(msg.replyTo, ApiCommunicationVersion.fromVersionCode(msg.data.getInt(SERVICE_API_VERSION_KEY, 0)))
                 }
+
                 MSG_UNREGISTER_CLIENT -> {
                     Log.i(TAG, "receive unsubscription request")
                     MessangerHandler.unsubscribeClient(msg.replyTo)
                 }
-                MSG_AUTHORIZATION_RESPONSE -> {
-                    Log.i(TAG, "receive authorization response")
-                    val response = msg.data.getBoolean(SERVICE_DATA_KEY)
-                    authResponse.offer(response)
-                    Log.i(TAG, String.format("authorization %s", if (response) "granted" else "denied"))
-                }
+
+                MSG_AUTHORIZATION_RESPONSE -> authorizationResponse(msg)
+
                 MSG_RESUME_SUSPEND_UPGRADE, MSG_FORCE_PING -> {
                     Log.i(TAG, "receive request to resume suspend state")
                     ufService?.forcePing()
                 }
-                MSG_SYNC_REQUEST -> {
-                    Log.i(TAG, "received sync request")
 
-                    if (ufService == null || msg.replyTo == null) {
-                        Log.i(TAG, "command ignored because ufService is not configured or field replyTo is null")
-                        return
-                    }
+                MSG_SYNC_REQUEST -> sync(msg)
 
-                    val sharedPreferences = getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE)
-                    MessangerHandler.sendMessage(getCurrentConfiguration(sharedPreferences), MSG_SERVICE_CONFIGURATION_STATUS, msg.replyTo)
-                    val api = ApiCommunicationVersion.fromVersionCode(msg.data.getInt(SERVICE_API_VERSION_KEY, 0))
-                    if (MessangerHandler.hasMessage(api)) {
-                        MessangerHandler.sendMessage(MessangerHandler.getlastSharedMessage(api).messageToSendOnSync, MSG_SERVICE_STATUS, msg.replyTo)
-                    }
-                    Log.i(TAG, "client synced")
-                }
                 else -> super.handleMessage(msg)
+            }
+        }
+
+        private fun sync(msg: Message) {
+            Log.i(TAG, "received sync request")
+
+            if (ufService == null || msg.replyTo == null) {
+                Log.i(TAG, "command ignored because ufService is not configured or field replyTo is null")
+                return
+            }
+
+            val sharedPreferences = getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE)
+            MessangerHandler.sendMessage(
+                getCurrentConfiguration(sharedPreferences),
+                MSG_SERVICE_CONFIGURATION_STATUS,
+                msg.replyTo
+            )
+            val api = ApiCommunicationVersion.fromVersionCode(msg.data.getInt(SERVICE_API_VERSION_KEY, 0))
+            if (MessangerHandler.hasMessage(api)) {
+                MessangerHandler.sendMessage(
+                    MessangerHandler.getlastSharedMessage(api).messageToSendOnSync,
+                    MSG_SERVICE_STATUS,
+                    msg.replyTo
+                )
+            }
+            Log.i(TAG, "client synced")
+        }
+
+        private fun authorizationResponse(msg: Message) {
+            Log.i(TAG, "receive authorization response")
+            val response = msg.data.getBoolean(SERVICE_DATA_KEY)
+            authResponse.offer(response)
+            Log.i(TAG, String.format("authorization %s", if (response) "granted" else "denied"))
+        }
+
+        private fun configureService(msg: Message) {
+            Log.i(TAG, "receive configuration update request")
+            val configuration = msg.data.getSerializable(SERVICE_DATA_KEY) as UFServiceConfiguration
+            val currentConf = getCurrentConfiguration(getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE))
+
+            if (currentConf != configuration) {
+                saveServiceConfigurationToSharedPreferences(configuration)
+                Log.i(TAG, "configuration updated")
+            } else {
+                Log.i(TAG, "new configuration equals to current configuration")
+            }
+
+            if (currentConf.copy(targetAttributes = emptyMap()) != configuration.copy(targetAttributes = emptyMap())) {
+                buildServiceFromPreferences()
+                Log.i(TAG, "configuration updated - restarting service")
             }
         }
     }
