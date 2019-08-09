@@ -50,6 +50,7 @@ import com.kynetics.uf.android.content.SharedPreferencesWithObject
 import com.kynetics.uf.android.ui.MainActivity
 import com.kynetics.uf.android.update.ApkUpdater
 import com.kynetics.uf.android.update.CurrentUpdateState
+import com.kynetics.uf.android.update.OtaUpdater
 import com.kynetics.uf.android.update.SystemUpdateType
 import com.kynetics.updatefactory.ddiclient.core.UpdateFactoryClientDefaultImpl
 import com.kynetics.updatefactory.ddiclient.core.api.ConfigDataProvider
@@ -264,7 +265,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
                     },
                     deploymentPermitProvider,
                     listOf(eventListener),
-                    systemUpdateType.getUpdater(this@UpdateFactoryService),
+                    OtaUpdater(this@UpdateFactoryService),
                     ApkUpdater(this@UpdateFactoryService)
 
                 )

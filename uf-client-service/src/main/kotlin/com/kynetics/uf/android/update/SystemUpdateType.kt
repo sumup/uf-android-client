@@ -21,19 +21,19 @@ import com.kynetics.updatefactory.ddiclient.core.api.Updater
 enum class SystemUpdateType(val readableName: String) {
 
     SINGLE_COPY("Single Copy") {
-        override fun getUpdater(context: Context): Updater {
+        override fun getInstaller(context: Context): OtaInstaller {
             saveToSharedPreferences(context)
-            return OtaUpdater(context)
+            return SingleCopyOtaInstaller
         }
     }, AB("A/B") {
         @RequiresApi(Build.VERSION_CODES.O)
-        override fun getUpdater(context: Context): Updater {
+        override fun getInstaller(context: Context): OtaInstaller {
             saveToSharedPreferences(context)
-            return ABUpdater(context)
+            return ABOtaInstaller
         }
     };
 
-    abstract fun getUpdater(context: Context): Updater
+    abstract fun getInstaller(context: Context): OtaInstaller
 
     protected fun saveToSharedPreferences(context: Context) {
         val sh = context.getSharedPreferences(context.getString(R.string.shared_preferences_file), Context.MODE_PRIVATE)
