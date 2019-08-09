@@ -26,7 +26,7 @@ fun Double.format(minFractionDigits: Int = 0): String {
 }
 
 object MessageHistory {
-    val CAPACITY = 100
+    const val CAPACITY = 100
     /**
      * An array of sample (dummy) items.
      */
@@ -41,7 +41,12 @@ object MessageHistory {
      * A dummy item representing a piece of content.
      */
 
-    data class StateEntry(val id: Long = System.currentTimeMillis(), val state: UFServiceMessageV1.State, val events: MutableList<EventEntry> = ArrayList(CAPACITY), var unread: Int = 0) {
+    data class StateEntry(
+        val id: Long = System.currentTimeMillis(),
+        val state: UFServiceMessageV1.State,
+        val events: MutableList<EventEntry> = ArrayList(CAPACITY),
+        var unread: Int = 0
+    ) {
 
         fun addEvent(item: UFServiceMessageV1.Event) {
             if (events.size == CAPACITY) {
@@ -70,12 +75,20 @@ object MessageHistory {
             }
         }
 
-        private fun print(infix: String, event: UFServiceMessageV1.Event.StartDownloadFile): String = "$infix \nFile Name: ${event.fileName}"
-        private fun print(infix: String, event: UFServiceMessageV1.Event.FileDownloaded): String = "$infix \nFile Name: ${event.fileDownloaded}"
-        private fun print(infix: String, event: UFServiceMessageV1.Event.UpdateFinished): String = "$infix \nUpdate Result: ${if (event.successApply) "applied" else "not applied" }\n${event.details.joinToString("\n")}"
-        private fun print(infix: String, event: UFServiceMessageV1.Event.Error): String = "$infix \n${event.details.joinToString("\n")}"
-        private fun print(infix: String, event: UFServiceMessageV1.Event.DownloadProgress): String = "$infix \n${event.fileName} is downloaded at ${event.percentage.format(2)}"
-        private fun print(infix: String, event: UFServiceMessageV1.Event.UpdateProgress): String = "$infix  \nPhase name:${event.phaseName} is at ${event.percentage.format(2)}"
+        private fun print(infix: String, event: UFServiceMessageV1.Event.StartDownloadFile): String =
+            "$infix \nFile Name: ${event.fileName}"
+        private fun print(infix: String, event: UFServiceMessageV1.Event.FileDownloaded): String =
+            "$infix \nFile Name: ${event.fileDownloaded}"
+        private fun print(infix: String, event: UFServiceMessageV1.Event.UpdateFinished): String = """
+            "$infix \nUpdate Result: ${if (event.successApply) "applied" else "not applied" }
+            ${event.details.joinToString("\n")}"
+        """.trimIndent()
+        private fun print(infix: String, event: UFServiceMessageV1.Event.Error): String =
+            "$infix \n${event.details.joinToString("\n")}"
+        private fun print(infix: String, event: UFServiceMessageV1.Event.DownloadProgress): String =
+            "$infix \n${event.fileName} is downloaded at ${event.percentage.format(2)}"
+        private fun print(infix: String, event: UFServiceMessageV1.Event.UpdateProgress): String =
+            "$infix  \nPhase name:${event.phaseName} is at ${event.percentage.format(2)}"
     }
 
     fun appendEvent(event: UFServiceMessageV1.Event) {
