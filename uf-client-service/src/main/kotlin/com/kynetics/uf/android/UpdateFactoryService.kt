@@ -103,16 +103,16 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         buildServiceFromPreferences()
     }
 
-    lateinit var forcePingPendingIntent: PendingIntent
+    private lateinit var forcePingPendingIntent: PendingIntent
     lateinit var currentUpdateState: CurrentUpdateState
 
     fun Map<String, String>.toMD5(): String {
-        val content = entries.sortedBy { it.key }.map { "${it.key}_${it.value}" }.joinToString("-")
+        val content = entries.sortedBy { it.key }.joinToString("-") { "${it.key}_${it.value}" }
         val bytes = MessageDigest.getInstance("MD5").digest(content.toByteArray())
         return bytes.toMD5()
     }
 
-    fun ByteArray.toMD5(): String {
+    private fun ByteArray.toMD5(): String {
         return this.joinToString("") { "%02x".format(it) }
     }
     override fun onCreate() {
@@ -145,29 +145,34 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         registerReceiver(receiver, intentFilter)
     }
 
+    private fun getServiceConfigurationFromIntent(intent: Intent):UFServiceConfiguration?{
+        Log.i(TAG, "Loaded new configuration from intent")
+        val serializable = intent.getSerializableExtra(SERVICE_DATA_KEY)
+        val string = intent.getStringExtra(SERVICE_DATA_KEY)
+        return try {
+            when {
+
+                serializable is String -> UFServiceConfiguration.fromJson(serializable)
+
+                serializable is UFServiceConfiguration -> serializable
+
+                string != null -> UFServiceConfiguration.fromJson(string)
+
+                else -> null
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "Deserialization error", e)
+            null
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(TAG, String.format("service's starting with version %s (%s)", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE))
         startForeground()
         val configurationFile = ConfigurationFileLoader(super.getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE), UF_CONF_FILE, applicationContext)
         var serviceConfiguration = configurationFile.newFileConfiguration
         if (serviceConfiguration == null && intent != null) {
-            Log.i(TAG, "Loaded new configuration from intent")
-            val serializable = intent.getSerializableExtra(SERVICE_DATA_KEY)
-            val string = intent.getStringExtra(SERVICE_DATA_KEY)
-            try {
-                serviceConfiguration = when {
-
-                    serializable is String -> UFServiceConfiguration.fromJson(serializable)
-
-                    serializable is UFServiceConfiguration -> serializable
-
-                    string != null -> UFServiceConfiguration.fromJson(string)
-
-                    else -> null
-                }
-            } catch (e: Throwable) {
-                Log.w(TAG, "Deserialization error", e)
-            }
+            serviceConfiguration = getServiceConfigurationFromIntent(intent)
         } else if (serviceConfiguration != null) {
             Log.i(TAG, "Loaded new configuration from file")
         }
@@ -175,7 +180,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
             saveServiceConfigurationToSharedPreferences(serviceConfiguration)
             buildServiceFromPreferences()
         }
-        return Service.START_STICKY
+        return START_STICKY
     }
 
     private fun buildServiceFromPreferences() {
@@ -334,7 +339,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
             .build()
     }
 
-    // todo api to configure targetAttibutes (separeted from serviceConfiguration)
+    // todo add api to configure targetAttibutes (separeted from serviceConfiguration)
     private inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
@@ -407,8 +412,8 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         editor.putString(sharedPreferencesGatewayToken, configuration.gatewayToken)
         editor.putString(sharedPreferencesTargetToken, configuration.targetToken)
         editor.putLong(sharedPreferencesRetryDelayKey, configuration.retryDelay)
-        editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode!!)
-        editor.putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnable!!)
+        editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode)
+        editor.putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnable)
         editor.putBoolean(sharedPreferencesIsUpdateFactoryServerType, configuration.isUpdateFactoryServe)
         editor.apply()
         sharedPreferences.putAndCommitObject(sharedPreferencesTargetAttributes, configuration.targetAttributes)
@@ -490,23 +495,21 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         var ufServiceCommand: UpdateFactoryServiceCommand? = null
         private const val FORCE_PING_ACTION = "ForcePing"
 
-        private val CHANNEL_ID = "UPDATE_FACTORY_NOTIFICATION_CHANNEL_ID"
-        private val NOTIFICATION_ID = 1
+        private const val CHANNEL_ID = "UPDATE_FACTORY_NOTIFICATION_CHANNEL_ID"
+        private const val NOTIFICATION_ID = 1
         private val TAG = UpdateFactoryService::class.java.simpleName
-        private val CLIENT_VERSION_TARGET_ATTRIBUTE_KEY = "client_version"
-        private val CLIENT_VERSION_CODE_ATTRIBUTE_KEY = "client_version_code"
-        private val LAST_TARGET_ATTRIBUTES_MD5_SENT_KEY = "LAST_TARGET_ATTRIBUTES_MD5_SET_KEY"
-        //        private val SHARED_PREFERENCES_LAST_NOTIFY_MESSAGE = "LAST_NOTIFY_MESSAGE"
+        private const val CLIENT_VERSION_TARGET_ATTRIBUTE_KEY = "client_version"
+        private const val CLIENT_VERSION_CODE_ATTRIBUTE_KEY = "client_version_code"
+        private const val LAST_TARGET_ATTRIBUTES_MD5_SENT_KEY = "LAST_TARGET_ATTRIBUTES_MD5_SET_KEY"
         private val EXTERNAL_STORAGE_DIR = Environment.getExternalStorageDirectory().path
         private val UF_CONF_FILE = "$EXTERNAL_STORAGE_DIR/UpdateFactoryConfiguration/ufConf.conf"
-        private val ANDROID_BUILD_DATE_TARGET_ATTRIBUTE_KEY = "android_build_date"
-        private val ANDROID_BUILD_TYPE_TARGET_ATTRIBUTE_KEY = "android_build_type"
-        private val ANDROID_FINGERPRINT_TARGET_ATTRIBUTE_KEY = "android_fingerprint"
-        private val ANDROID_KEYS_TARGET_ATTRIBUTE_KEY = "android_keys"
-        private val ANDROID_VERSION_TARGET_ATTRIBUTE_KEY = "android_version"
-        private val DEVICE_NAME_TARGET_ATTRIBUTE_KEY = "device_name"
-        private val SYSTEM_UPDATE_TYPE = "system_update_type"
-        private val CLIENT_TYPE_TARGET_TOKEN_KEY = "client"
-        private val CLIENT_DATE_TARGET_TOKEN_KEY = "date"
+        private const val ANDROID_BUILD_DATE_TARGET_ATTRIBUTE_KEY = "android_build_date"
+        private const val ANDROID_BUILD_TYPE_TARGET_ATTRIBUTE_KEY = "android_build_type"
+        private const val ANDROID_FINGERPRINT_TARGET_ATTRIBUTE_KEY = "android_fingerprint"
+        private const val ANDROID_KEYS_TARGET_ATTRIBUTE_KEY = "android_keys"
+        private const val ANDROID_VERSION_TARGET_ATTRIBUTE_KEY = "android_version"
+        private const val DEVICE_NAME_TARGET_ATTRIBUTE_KEY = "device_name"
+        private const val SYSTEM_UPDATE_TYPE = "system_update_type"
+        private const val CLIENT_TYPE_TARGET_TOKEN_KEY = "client"
     }
 }
