@@ -46,14 +46,14 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                 Log.d(TAG, "install artifact ${a.filename} from file ${a.path}")
                 val installationResult = otaInstaller.install(a, currentUpdateState, messenger, context)
                 updateDetails.addAll(installationResult.details)
-                checkReliable(updateDetails,messenger, installationResult)
+                checkReliable(updateDetails, messenger, installationResult)
                 installationResult is CurrentUpdateState.InstallationResult.Success
             }.isEmpty()
         }.isEmpty()
         return Updater.UpdateResult(success = success, details = updateDetails)
     }
 
-    private fun checkReliable(updateDetails:MutableList<String>, messenger: Updater.Messenger, installationResult: CurrentUpdateState.InstallationResult){
+    private fun checkReliable(updateDetails: MutableList<String>, messenger: Updater.Messenger, installationResult: CurrentUpdateState.InstallationResult) {
         if (otaInstaller.isFeedbackReliable(context)) {
             updateDetails.add("Final feedback message is reliable")
             val lastLog = currentUpdateState.parseLastLogFile()
@@ -68,5 +68,4 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
             updateDetails.add("Can't read ${CurrentUpdateState.LAST_LOG_FILE_NAME}, the final feedback message could be unreliable")
         }
     }
-
 }

@@ -7,7 +7,7 @@ import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.io.IOException
 
-internal object SingleCopyOtaInstaller :OtaInstaller{
+internal object SingleCopyOtaInstaller : OtaInstaller {
 
     val TAG: String = OtaInstaller::class.java.simpleName
 
@@ -16,7 +16,7 @@ internal object SingleCopyOtaInstaller :OtaInstaller{
         currentUpdateState: CurrentUpdateState,
         messenger: Updater.Messenger,
         context: Context
-    ): CurrentUpdateState.InstallationResult{
+    ): CurrentUpdateState.InstallationResult {
         val installationState = currentUpdateState.getOtaInstallationState(artifact)
 
         return when {
@@ -24,11 +24,11 @@ internal object SingleCopyOtaInstaller :OtaInstaller{
 
             installationState == CurrentUpdateState.InstallationState.SUCCESS -> CurrentUpdateState.InstallationResult.Success()
 
-            installationState == CurrentUpdateState.InstallationState.ERROR   -> CurrentUpdateState.InstallationResult.Error(listOf("Installation of ${artifact.filename} is failed"))
+            installationState == CurrentUpdateState.InstallationState.ERROR -> CurrentUpdateState.InstallationResult.Error(listOf("Installation of ${artifact.filename} is failed"))
 
-            verify(artifact)                                                   -> onVerified(artifact,currentUpdateState, messenger, context)
+            verify(artifact) -> onVerified(artifact, currentUpdateState, messenger, context)
 
-            else                                                              -> onWrongSignature(messenger)
+            else -> onWrongSignature(messenger)
         }
     }
 
@@ -54,10 +54,12 @@ internal object SingleCopyOtaInstaller :OtaInstaller{
         return CurrentUpdateState.InstallationResult.Error(listOf(message))
     }
 
-    private fun onVerified(artifact: Updater.SwModuleWithPath.Artifact,
+    private fun onVerified(
+        artifact: Updater.SwModuleWithPath.Artifact,
         currentUpdateState: CurrentUpdateState,
         messenger: Updater.Messenger,
-        context: Context): CurrentUpdateState.InstallationResult.Error {
+        context: Context
+    ): CurrentUpdateState.InstallationResult.Error {
         val packageFile = File(artifact.path)
         currentUpdateState.addPendingOTAInstallation(artifact) // todo handle error on file creation
         messenger.sendMessageToServer("Applying ota update (${artifact.filename})...")

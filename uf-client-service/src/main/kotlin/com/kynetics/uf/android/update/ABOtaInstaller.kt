@@ -21,7 +21,7 @@ import java.util.zip.ZipFile
 import kotlin.streams.toList
 
 @RequiresApi(Build.VERSION_CODES.O)
-internal object ABOtaInstaller: OtaInstaller {
+internal object ABOtaInstaller : OtaInstaller {
 
         val TAG: String = ABOtaInstaller::class.java.simpleName
         private const val PROPERTY_FILE = "payload_properties.txt"

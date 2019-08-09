@@ -16,7 +16,6 @@ import android.os.Build
 import android.os.SystemProperties
 import android.support.annotation.RequiresApi
 import com.kynetics.uf.android.R
-import com.kynetics.updatefactory.ddiclient.core.api.Updater
 
 enum class SystemUpdateType(val readableName: String) {
 

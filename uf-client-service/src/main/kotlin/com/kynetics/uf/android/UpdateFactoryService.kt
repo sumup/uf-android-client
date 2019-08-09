@@ -145,7 +145,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         registerReceiver(receiver, intentFilter)
     }
 
-    private fun getServiceConfigurationFromIntent(intent: Intent):UFServiceConfiguration?{
+    private fun getServiceConfigurationFromIntent(intent: Intent): UFServiceConfiguration? {
         Log.i(TAG, "Loaded new configuration from intent")
         val serializable = intent.getSerializableExtra(SERVICE_DATA_KEY)
         val string = intent.getStringExtra(SERVICE_DATA_KEY)
