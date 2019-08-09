@@ -234,7 +234,7 @@ internal object ABOtaInstaller : OtaInstaller {
                 val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
                 pm!!.reboot(null)
                 Log.w(TAG, "Reboot fail")
-                messenger.sendMessageToServer(*listOf("Update is successfully applied but system failed to reboot", "Waiting manual reboot").toTypedArray())
+                messenger.sendMessageToServer("Update is successfully applied but system failed to reboot", "Waiting manual reboot")
                 updateStatus.complete(UpdateEngine.UpdateStatusConstants.UPDATED_NEED_REBOOT)
             }
         }

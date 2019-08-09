@@ -50,7 +50,9 @@ class PackageInstallerBroadcastReceiver internal constructor(
         when (result) {
             PackageInstaller.STATUS_FAILURE, PackageInstaller.STATUS_FAILURE_ABORTED, PackageInstaller.STATUS_FAILURE_BLOCKED, PackageInstaller.STATUS_FAILURE_CONFLICT, PackageInstaller.STATUS_FAILURE_INCOMPATIBLE, PackageInstaller.STATUS_FAILURE_INVALID, PackageInstaller.STATUS_FAILURE_STORAGE -> {
                 val errorMessage = listOf("Installation of ${artifact.filename} ($packageName) fails with error code $result", errorCodeToDescription.getValue(result)).toTypedArray()
+                @Suppress("SpreadOperator")
                 currentUpdateState.addErrorToRepor(*errorMessage)
+                @Suppress("SpreadOperator")
                 messenger.sendMessageToServer(*errorMessage)
                 currentUpdateState.packageInstallationTerminated(packageName, packageVersion)
                 countDownLatch.countDown()

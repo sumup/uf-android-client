@@ -107,9 +107,8 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
                         .FixedTimeProvider.ofSeconds(1800).getTimeout(null)
 
                 if (!countDownLatch.await(timeout.value, timeout.timeUnit)) {
-                    val messages = listOf("Time to update exceeds the timeout", "Package manager timeout expired, package installation status unknown").toTypedArray()
-                    currentUpdateState.addSuccessMessageToRepor(*messages)
-                    Log.w(TAG, messages.joinToString("\n"))
+                    currentUpdateState.addSuccessMessageToRepor("Time to update exceeds the timeout", "Package manager timeout expired, package installation status unknown")
+                    Log.w(TAG, "Time to update exceeds the timeout")
                 }
             }
         }

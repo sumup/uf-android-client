@@ -62,6 +62,7 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
             }
             for (i in 0..lastLog.size / maxMessageForState) {
                 val message = lastLog.subList(i * maxMessageForState, min(i * maxMessageForState + maxMessageForState, lastLog.size))
+                @Suppress("SpreadOperator")
                 messenger.sendMessageToServer("${CurrentUpdateState.LAST_LOG_FILE_NAME} - $i", *message.toTypedArray())
             }
         } else {
