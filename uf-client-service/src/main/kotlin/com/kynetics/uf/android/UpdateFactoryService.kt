@@ -44,7 +44,7 @@ import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_
 import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.apicomptibility.ApiVersion
 import com.kynetics.uf.android.communication.MessageHandler
-import com.kynetics.uf.android.communication.MessangerHandler
+import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.configuration.ConfigurationFileLoader
 import com.kynetics.uf.android.content.SharedPreferencesWithObject
 import com.kynetics.uf.android.ui.MainActivity
@@ -135,7 +135,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == FORCE_PING_ACTION) {
                     ufService?.forcePing()
-                    MessangerHandler.onAction(MessageHandler.Action.FORCE_PING)
+                    MessengerHandler.onAction(MessageHandler.Action.FORCE_PING)
                     val closeIntent = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
                     sendBroadcast(closeIntent)
                 }
@@ -193,7 +193,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
                 private fun allowed(auth: AuthorizationType): Boolean {
                     if (apiMode) {
-                        MessangerHandler.sendMessage(MSG_AUTHORIZATION_REQUEST, auth.name)
+                        MessengerHandler.sendMessage(MSG_AUTHORIZATION_REQUEST, auth.name)
                     } else {
                         showAuthorizationDialog(auth)
                     }
@@ -202,13 +202,13 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
                         val isGranted = authResponse.take()
                         if (isGranted) {
                             mNotificationManager?.notify(NOTIFICATION_ID, getNotification(auth.event.toString(), true))
-                            MessangerHandler.onAction(auth.toActionOnGranted)
+                            MessengerHandler.onAction(auth.toActionOnGranted)
                         } else {
-                            MessangerHandler.onAction(auth.toActionOnDenied)
+                            MessengerHandler.onAction(auth.toActionOnDenied)
                         }
                         isGranted
                     } catch (e: InterruptedException) {
-                        MessangerHandler.onAction(auth.toActionOnDenied)
+                        MessengerHandler.onAction(auth.toActionOnDenied)
                         false
                     }
                 }
@@ -226,12 +226,12 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
                     when (message) {
                         is MessageListener.Message.Event.UpdateFinished, is MessageListener.Message.State.CancellingUpdate -> {
                             currentUpdateState.clearState()
-                            MessangerHandler.onAction(MessageHandler.Action.UPDATE_FINISH)
+                            MessengerHandler.onAction(MessageHandler.Action.UPDATE_FINISH)
                         }
                     }
 
-                    MessangerHandler.onMessageReceived(message)
-                    MessangerHandler.sendMessage(MSG_SERVICE_STATUS)
+                    MessengerHandler.onMessageReceived(message)
+                    MessengerHandler.sendMessage(MSG_SERVICE_STATUS)
 
                     mNotificationManager?.notify(NOTIFICATION_ID, getNotification(message.toString()))
                     Log.i(TAG, message.toString())
@@ -347,12 +347,12 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
                 MSG_REGISTER_CLIENT -> {
                     Log.i(TAG, "receive subscription request")
-                    MessangerHandler.subscribeClient(msg.replyTo, ApiCommunicationVersion.fromVersionCode(msg.data.getInt(SERVICE_API_VERSION_KEY, 0)))
+                    MessengerHandler.subscribeClient(msg.replyTo, ApiCommunicationVersion.fromVersionCode(msg.data.getInt(SERVICE_API_VERSION_KEY, 0)))
                 }
 
                 MSG_UNREGISTER_CLIENT -> {
                     Log.i(TAG, "receive unsubscription request")
-                    MessangerHandler.unsubscribeClient(msg.replyTo)
+                    MessengerHandler.unsubscribeClient(msg.replyTo)
                 }
 
                 MSG_AUTHORIZATION_RESPONSE -> authorizationResponse(msg)
@@ -377,15 +377,15 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
             }
 
             val sharedPreferences = getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE)
-            MessangerHandler.sendMessage(
+            MessengerHandler.sendMessage(
                 getCurrentConfiguration(sharedPreferences),
                 MSG_SERVICE_CONFIGURATION_STATUS,
                 msg.replyTo
             )
             val api = ApiCommunicationVersion.fromVersionCode(msg.data.getInt(SERVICE_API_VERSION_KEY, 0))
-            if (MessangerHandler.hasMessage(api)) {
-                MessangerHandler.sendMessage(
-                    MessangerHandler.getlastSharedMessage(api).messageToSendOnSync,
+            if (MessengerHandler.hasMessage(api)) {
+                MessengerHandler.sendMessage(
+                    MessengerHandler.getlastSharedMessage(api).messageToSendOnSync,
                     MSG_SERVICE_STATUS,
                     msg.replyTo
                 )

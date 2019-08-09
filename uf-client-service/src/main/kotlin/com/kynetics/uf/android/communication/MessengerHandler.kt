@@ -10,9 +10,9 @@ import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
 import java.io.Serializable
 
-object MessangerHandler {
+object MessengerHandler {
 
-    private val TAG = MessangerHandler::class.java.simpleName
+    private val TAG = MessengerHandler::class.java.simpleName
 
     private val lastSharedMessagesByVersion = mutableMapOf(
             ApiCommunicationVersion.V0_1 to V0(),
@@ -56,11 +56,11 @@ object MessangerHandler {
         mClients.keys.filter { hasMessage(mClients.getValue(it)) }
                 .forEach { messenger ->
                     try {
-                        val ApiCommunicationVersion = mClients.getValue(messenger)
+                        val apiCommunicationVersion = mClients.getValue(messenger)
                         messenger.send(
                                 getMessage(
                                         message
-                                        ?: lastSharedMessagesByVersion.getValue(ApiCommunicationVersion).currentMessage, messageCode)
+                                        ?: lastSharedMessagesByVersion.getValue(apiCommunicationVersion).currentMessage, messageCode)
                         )
                     } catch (e: RemoteException) {
                         mClients.remove(messenger)
@@ -68,9 +68,9 @@ object MessangerHandler {
                 }
     }
 
-    internal fun subscribeClient(messenger: Messenger?, ApiCommunicationVersion: ApiCommunicationVersion) {
+    internal fun subscribeClient(messenger: Messenger?, apiVersion: ApiCommunicationVersion) {
         if (messenger != null) {
-            mClients[messenger] = ApiCommunicationVersion
+            mClients[messenger] = apiVersion
             Log.i(TAG, "client subscription")
         } else {
             Log.i(TAG, "client subscription ignored. Field replyTo mustn't be null")

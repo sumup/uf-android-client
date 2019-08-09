@@ -9,7 +9,7 @@ import android.support.annotation.RequiresApi
 import android.util.Log
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
-import com.kynetics.uf.android.communication.MessangerHandler
+import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.util.concurrent.ArrayBlockingQueue
@@ -218,7 +218,7 @@ internal object ABOtaInstaller : OtaInstaller {
 
             val limit = queue.peek() ?: 1.0
             if (currentPhaseProgress > limit || currentPhaseProgress == 1.0 || newPhase) {
-                MessangerHandler.sendMessage(
+                MessengerHandler.sendMessage(
                     UFServiceCommunicationConstants.MSG_SERVICE_STATUS,
                     UFServiceMessageV1.Event.UpdateProgress(
                         phaseName = UPDATE_STATUS.getValue(i),

@@ -24,7 +24,7 @@ import com.kynetics.uf.android.UpdateFactoryService;
 import com.kynetics.uf.android.api.ApiCommunicationVersion;
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1;
 import com.kynetics.uf.android.apicomptibility.ApiVersion;
-import com.kynetics.uf.android.communication.MessangerHandler;
+import com.kynetics.uf.android.communication.MessengerHandler;
 
 /**
  * A simple {@link PreferenceFragmentCompat} subclass.
@@ -149,7 +149,7 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
 
         if(key.equals(getString(R.string.shared_preferences_current_state_key))){
             try {
-                final UFServiceMessageV1 messageV1 = UFServiceMessageV1.Companion.fromJson((String) MessangerHandler.INSTANCE.getlastSharedMessage(ApiCommunicationVersion.V1).getMessageToSendOnSync());
+                final UFServiceMessageV1 messageV1 = UFServiceMessageV1.Companion.fromJson((String) MessengerHandler.INSTANCE.getlastSharedMessage(ApiCommunicationVersion.V1).getMessageToSendOnSync());
                 preference.setSummary(messageV1.getName().name());
             }catch(IllegalArgumentException error){
                 Log.w(TAG, "Error setting current state", error);
