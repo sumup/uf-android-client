@@ -126,11 +126,14 @@ sealed class UFServiceMessageV1 {
     abstract fun toJson(): String
 
     companion object {
+
         @UseExperimental(ImplicitReflectionSerializer::class)
+        @Suppress("ComplexMethod")
         fun fromJson(jsonContent: String): UFServiceMessageV1 {
             val json = Json(JsonConfiguration.Stable.copy(strictMode = false))
             val jsonElement = json.parseJson(jsonContent)
             return when (jsonElement.jsonObject["name"]?.primitive?.content) {
+
                 MessageName.DOWNLOADING.name -> json.fromJson<State.Downloading>(jsonElement)
                 MessageName.UPDATING.name -> State.Updating
                 MessageName.CANCELLING_UPDATE.name -> State.CancellingUpdate
