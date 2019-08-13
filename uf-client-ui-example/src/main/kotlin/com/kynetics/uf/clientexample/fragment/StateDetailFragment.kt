@@ -98,7 +98,8 @@ class StateDetailFragment : Fragment(), UFServiceInteractionFragment {
                 binding?.root?.details_title?.text = "Files to donwload:"
                 binding?.root?.details_title?.visibility = View.VISIBLE
                 binding?.root?.details_list?.visibility = View.VISIBLE
-                binding?.root?.details_list?.adapter = ArrayAdapter(activity, android.R.layout.simple_list_item_1, stateDetail!!.details)
+                binding?.root?.details_list?.adapter =
+                    ArrayAdapter(activity, android.R.layout.simple_list_item_1, stateDetail!!.details)
 
                 item!!.events.forEach {
                     onMessageReceived(it.event)
@@ -134,11 +135,14 @@ class StateDetailFragment : Fragment(), UFServiceInteractionFragment {
             adapter?.notifyDataSetChanged()
             val size = item?.events?.size ?: 0
             binding?.root?.events_list?.setSelection(max(0, size - 1))
-
+            val itemStateIsDonwloading = item?.state is UFServiceMessageV1.State.Downloading
             when {
-                message is UFServiceMessageV1.Event.StartDownloadFile && item?.state is UFServiceMessageV1.State.Downloading -> updateDetails(message.fileName, 0.0)
-                message is UFServiceMessageV1.Event.DownloadProgress && item?.state is UFServiceMessageV1.State.Downloading -> updateDetails(message.fileName, message.percentage)
-                message is UFServiceMessageV1.Event.FileDownloaded && item?.state is UFServiceMessageV1.State.Downloading -> updateDetails(message.fileDownloaded, 100.0)
+                message is UFServiceMessageV1.Event.StartDownloadFile &&  itemStateIsDonwloading ->
+                    updateDetails(message.fileName, 0.0)
+                message is UFServiceMessageV1.Event.DownloadProgress && itemStateIsDonwloading ->
+                    updateDetails(message.fileName, message.percentage)
+                message is UFServiceMessageV1.Event.FileDownloaded && itemStateIsDonwloading ->
+                    updateDetails(message.fileDownloaded, 100.0)
                 else -> {}
             }
         }
