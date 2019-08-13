@@ -137,7 +137,7 @@ class StateDetailFragment : Fragment(), UFServiceInteractionFragment {
             binding?.root?.events_list?.setSelection(max(0, size - 1))
             val itemStateIsDonwloading = item?.state is UFServiceMessageV1.State.Downloading
             when {
-                message is UFServiceMessageV1.Event.StartDownloadFile &&  itemStateIsDonwloading ->
+                message is UFServiceMessageV1.Event.StartDownloadFile && itemStateIsDonwloading ->
                     updateDetails(message.fileName, 0.0)
                 message is UFServiceMessageV1.Event.DownloadProgress && itemStateIsDonwloading ->
                     updateDetails(message.fileName, message.percentage)

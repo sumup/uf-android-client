@@ -80,8 +80,8 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization{
                 getString(type == INTENT_TYPE_EXTRA_VALUE_DOWNLOAD ?
                         R.string.update_download_content :
                         R.string.update_started_content),
-                getString(R.string.yes),
-                getString(R.string.no));
+                getString(android.R.string.ok),
+                getString(android.R.string.cancel));
         newFragment.show(getSupportFragmentManager(), "authorization");
     }
 
