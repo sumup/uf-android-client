@@ -10,6 +10,8 @@
  */
 
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 28
@@ -18,15 +20,24 @@ android {
         applicationId "com.kynetics.uf.clientexample"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 20
+        versionCode 21
         versionName versionFromGit(project)
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
+    dataBinding {
+        enabled = true
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
     def isRunningOnTravis = System.getenv("CI") == "true"
 
-    if (isRunningOnTravis) {
-        signingConfigs {
+    signingConfigs{
+
+        if (isRunningOnTravis) {
             kynetics {
                 storePassword System.getenv("uf_store_password")
                 keyAlias System.getenv("kynetics_alias")
@@ -35,19 +46,39 @@ android {
                 v2SigningEnabled true
                 v1SigningEnabled true
             }
+
+        } else {
+            debug {
+                keyAlias project.properties['uf-android-client-ui.keyAlias']
+                keyPassword project.properties['uf-android-client-ui.keyPassword']
+                storeFile file(project.properties['uf-android-client-ui.storePath'])
+                storePassword project.properties['uf-android-client-ui.storePassword']
+                v2SigningEnabled true
+                v1SigningEnabled true
+            }
         }
     }
 
     buildTypes {
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
         if (isRunningOnTravis) {
             kynetics_key {
                 signingConfig signingConfigs.kynetics
                 minifyEnabled false
                 proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            }
+        } else {
+            debug{
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                if(isRunningOnTravis){
+                    signingConfig signingConfigs.debug
+                }
             }
         }
     }

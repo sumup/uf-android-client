@@ -20,12 +20,11 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-
-import com.kynetics.uf.android.ui.fragment.UFPreferenceFragment;
 import com.kynetics.uf.android.R;
 import com.kynetics.uf.android.UpdateFactoryService;
 import com.kynetics.uf.android.ui.fragment.AuthorizationDialogFragment;
 import com.kynetics.uf.android.ui.fragment.AuthorizationDialogFragment.OnAuthorization;
+import com.kynetics.uf.android.ui.fragment.UFPreferenceFragment;
 
 /**
  * @author Daniele Sergio
@@ -40,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTitle(R.string.update_factory_label);
         final Intent intent =  getIntent();
         final int type = intent.getIntExtra(INTENT_TYPE_EXTRA_VARIABLE, 0);
         switch (type){
@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization{
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            UpdateFactoryService.getUFServiceCommand().configureService();
+            UpdateFactoryService.getUfServiceCommand().configureService();
             finish();
         }
         return super.onOptionsItemSelected(item);
@@ -99,13 +99,13 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization{
 
     @Override
     public void onAuthorizationGrant() {
-        UpdateFactoryService.getUFServiceCommand().authorizationGranted();
+        UpdateFactoryService.getUfServiceCommand().authorizationGranted();
         finishActivity();
     }
 
     @Override
     public void onAuthorizationDenied() {
-        UpdateFactoryService.getUFServiceCommand().authorizationDenied();
+        UpdateFactoryService.getUfServiceCommand().authorizationDenied();
         finishActivity();
     }
 

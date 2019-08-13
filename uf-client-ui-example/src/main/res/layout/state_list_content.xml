@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="5dp">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/state_name"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/text_padding" />
+        <TextView
+            android:id="@+id/date_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/text_padding" />
+    </LinearLayout>
+    <TextView
+        android:id="@+id/unread_event"
+        android:text="11"
+        android:background="@drawable/circle"
+        android:layout_width="45sp"
+        android:layout_height="45sp"
+        android:textAlignment="gravity"
+        android:gravity="center"
+        android:textColor="#fff"
+        android:layout_gravity="center_vertical"
+        android:padding="@dimen/text_padding"/>
+</LinearLayout>

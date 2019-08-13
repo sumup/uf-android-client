@@ -31,11 +31,6 @@ public class UFServiceCommunicationConstants {
      */
     public static final int MSG_UNREGISTER_CLIENT = 3;
 
-    /**
-     * Command to service to set a new value.  This can be sent to the
-     * service to supply a new value, and will be sent by the service to
-     * any registered clients with the new value.
-     */
     public static final int MSG_SERVICE_STATUS = 4;
 
     public static final int MSG_AUTHORIZATION_REQUEST = 5;
@@ -48,11 +43,15 @@ public class UFServiceCommunicationConstants {
 
     public static final int MSG_SERVICE_CONFIGURATION_STATUS = 9;
 
+    public static final int MSG_FORCE_PING = 10;
+
     public static final String SERVICE_PACKAGE_NAME = "com.kynetics.uf.service";
 
     public static final String SERVICE_ACTION = "com.kynetics.action.BIND_UF_SERVICE";
 
     public static final String SERVICE_DATA_KEY = "DATA_KEY";
+
+    public static final String SERVICE_API_VERSION_KEY = "API_VERSION_KEY";
 
     public static final String ACTION_SETTINGS = "com.kynetics.action.SETTINGS";
 

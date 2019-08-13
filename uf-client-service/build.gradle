@@ -20,9 +20,13 @@ android {
         applicationId "com.kynetics.uf.service"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 21
+        versionCode 22
         versionName versionFromGit(project)
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
     }
 
     compileOptions {
@@ -32,8 +36,8 @@ android {
 
     def isRunningOnTravis = System.getenv("CI") == "true"
 
-    if (isRunningOnTravis) {
-        signingConfigs {
+    signingConfigs {
+        if (isRunningOnTravis) {
             nxp_platform {
                 storePassword System.getenv("uf_store_password")
                 keyAlias System.getenv("nxp_alias")
@@ -51,9 +55,7 @@ android {
                 v2SigningEnabled true
                 v1SigningEnabled true
             }
-        }
-    } else {
-        signingConfigs {
+        } else {
             debug {
                 keyAlias project.properties['uf-android-client-service.keyAlias']
                 keyPassword project.properties['uf-android-client-service.keyPassword']
@@ -62,20 +64,16 @@ android {
                 v2SigningEnabled true
                 v1SigningEnabled true
             }
-        }
-    }
 
+        }
+
+    }
 
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-
-        debug {
-            minifyEnabled false
-            signingConfig signingConfigs.debug
         }
 
         if (isRunningOnTravis) {
@@ -90,12 +88,21 @@ android {
                 minifyEnabled false
                 proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             }
+        } else {
+            debug{
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                signingConfig signingConfigs.debug
+            }
         }
     }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "com.github.Kynetics.uf-ddiclient:core:1.0.0-rc3"
+    implementation "com.github.Kynetics.uf-ddiclient:core-api:1.0.0-rc3"
+//    implementation "org.slf4j:slf4j-android:1.7.26"
     implementation "com.android.support:support-v4:$supportLibraryVersion"
     implementation "com.android.support:design:$supportLibraryVersion"
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
@@ -105,7 +112,15 @@ dependencies {
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
     implementation "com.android.support:preference-v7:$supportLibraryVersion"
     testImplementation 'junit:junit:4.12'
-    implementation 'com.github.Kynetics.uf-ddiclient:ddiclient-core:v0.4.7'
+//    implementation 'com.github.Kynetics.uf-ddiclient:ddiclient-core:v0.4.7'
     implementation project(':uf-client-service:uf-client-service-api')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+
+    implementation 'com.google.code.gson:gson:2.8.1'
+    implementation "com.squareup.retrofit2:retrofit:2.5.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.5.0"
+    implementation 'com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2'
+    implementation "com.squareup.okhttp3:okhttp:3.9.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.1.1"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.1.1'
 }

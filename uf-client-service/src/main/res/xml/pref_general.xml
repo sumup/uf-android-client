@@ -77,4 +77,8 @@
         android:selectAllOnFocus="true"
         android:singleLine="true" />
 
+    <Preference
+        android:key="@string/shared_preferences_system_update_type_key"
+        android:title="@string/shared_preferences_system_update_type_title" />
+
 </PreferenceScreen>

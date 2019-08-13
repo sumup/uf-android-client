@@ -18,8 +18,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 
-import com.kynetics.uf.android.R;
-
 /**
  * @author Daniele Sergio
  */

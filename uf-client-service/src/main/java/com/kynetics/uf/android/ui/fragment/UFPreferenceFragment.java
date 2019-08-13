@@ -16,24 +16,22 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.preference.EditTextPreference;
-import android.support.v7.preference.ListPreference;
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceFragmentCompat;
-import android.support.v7.preference.PreferenceGroup;
-import android.support.v7.preference.SwitchPreferenceCompat;
+import android.support.v7.preference.*;
+import android.telecom.Log;
 import android.widget.Toast;
-
 import com.kynetics.uf.android.R;
 import com.kynetics.uf.android.UpdateFactoryService;
+import com.kynetics.uf.android.api.ApiCommunicationVersion;
+import com.kynetics.uf.android.api.v1.UFServiceMessageV1;
 import com.kynetics.uf.android.apicomptibility.ApiVersion;
-import com.kynetics.uf.android.content.SharedPreferencesWithObject;
-import com.kynetics.updatefactory.ddiclient.core.model.state.AbstractState;
+import com.kynetics.uf.android.communication.MessengerHandler;
 
 /**
  * A simple {@link PreferenceFragmentCompat} subclass.
  */
 public class UFPreferenceFragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
+
+    private static final String TAG = UFPreferenceFragment.class.getSimpleName();
 
     public UFPreferenceFragment() {
     }
@@ -150,8 +148,17 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
         }
 
         if(key.equals(getString(R.string.shared_preferences_current_state_key))){
-            preference.setSummary(getStateName(key, sharedPrefs));
+            try {
+                final UFServiceMessageV1 messageV1 = UFServiceMessageV1.Companion.fromJson((String) MessengerHandler.INSTANCE.getlastSharedMessage(ApiCommunicationVersion.V1).getMessageToSendOnSync());
+                preference.setSummary(messageV1.getName().name());
+            }catch(IllegalArgumentException error){
+                Log.w(TAG, "Error setting current state", error);
+            }
             return;
+        }
+
+        if(key.equals(getString(R.string.shared_preferences_system_update_type_key))){
+            preference.setSummary(sharedPrefs.getString(getString(R.string.shared_preferences_system_update_type_key),""));
         }
 
         if(key.equals(getString(R.string.shared_preferences_retry_delay_key))){
@@ -159,15 +166,6 @@ public class UFPreferenceFragment extends PreferenceFragmentCompat implements Sh
             return;
         }
 
-    }
-
-    private String getStateName(String key, SharedPreferences sharedPreferences){
-        final SharedPreferencesWithObject sharedPrefs = new SharedPreferencesWithObject(sharedPreferences);
-        AbstractState state = sharedPrefs.getObject(key, AbstractState.class);
-        if(state != null){
-            return state.getStateName().name();
-        }
-        return "";
     }
 
     @Override

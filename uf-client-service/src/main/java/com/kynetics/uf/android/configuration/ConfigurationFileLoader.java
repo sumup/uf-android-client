@@ -13,7 +13,6 @@ package com.kynetics.uf.android.configuration;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import com.kynetics.uf.android.api.UFServiceConfiguration;
 
 import java.io.BufferedReader;
@@ -56,7 +55,7 @@ public class ConfigurationFileLoader {
     }
 
     public UFServiceConfiguration getNewFileConfiguration(){
-        if(!configurationFileFound() || !parseFile()){
+        if(!configurationFileFound() || !isNewConfigurationFile()){
             return null;
         }
         final String controllerId = map.get(CONTROLLER_ID_CONFIGURATION_KEY);
@@ -84,7 +83,7 @@ public class ConfigurationFileLoader {
         return value == null || !value.equalsIgnoreCase("FALSE");
     }
 
-    private boolean parseFile(){
+    private boolean isNewConfigurationFile(){
         try (final BufferedReader br = new BufferedReader(new FileReader(configurationFilePath))) {
             String line;
             final MessageDigest md5digest = getDigest();
@@ -96,16 +95,15 @@ public class ConfigurationFileLoader {
                 }
             }
             final BigInteger bigInt = new BigInteger(1,md5digest.digest());
-            final String hashtext = bigInt.toString(16);
+            final String md5NewConfigurationFile = bigInt.toString(16);
             final String md5LastConfigurationFileLoaded = sh.getString(SHARED_PREFERENCES_LAST_CONFIGURATION_FILE_KEY, "");
-            sh.edit().putString(SHARED_PREFERENCES_LAST_CONFIGURATION_FILE_KEY, hashtext).apply();
-            return !hashtext.equals(md5LastConfigurationFileLoaded);
+            sh.edit().putString(SHARED_PREFERENCES_LAST_CONFIGURATION_FILE_KEY, md5NewConfigurationFile).apply();
+            return !md5NewConfigurationFile.equals(md5LastConfigurationFileLoaded);
         }
         catch (IOException e) {
             e.printStackTrace();
         }
-        return true;
-
+        return false;
     }
 
     private boolean configurationFileFound(){
