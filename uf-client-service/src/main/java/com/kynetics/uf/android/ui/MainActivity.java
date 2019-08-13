@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements OnAuthorization{
                 setContentView(R.layout.activity_main);
                 ActionBar actionBar = getSupportActionBar();
                 actionBar.setDisplayHomeAsUpEnabled(true);
-                changePage(UFPreferenceFragment.newInstance());
+                changePage(UFPreferenceFragment.Companion.newInstance());
                 break;
             case INTENT_TYPE_EXTRA_VALUE_DOWNLOAD:
             case INTENT_TYPE_EXTRA_VALUE_REBOOT:
