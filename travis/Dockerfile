@@ -2,15 +2,12 @@ FROM gradle:5.1.1-jdk8
 
 USER root
 
-ARG CI_ARG="false"
-
 ENV SDK_URL="https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip" \
     ANDROID_HOME="/usr/local/android-sdk" \
     ANDROID_VERSION=28 \
     ANDROID_BUILD_TOOLS_VERSION=28.0.3 \
     ANDROID_HIDDEN_URL="https://github.com/anggrayudi/android-hidden-api/raw/master/android-28/android.jar" \
     ANDROID_HIDDEN_URL="https://github.com/anggrayudi/android-hidden-api/files/2709802/android.zip"\
-    CI=$CI_ARG
 
 ARG PROJECT_DIR="project"
 ARG ANDROID_JAR="$ANDROID_HOME/platforms/android-28/android.jar"
