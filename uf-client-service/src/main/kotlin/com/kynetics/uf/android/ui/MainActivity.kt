@@ -50,7 +50,6 @@ class MainActivity : AppCompatActivity(), OnAuthorization {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == android.R.id.home) {
-            UpdateFactoryService.ufServiceCommand!!.configureService()
             finish()
         }
         return super.onOptionsItemSelected(item)

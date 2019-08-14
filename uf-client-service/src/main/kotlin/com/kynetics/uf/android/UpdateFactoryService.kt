@@ -169,6 +169,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(TAG, String.format("service's starting with version %s (%s)", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE))
         startForeground()
+        isRunning = true
         val configurationFile = ConfigurationFileLoader(super.getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE), UF_CONF_FILE, applicationContext)
         var serviceConfiguration = configurationFile.newFileConfiguration
         if (serviceConfiguration == null && intent != null) {
@@ -509,6 +510,8 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
             abstract val extra: Int
             abstract val event: MessageListener.Message.State
         }
+
+        var isRunning = false
 
         @JvmStatic
         var ufServiceCommand: UpdateFactoryServiceCommand? = null

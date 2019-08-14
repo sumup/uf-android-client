@@ -35,6 +35,8 @@ import com.kynetics.uf.android.communication.MessengerHandler
  */
 class UFPreferenceFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
 
+    var startingSharedPreferences: Map<String, Any?> = mutableMapOf()
+
     private var notEmptyEditTextListener = Preference.OnPreferenceChangeListener { _, newValue ->
         if (newValue.toString().trim { it <= ' ' } == "") {
             Toast.makeText(activity, "Filed can't be empty",
@@ -45,7 +47,7 @@ class UFPreferenceFragment : PreferenceFragmentCompat(), SharedPreferences.OnSha
         }
     }
 
-    override fun onCreatePreferences(savedInstanceState: Bundle, rootKey: String) {
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         preferenceManager.sharedPreferencesName = getString(R.string.shared_preferences_file)
         setPreferencesFromResource(R.xml.pref_general, rootKey)
         preferenceScreen.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
@@ -56,12 +58,16 @@ class UFPreferenceFragment : PreferenceFragmentCompat(), SharedPreferences.OnSha
             val editTextPreference = findPreference(key) as EditTextPreference
             editTextPreference.onPreferenceChangeListener = notEmptyEditTextListener
         }
+
+        startingSharedPreferences = preferenceScreen.sharedPreferences.all
     }
 
     override fun onStart() {
         super.onStart()
-        val myIntent = Intent(context, UpdateFactoryService::class.java)
-        ApiVersion.fromVersionCode().startService(context, myIntent)
+        if (!UpdateFactoryService.isRunning) {
+            val myIntent = Intent(context, UpdateFactoryService::class.java)
+            ApiVersion.fromVersionCode().startService(context, myIntent)
+        }
     }
 
     override fun onResume() {
@@ -154,6 +160,11 @@ class UFPreferenceFragment : PreferenceFragmentCompat(), SharedPreferences.OnSha
     override fun onPause() {
         super.onPause()
         preferenceScreen.sharedPreferences.edit().apply()
+        val currentSharedPreferences = preferenceScreen.sharedPreferences.all
+        if (currentSharedPreferences != startingSharedPreferences) {
+            UpdateFactoryService.ufServiceCommand!!.configureService()
+            startingSharedPreferences = currentSharedPreferences
+        }
     }
 
     override fun onDetach() {
