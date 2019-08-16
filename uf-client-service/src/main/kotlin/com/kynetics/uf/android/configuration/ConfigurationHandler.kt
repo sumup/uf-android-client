@@ -1,0 +1,246 @@
+package com.kynetics.uf.android.configuration
+
+import android.content.Intent
+import android.os.Build
+import android.os.Environment
+import android.util.Log
+import android.widget.Toast
+import com.kynetics.uf.android.BuildConfig
+import com.kynetics.uf.android.R
+import com.kynetics.uf.android.UpdateFactoryService
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants
+import com.kynetics.uf.android.api.UFServiceConfiguration
+import com.kynetics.uf.android.content.SharedPreferencesWithObject
+import com.kynetics.uf.android.update.ApkUpdater
+import com.kynetics.uf.android.update.CurrentUpdateState
+import com.kynetics.uf.android.update.OtaUpdater
+import com.kynetics.uf.android.update.SystemUpdateType
+import com.kynetics.updatefactory.ddiclient.core.UpdateFactoryClientDefaultImpl
+import com.kynetics.updatefactory.ddiclient.core.api.ConfigDataProvider
+import com.kynetics.updatefactory.ddiclient.core.api.DeploymentPermitProvider
+import com.kynetics.updatefactory.ddiclient.core.api.DirectoryForArtifactsProvider
+import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
+import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClient
+import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClientData
+import java.io.File
+import java.security.MessageDigest
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.HashMap
+import java.util.Locale
+
+data class ConfigurationHandler(
+    private var ufService: UpdateFactoryClient?,
+    private val context: UpdateFactoryService,
+    private val sharedPreferences: SharedPreferencesWithObject
+) {
+
+    fun getConfigurationFromFile(): UFServiceConfiguration? = configurationFile.newFileConfiguration
+
+    fun getServiceConfigurationFromIntent(intent: Intent): UFServiceConfiguration? {
+        Log.i(TAG, "Loaded new configuration from intent")
+        val serializable = intent.getSerializableExtra(UFServiceCommunicationConstants.SERVICE_DATA_KEY)
+        val string = intent.getStringExtra(UFServiceCommunicationConstants.SERVICE_DATA_KEY)
+        return try {
+            when {
+
+                serializable is String -> UFServiceConfiguration.fromJson(serializable)
+
+                serializable is UFServiceConfiguration -> serializable
+
+                string != null -> UFServiceConfiguration.fromJson(string)
+
+                else -> null
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "Deserialization error", e)
+            null
+        }
+    }
+
+    fun saveServiceConfigurationToSharedPreferences(
+        configuration: UFServiceConfiguration?
+    ) {
+        if (configuration == null) {
+            return
+        }
+        val editor = sharedPreferences.edit()
+        editor.putString(sharedPreferencesControllerIdKey, configuration.controllerId)
+        editor.putString(sharedPreferencesTenantKey, configuration.tenant)
+        editor.putString(sharedPreferencesServerUrlKey, configuration.url)
+        editor.putString(sharedPreferencesGatewayToken, configuration.gatewayToken)
+        editor.putString(sharedPreferencesTargetToken, configuration.targetToken)
+        editor.putLong(sharedPreferencesRetryDelayKey, configuration.retryDelay)
+        editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode)
+        editor.putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnable)
+        editor.putBoolean(sharedPreferencesIsUpdateFactoryServerType, configuration.isUpdateFactoryServe)
+        editor.apply()
+        sharedPreferences.putAndCommitObject(sharedPreferencesTargetAttributes, configuration.targetAttributes)
+    }
+
+    fun getCurrentConfiguration(): UFServiceConfiguration {
+        val serviceIsEnable = ufService != null && sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false)
+        val url = sharedPreferences.getString(sharedPreferencesServerUrlKey, "")
+        val controllerId = sharedPreferences.getString(sharedPreferencesControllerIdKey, "")
+        val gatewayToken = sharedPreferences.getString(sharedPreferencesGatewayToken, "")
+        val targetToken = sharedPreferences.getString(sharedPreferencesTargetToken, "")
+        val tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "")
+        val delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 900000)
+        val apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true)
+        var targetAttributes: MutableMap<String, String>? = sharedPreferences.getObject<HashMap<String, String>>(sharedPreferencesTargetAttributes, HashMap<String, String>().javaClass)
+        if (targetAttributes == null) {
+            targetAttributes = HashMap()
+        }
+        val serverType = if (sharedPreferences.getBoolean(sharedPreferencesIsUpdateFactoryServerType, true)) {
+            UpdateFactoryClientData.ServerType.UPDATE_FACTORY
+        } else {
+            UpdateFactoryClientData.ServerType.HAWKBIT
+        }
+        return UFServiceConfiguration.builder()
+            .withTargetAttributes(targetAttributes)
+            .withEnable(serviceIsEnable)
+            .withApiMode(apiMode)
+            .withControllerId(controllerId)
+            .withGetawayToken(gatewayToken)
+            .withRetryDelay(delay)
+            .withTargetToken(targetToken)
+            .withTenant(tenant)
+            .withIsUpdateFactoryServer(serverType == UpdateFactoryClientData.ServerType.UPDATE_FACTORY)
+            .withUrl(url)
+            .build()
+    }
+
+    fun apiModeIsEnabled() = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, false)
+
+    fun buildServiceFromPreferences(
+        deploymentPermitProvider: DeploymentPermitProvider,
+        listener: List<MessageListener>,
+        currentUfService: UpdateFactoryClient?
+    ): UpdateFactoryClient? {
+        currentUfService?.stop()
+        val serviceConfiguration = getCurrentConfiguration()
+        if (sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false)) {
+            try {
+                val clientData = UpdateFactoryClientData(
+                    serviceConfiguration.tenant,
+                    serviceConfiguration.controllerId,
+                    serviceConfiguration.url,
+                    if (serviceConfiguration.isUpdateFactoryServe) { UpdateFactoryClientData.ServerType.UPDATE_FACTORY } else { UpdateFactoryClientData.ServerType.HAWKBIT },
+                    serviceConfiguration.gatewayToken,
+                    serviceConfiguration.targetToken
+                )
+
+                val newUfService = UpdateFactoryClientDefaultImpl()
+                newUfService.init(
+                    clientData,
+                    object : DirectoryForArtifactsProvider { override fun directoryForArtifacts(): File = currentUpdateState.rootDir() },
+                    buildConfigDataProvider(),
+                    deploymentPermitProvider,
+                    listener,
+                    OtaUpdater(context),
+                    ApkUpdater(context)
+                )
+                newUfService.startAsync()
+                ufService = newUfService
+                return newUfService
+            } catch (e: IllegalStateException) {
+                ufService = null
+                sharedPreferences.edit().putBoolean(sharedPreferencesServiceEnableKey, false).apply()
+                Toast.makeText(context, "Update Factory configuration error", Toast.LENGTH_LONG)
+                    .show()
+            } catch (e: IllegalArgumentException) {
+                ufService = null
+                sharedPreferences.edit().putBoolean(sharedPreferencesServiceEnableKey, false).apply()
+                Toast.makeText(context, "Update Factory configuration error", Toast.LENGTH_LONG).show()
+            }
+        }
+        return ufService
+    }
+
+    fun needReboot(newConf: UFServiceConfiguration): Boolean {
+        val currentConf = getCurrentConfiguration()
+        return currentConf.copy(targetAttributes = emptyMap()) != newConf.copy(targetAttributes = emptyMap())
+    }
+
+    private fun buildConfigDataProvider(): ConfigDataProvider {
+        return object : ConfigDataProvider {
+            override fun configData(): Map<String, String> {
+                return decorateTargetAttribute(sharedPreferences)
+            }
+
+            override fun isUpdated(): Boolean {
+                val md5 = decorateTargetAttribute(sharedPreferences).toMD5()
+                return md5 == sharedPreferences.getString(LAST_TARGET_ATTRIBUTES_MD5_SENT_KEY, "")
+            }
+
+            override fun onConfigDataUpdate() {
+                val md5 = decorateTargetAttribute(sharedPreferences).toMD5()
+                sharedPreferences.edit().putString(LAST_TARGET_ATTRIBUTES_MD5_SENT_KEY, md5)
+                    .apply()
+            }
+        }
+    }
+
+    private fun decorateTargetAttribute(sharedPreferences: SharedPreferencesWithObject): Map<String, String> {
+        var targetAttributes: MutableMap<String, String>? = sharedPreferences.getObject<HashMap<String, String>>(sharedPreferencesTargetAttributes, HashMap<String, String>().javaClass)
+        if (targetAttributes == null) {
+            targetAttributes = HashMap()
+        }
+        targetAttributes = targetAttributes.toMutableMap()
+        targetAttributes[CLIENT_TYPE_TARGET_TOKEN_KEY] = "Android"
+        targetAttributes[CLIENT_VERSION_TARGET_ATTRIBUTE_KEY] = BuildConfig.VERSION_NAME // TODO: 4/17/18 refactor
+        targetAttributes[CLIENT_VERSION_CODE_ATTRIBUTE_KEY] = BuildConfig.VERSION_CODE.toString()
+        val buildDate = Date(Build.TIME)
+        val dateFormat = SimpleDateFormat("yyyyMMdd", Locale.UK)
+        targetAttributes[ANDROID_BUILD_DATE_TARGET_ATTRIBUTE_KEY] = dateFormat.format(buildDate)
+        targetAttributes[ANDROID_BUILD_TYPE_TARGET_ATTRIBUTE_KEY] = Build.TYPE
+        targetAttributes[ANDROID_FINGERPRINT_TARGET_ATTRIBUTE_KEY] = Build.FINGERPRINT
+        targetAttributes[ANDROID_KEYS_TARGET_ATTRIBUTE_KEY] = Build.TAGS
+        targetAttributes[ANDROID_VERSION_TARGET_ATTRIBUTE_KEY] = Build.VERSION.RELEASE
+        targetAttributes[DEVICE_NAME_TARGET_ATTRIBUTE_KEY] = Build.DEVICE
+        targetAttributes[SYSTEM_UPDATE_TYPE] = systemUpdateType!!.name
+        return targetAttributes
+    }
+
+    private fun Map<String, String>.toMD5(): String {
+        val content = entries.sortedBy { it.key }.joinToString("-") { "${it.key}_${it.value}" }
+        val bytes = MessageDigest.getInstance("MD5").digest(content.toByteArray())
+        return bytes.toMD5()
+    }
+
+    private fun ByteArray.toMD5(): String {
+        return this.joinToString("") { "%02x".format(it) }
+    }
+
+    private var systemUpdateType: SystemUpdateType? = SystemUpdateType.getSystemUpdateType()
+    private val configurationFile = ConfigurationFileLoader(sharedPreferences, UF_CONF_FILE, context)
+
+    private val sharedPreferencesServerUrlKey = context.getString(R.string.shared_preferences_server_url_key)
+    private val sharedPreferencesApiModeKey = context.getString(R.string.shared_preferences_api_mode_key)
+    private val sharedPreferencesTenantKey = context.getString(R.string.shared_preferences_tenant_key)
+    private val sharedPreferencesControllerIdKey = context.getString(R.string.shared_preferences_controller_id_key)
+    private val sharedPreferencesRetryDelayKey = context.getString(R.string.shared_preferences_retry_delay_key)
+    private val sharedPreferencesServiceEnableKey = context.getString(R.string.shared_preferences_is_enable_key)
+    private val sharedPreferencesGatewayToken = context.getString(R.string.shared_preferences_gateway_token_key)
+    private val sharedPreferencesTargetToken = context.getString(R.string.shared_preferences_target_token_key)
+    private val sharedPreferencesTargetAttributes = context.getString(R.string.shared_preferences_args_key)
+    private val sharedPreferencesIsUpdateFactoryServerType = context.getString(R.string.shared_preferences_is_update_factory_server_type_key)
+    private val currentUpdateState: CurrentUpdateState = CurrentUpdateState(context)
+
+    companion object {
+        private const val LAST_TARGET_ATTRIBUTES_MD5_SENT_KEY = "LAST_TARGET_ATTRIBUTES_MD5_SET_KEY"
+        private const val CLIENT_VERSION_TARGET_ATTRIBUTE_KEY = "client_version"
+        private const val CLIENT_VERSION_CODE_ATTRIBUTE_KEY = "client_version_code"
+        private const val ANDROID_BUILD_DATE_TARGET_ATTRIBUTE_KEY = "android_build_date"
+        private const val ANDROID_BUILD_TYPE_TARGET_ATTRIBUTE_KEY = "android_build_type"
+        private const val ANDROID_FINGERPRINT_TARGET_ATTRIBUTE_KEY = "android_fingerprint"
+        private const val ANDROID_KEYS_TARGET_ATTRIBUTE_KEY = "android_keys"
+        private const val ANDROID_VERSION_TARGET_ATTRIBUTE_KEY = "android_version"
+        private const val DEVICE_NAME_TARGET_ATTRIBUTE_KEY = "device_name"
+        private const val SYSTEM_UPDATE_TYPE = "system_update_type"
+        private const val CLIENT_TYPE_TARGET_TOKEN_KEY = "client"
+        private val EXTERNAL_STORAGE_DIR = Environment.getExternalStorageDirectory().path
+        private val UF_CONF_FILE = "$EXTERNAL_STORAGE_DIR/UpdateFactoryConfiguration/ufConf.conf"
+        private val TAG: String = ConfigurationHandler::class.java.simpleName
+    }
+}
