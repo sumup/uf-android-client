@@ -50,9 +50,9 @@ object MessageHistory {
 
         fun addEvent(item: UFServiceMessageV1.Event) {
             if (events.size == CAPACITY) {
-                events.removeAt(0)
+                events.removeAt(CAPACITY - 1)
             }
-            events.add(
+            events.add(0,
                 EventEntry(
                     System.currentTimeMillis().toDate(),
                     item
@@ -84,10 +84,9 @@ object MessageHistory {
             "$infix \nFile Name: ${event.fileName}"
         private fun print(infix: String, event: UFServiceMessageV1.Event.FileDownloaded): String =
             "$infix \nFile Name: ${event.fileDownloaded}"
-        private fun print(infix: String, event: UFServiceMessageV1.Event.UpdateFinished): String = """
-            "$infix \nUpdate Result: ${if (event.successApply) "applied" else "not applied" }
-            ${event.details.joinToString("\n")}"
-        """.trimIndent()
+        private fun print(infix: String, event: UFServiceMessageV1.Event.UpdateFinished): String =
+            "$infix \nUpdate Result: ${if (event.successApply) "applied" else "not applied" }\n" +
+                event.details.joinToString("\n")
         private fun print(infix: String, event: UFServiceMessageV1.Event.Error): String =
             "$infix \n${event.details.joinToString("\n")}"
         private fun print(infix: String, event: UFServiceMessageV1.Event.DownloadProgress): String =
@@ -97,15 +96,17 @@ object MessageHistory {
     }
 
     fun appendEvent(event: UFServiceMessageV1.Event) {
-        ITEMS.last().addEvent(event)
+        if (ITEMS.isNotEmpty()) {
+            ITEMS.first().addEvent(event)
+        }
     }
 
     fun addState(item: StateEntry) {
         if (ITEMS.size == CAPACITY) {
-            val itemToRemove = ITEMS.removeAt(0)
+            val itemToRemove = ITEMS.removeAt(CAPACITY - 1)
             ITEM_MAP.remove(itemToRemove.id)
         }
-        ITEMS.add(item)
+        ITEMS.add(0, item)
         ITEM_MAP[item.id] = item
     }
 }
