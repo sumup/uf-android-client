@@ -42,6 +42,7 @@ import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_UNREGISTE
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_API_VERSION_KEY
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY
 import com.kynetics.uf.android.api.UFServiceConfiguration
+import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.android.apicomptibility.ApiVersion
 import com.kynetics.uf.android.communication.MessageHandler
 import com.kynetics.uf.android.communication.MessengerHandler
@@ -360,6 +361,13 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
                 MSG_RESUME_SUSPEND_UPGRADE, MSG_FORCE_PING -> {
                     Log.i(TAG, "receive request to resume suspend state")
+                    val message = MessengerHandler.getlastSharedMessage(ApiCommunicationVersion.V1).messageToSendOnSync as String?
+                    val messageV1 = if (message == null) UFServiceMessageV1.State.Idle else UFServiceMessageV1.fromJson(message)
+                    if (messageV1 is UFServiceMessageV1.State.WaitingDownloadAuthorization ||
+                        messageV1 is UFServiceMessageV1.State.WaitingDownloadAuthorization) {
+                        Log.i(TAG, "Reset waiting authorization")
+                        authResponse.add(false)
+                    }
                     ufService?.forcePing()
                 }
 
