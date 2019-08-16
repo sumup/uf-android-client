@@ -146,7 +146,7 @@ class CurrentUpdateState(context: Context) {
     }
 
     private fun getPackageKey(packageName: String?): String {
-        return packageName?.replace(".".toRegex(), "_") ?: "NULL"
+        return packageName ?: String.format(APK_PACKAGE_TEMPLATE_KEY, "NULL")
     }
 
     private fun getVersion(versionCode: Long?): Long {
