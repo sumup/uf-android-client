@@ -57,7 +57,7 @@ import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.clientexample.BuildConfig
 import com.kynetics.uf.clientexample.R
-import com.kynetics.uf.clientexample.dummy.MessageHistory
+import com.kynetics.uf.clientexample.data.MessageHistory
 import com.kynetics.uf.clientexample.fragment.ListStateFragment
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment
 import kotlinx.android.synthetic.main.state_list.*

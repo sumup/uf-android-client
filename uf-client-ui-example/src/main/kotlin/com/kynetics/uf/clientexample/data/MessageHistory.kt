@@ -1,4 +1,4 @@
-package com.kynetics.uf.clientexample.dummy
+package com.kynetics.uf.clientexample.data
 
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import java.text.DateFormat
@@ -52,7 +52,12 @@ object MessageHistory {
             if (events.size == CAPACITY) {
                 events.removeAt(0)
             }
-            events.add(EventEntry(System.currentTimeMillis().toDate(), item))
+            events.add(
+                EventEntry(
+                    System.currentTimeMillis().toDate(),
+                    item
+                )
+            )
             unread++
         }
 

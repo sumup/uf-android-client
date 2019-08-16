@@ -9,9 +9,9 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.clientexample.R
+import com.kynetics.uf.clientexample.data.MessageHistory
+import com.kynetics.uf.clientexample.data.format
 import com.kynetics.uf.clientexample.databinding.StateDetailBinding
-import com.kynetics.uf.clientexample.dummy.MessageHistory
-import com.kynetics.uf.clientexample.dummy.format
 import kotlin.math.max
 import kotlin.math.pow
 import kotlinx.android.synthetic.main.state_detail.view.*

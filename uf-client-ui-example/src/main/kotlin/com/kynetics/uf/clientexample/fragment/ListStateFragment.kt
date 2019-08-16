@@ -12,8 +12,8 @@ import android.widget.TextView
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.clientexample.R
 import com.kynetics.uf.clientexample.activity.MainActivity
-import com.kynetics.uf.clientexample.dummy.MessageHistory
-import com.kynetics.uf.clientexample.dummy.toDate
+import com.kynetics.uf.clientexample.data.MessageHistory
+import com.kynetics.uf.clientexample.data.toDate
 import kotlinx.android.synthetic.main.state_list_content.view.*
 import kotlinx.android.synthetic.main.state_list_fragment.view.*
 

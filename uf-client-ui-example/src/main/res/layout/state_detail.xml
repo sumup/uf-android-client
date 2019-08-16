@@ -5,7 +5,7 @@
     <data>
         <variable
             name="data"
-            type="com.kynetics.uf.clientexample.dummy.MessageHistory.StateEntry" />
+            type="com.kynetics.uf.clientexample.data.MessageHistory.StateEntry" />
     </data>
 
     <android.support.constraint.ConstraintLayout
