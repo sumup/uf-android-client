@@ -20,11 +20,14 @@ internal object SingleCopyOtaInstaller : OtaInstaller {
         val installationState = currentUpdateState.getOtaInstallationState(artifact)
 
         return when {
-            installationState == CurrentUpdateState.InstallationState.PENDING -> onPending(currentUpdateState, artifact, messenger)
+            installationState == CurrentUpdateState.InstallationState.PENDING ->
+                onPending(currentUpdateState, artifact, messenger)
 
-            installationState == CurrentUpdateState.InstallationState.SUCCESS -> CurrentUpdateState.InstallationResult.Success()
+            installationState == CurrentUpdateState.InstallationState.SUCCESS ->
+                CurrentUpdateState.InstallationResult.Success()
 
-            installationState == CurrentUpdateState.InstallationState.ERROR -> CurrentUpdateState.InstallationResult.Error(listOf("Installation of ${artifact.filename} is failed"))
+            installationState == CurrentUpdateState.InstallationState.ERROR ->
+                CurrentUpdateState.InstallationResult.Error(listOf("Installation of ${artifact.filename} is failed"))
 
             verify(artifact) -> onVerified(artifact, currentUpdateState, messenger, context)
 
@@ -83,7 +86,8 @@ internal object SingleCopyOtaInstaller : OtaInstaller {
     ): CurrentUpdateState.InstallationResult {
         val result = currentUpdateState.lastIntallationResult(artifact)
         val message =
-            "Installation result of Ota named ${artifact.filename} is ${if (result is CurrentUpdateState.InstallationResult.Success) "success" else "failure"}"
+            "Installation result of Ota named ${artifact.filename} is " +
+                if (result is CurrentUpdateState.InstallationResult.Success) "success" else "failure"
         messenger.sendMessageToServer(message + result.details)
         Log.i(TAG, message)
         return result

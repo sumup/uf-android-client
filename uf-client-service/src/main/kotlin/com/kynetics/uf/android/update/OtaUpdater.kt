@@ -20,6 +20,7 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
 
     companion object {
         val TAG: String = OtaUpdater::class.java.simpleName
+        private const val MAX_MESSAGES_FOR_STATE = 49
     }
 
     private val otaInstaller = SystemUpdateType.getSystemUpdateType().getInstaller(context)
@@ -35,9 +36,10 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
                     it.artifacts.map { a -> a.hashes }.toSet()) }.toSet())
     }
 
-    private val maxMessageForState = 49
-
-    override fun applyUpdate(modules: Set<Updater.SwModuleWithPath>, messenger: Updater.Messenger): Updater.UpdateResult {
+    override fun applyUpdate(
+        modules: Set<Updater.SwModuleWithPath>,
+        messenger: Updater.Messenger
+    ): Updater.UpdateResult {
         val currentUpdateState = CurrentUpdateState(context)
         val updateDetails = mutableListOf<String>()
         val success = modules.dropWhile {
@@ -53,20 +55,26 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
         return Updater.UpdateResult(success = success, details = updateDetails)
     }
 
-    private fun checkReliable(updateDetails: MutableList<String>, messenger: Updater.Messenger, installationResult: CurrentUpdateState.InstallationResult) {
+    private fun checkReliable(
+        updateDetails: MutableList<String>,
+        messenger: Updater.Messenger,
+        installationResult: CurrentUpdateState.InstallationResult
+    ) {
         if (otaInstaller.isFeedbackReliable(context)) {
             updateDetails.add("Final feedback message is reliable")
             val lastLog = currentUpdateState.parseLastLogFile()
             if (installationResult is CurrentUpdateState.InstallationResult.Success) {
                 return
             }
-            for (i in 0..lastLog.size / maxMessageForState) {
-                val message = lastLog.subList(i * maxMessageForState, min(i * maxMessageForState + maxMessageForState, lastLog.size))
+            for (i in 0..lastLog.size / MAX_MESSAGES_FOR_STATE) {
+                val min = min(i * MAX_MESSAGES_FOR_STATE + MAX_MESSAGES_FOR_STATE, lastLog.size)
+                val message = lastLog.subList(i * MAX_MESSAGES_FOR_STATE, min)
                 @Suppress("SpreadOperator")
                 messenger.sendMessageToServer("${CurrentUpdateState.LAST_LOG_FILE_NAME} - $i", *message.toTypedArray())
             }
         } else {
-            updateDetails.add("Can't read ${CurrentUpdateState.LAST_LOG_FILE_NAME}, the final feedback message could be unreliable")
+            updateDetails.add("Can't read ${CurrentUpdateState.LAST_LOG_FILE_NAME}, " +
+                "the final feedback message could be unreliable")
         }
     }
 }
