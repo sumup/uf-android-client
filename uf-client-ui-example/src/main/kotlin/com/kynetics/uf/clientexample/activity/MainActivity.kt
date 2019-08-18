@@ -11,7 +11,6 @@
 
 package com.kynetics.uf.clientexample.activity
 
-import android.app.Dialog
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -26,13 +25,10 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
-import android.support.design.widget.Snackbar
-import android.support.v4.app.DialogFragment
 import android.support.v4.app.Fragment
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.MenuItem
@@ -53,12 +49,14 @@ import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_S
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNC_REQUEST
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_API_VERSION_KEY
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY
+import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_PACKAGE_NAME
 import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.clientexample.BuildConfig
 import com.kynetics.uf.clientexample.R
 import com.kynetics.uf.clientexample.data.MessageHistory
 import com.kynetics.uf.clientexample.fragment.ListStateFragment
+import com.kynetics.uf.clientexample.fragment.MyAlertDialogFragment
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment
 import kotlinx.android.synthetic.main.state_list.*
 
@@ -91,7 +89,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             Toast.makeText(this@MainActivity, R.string.connected,
                     Toast.LENGTH_SHORT).show()
-            try {
+            handleRemoteException {
                 var msg = Message.obtain(null, MSG_REGISTER_CLIENT)
                 msg.replyTo = mMessenger
                 val bundleWithApiVersion = Bundle()
@@ -102,9 +100,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 msg.replyTo = mMessenger
                 msg.data = bundleWithApiVersion
                 mService!!.send(msg)
-            } catch (e: RemoteException) {
-                Toast.makeText(this@MainActivity, "service communication error",
-                        Toast.LENGTH_SHORT).show()
             }
 
             mIsBound = true
@@ -121,62 +116,49 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var mResumeUpdateFab: FloatingActionButton? = null
     private var mNavigationView: NavigationView? = null
 
+    private fun handleRemoteException(body: () -> Unit) {
+        try {
+            body.invoke()
+        } catch (e: RemoteException) {
+            Toast.makeText(this@MainActivity, "service communication error",
+                Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun NavigationView.configure(listener: NavigationView.OnNavigationItemSelectedListener) {
+        mNavigationView!!.setNavigationItemSelectedListener(listener)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        val textViewUiVersion = findViewById<TextView>(R.id.ui_version)
+        val textViewServiceVersion = findViewById<TextView>(R.id.service_version)
+        textViewUiVersion.text = String.format(getString(R.string.ui_version), BuildConfig.VERSION_NAME)
+        try {
+            val info = packageManager.getPackageInfo(SERVICE_PACKAGE_NAME, 0)
+            textViewServiceVersion.text = String.format(getString(R.string.service_version), info.versionName)
+        } catch (e: PackageManager.NameNotFoundException) {
+            textViewServiceVersion.visibility = View.GONE
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         mResumeUpdateFab = findViewById(R.id.fab_resume_update)
         mResumeUpdateFab!!.setOnClickListener { view ->
             val msg = Message.obtain(null,
                     UFServiceCommunicationConstants.MSG_RESUME_SUSPEND_UPGRADE)
-            try {
+            handleRemoteException {
                 mService!!.send(msg)
-            } catch (e: RemoteException) {
-                Toast.makeText(this@MainActivity, "service communication error",
-                        Toast.LENGTH_SHORT).show()
             }
         }
-
-        snackbar = Snackbar.make(findViewById<View>(R.id.coordinatorLayout), "Annotations", Snackbar.LENGTH_INDEFINITE)
-
         val drawer = findViewById<DrawerLayout>(R.id.drawer_layout)
         val toggle = ActionBarDrawerToggle(
                 this, drawer, null, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         drawer.addDrawerListener(toggle)
         toggle.syncState()
-
-        val navigationViewWrapper = findViewById<NavigationView>(R.id.nav_view_wrapper)
-
+        val navigationViewWrapper: NavigationView = findViewById(R.id.nav_view_wrapper)
         mNavigationView = navigationViewWrapper.findViewById(R.id.nav_view)
-        mNavigationView!!.setCheckedItem(R.id.menu_settings)
-        mNavigationView!!.setNavigationItemSelectedListener(this)
-//        changePage(LogFragment.newInstance())
-//        mNavigationView!!.setCheckedItem(R.id.menu_log)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        val textViewUiVersion = navigationViewWrapper.findViewById<TextView>(R.id.ui_version)
-        val textViewServiceVersion = navigationViewWrapper.findViewById<TextView>(R.id.service_version)
-        textViewUiVersion.text = String.format(getString(R.string.ui_version), BuildConfig.VERSION_NAME)
-        try {
-            val pinfo = packageManager.getPackageInfo("com.kynetics.uf.service", 0)
-            textViewServiceVersion.text = String.format(getString(R.string.service_version), pinfo.versionName)
-        } catch (e: PackageManager.NameNotFoundException) {
-            textViewServiceVersion.visibility = View.GONE
-        }
-
-        twoPane = state_detail_container != null
-        val listStateFragment = ListStateFragment().apply {
-            arguments = Bundle().apply {
-                putBoolean(ListStateFragment.ARG_TWO_PANE, this@MainActivity.twoPane)
-            }
-        }
-        if (twoPane) {
-            this.supportFragmentManager
-                    .beginTransaction()
-                    .replace(R.id.state_list_container, listStateFragment)
-                    .commit()
-        } else {
-            changePage(listStateFragment, false)
-        }
+        mNavigationView?.configure(this)
+        initAccordingScreenSize()
     }
 
     override fun onStart() {
@@ -198,32 +180,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun onBackPressedWithOnePane() {
-        val count = supportFragmentManager.backStackEntryCount
-        if (count == 0) {
-            super.onBackPressed()
-        } else {
-            supportFragmentManager.popBackStack()
-        }
-    }
-
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Handle navigation view item clicks here.
         val id = item.itemId
         when (id) {
+
             R.id.menu_settings -> {
                 val settingsIntent = Intent(ACTION_SETTINGS)
                 startActivity(settingsIntent)
             }
-//            R.id.menu_log -> changePage(LogFragment.newInstance())
+
             R.id.force_ping -> {
                 Log.d(TAG, "Force Ping Request")
-                try {
+                handleRemoteException {
                     if (mService != null) {
                         mService!!.send(Message.obtain(null, MSG_FORCE_PING))
                     }
-                } catch (e: RemoteException) {
-                    Log.d(TAG, "Failed to send force ping", e)
                 }
             }
 
@@ -236,19 +207,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun registerToService(data: Bundle) {
-        try {
+        handleRemoteException {
             val msg = Message.obtain(null, MSG_CONFIGURE_SERVICE)
             msg.replyTo = mMessenger
             data.putInt(SERVICE_API_VERSION_KEY, ApiCommunicationVersion.V1.versionCode)
             msg.data = data
             mService!!.send(msg)
-        } catch (e: RemoteException) {
-            Toast.makeText(this@MainActivity, "service communication error",
-                    Toast.LENGTH_SHORT).show()
         }
     }
 
-    var snackbar: Snackbar? = null
+    fun sendPermissionResponse(response: Boolean) {
+        val msg = Message.obtain(null, MSG_AUTHORIZATION_RESPONSE)
+        msg.data.putBoolean(SERVICE_DATA_KEY, response)
+        try {
+            mService!!.send(msg)
+        } catch (e: RemoteException) {
+            e.printStackTrace()
+        }
+    }
 
     /**
      * Handler of incoming messages from service.
@@ -300,13 +276,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 .forEach { fragment -> fragment.onMessageReceived(messageContent) }
 
             when (messageContent) {
-                is UFServiceMessageV1.State.WaitingDownloadAuthorization -> {
-                    mResumeUpdateFab!!.setImageResource(R.drawable.ic_get_app_black_48dp)
-                    mResumeUpdateFab!!.show()
-                }
-
-                is UFServiceMessageV1.State.WaitingUpdateAuthorization -> {
-                    mResumeUpdateFab!!.setImageResource(R.drawable.ic_loop_black_48dp)
+                is UFServiceMessageV1.State.WaitingDownloadAuthorization,
+                UFServiceMessageV1.State.WaitingUpdateAuthorization -> {
+                    mResumeUpdateFab!!.setImageResource(iconByMessageName.getValue(messageContent.name))
                     mResumeUpdateFab!!.show()
                 }
 
@@ -315,40 +287,48 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 else -> { }
             }
         }
+
+        private val iconByMessageName = mapOf(
+            UFServiceMessageV1.MessageName.WAITING_DOWNLOAD_AUTHORIZATION to R.drawable.ic_get_app_black_48dp,
+            UFServiceMessageV1.MessageName.WAITING_UPDATE_AUTHORIZATION to R.drawable.ic_loop_black_48dp
+        )
     }
 
-    private fun sendPermissionResponse(response: Boolean) {
-        val msg = Message.obtain(null, MSG_AUTHORIZATION_RESPONSE)
-        msg.data.putBoolean(SERVICE_DATA_KEY, response)
-        try {
-            mService!!.send(msg)
-        } catch (e: RemoteException) {
-            e.printStackTrace()
+    fun changePage(fragment: Fragment, addToBackStack: Boolean = true) {
+        val tx = supportFragmentManager.beginTransaction()
+                .replace(R.id.main_content, fragment)
+
+        if (addToBackStack) {
+            tx.addToBackStack(null)
+        }
+
+        tx.commit()
+    }
+
+    private fun initAccordingScreenSize() {
+        twoPane = state_detail_container != null
+        val listStateFragment = ListStateFragment().apply {
+            arguments = Bundle().apply {
+                putBoolean(ListStateFragment.ARG_TWO_PANE, this@MainActivity.twoPane)
+            }
+        }
+        if (twoPane) {
+            this.supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.state_list_container, listStateFragment)
+                .commit()
+        } else {
+            changePage(listStateFragment, false)
         }
     }
 
-    fun checkBatteryState() {
-/*
-        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val batteryStatus = registerReceiver(null, filter)
-
-        val chargeState = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-        val strState: String
-
-        when (chargeState) {
-            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> strState = "charging"
-            else -> strState = "not charging"
+    private fun onBackPressedWithOnePane() {
+        val count = supportFragmentManager.backStackEntryCount
+        if (count == 0) {
+            super.onBackPressed()
+        } else {
+            supportFragmentManager.popBackStack()
         }
-
-        val filter2 = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val intent = registerReceiver(null, filter)
-        val chargePlug = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
-        val usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB
-        val acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC
-
-        Toast.makeText(applicationContext, strState, Toast.LENGTH_LONG)
-*/
-        TODO("Not yet implemented")
     }
 
     private fun doBindService() {
@@ -356,7 +336,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // class name because there is no reason to be able to let other
         // applications replace our component.
         val intent = Intent(UFServiceCommunicationConstants.SERVICE_ACTION)
-        intent.setPackage(UFServiceCommunicationConstants.SERVICE_PACKAGE_NAME)
+        intent.setPackage(SERVICE_PACKAGE_NAME)
         intent.flags = FLAG_INCLUDE_STOPPED_PACKAGES
         val serviceExist = bindService(intent, mConnection, Context.BIND_AUTO_CREATE)
         if (!serviceExist) {
@@ -373,7 +353,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (mService != null) {
                 try {
                     val msg = Message.obtain(null,
-                            UFServiceCommunicationConstants.MSG_UNREGISTER_CLIENT)
+                        UFServiceCommunicationConstants.MSG_UNREGISTER_CLIENT)
                     msg.replyTo = mMessenger
                     mService!!.send(msg)
                 } catch (e: RemoteException) {
@@ -388,54 +368,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    class MyAlertDialogFragment : DialogFragment() {
-
-        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-            val dialogType = arguments!!.getString(ARG_DIALOG_TYPE)
-            val titleResource = resources.getIdentifier(String.format("%s_%s", dialogType.toLowerCase(), "title"),
-                    "string", activity!!.packageName)
-            val contentResource = resources.getIdentifier(String.format("%s_%s", dialogType.toLowerCase(), "content"),
-                    "string", activity!!.packageName)
-
-            return AlertDialog.Builder(activity!!)
-                    // .setIcon(R.drawable.alert_dialog_icon)
-                    .setTitle(titleResource)
-                    .setMessage(contentResource)
-                    .setPositiveButton(android.R.string.ok
-                    ) { dialog, whichButton -> (activity as MainActivity).sendPermissionResponse(true) }
-                    .setNegativeButton(android.R.string.cancel
-                    ) { dialog, whichButton -> (activity as MainActivity).sendPermissionResponse(false) }
-                    .create()
-        }
-
-        companion object {
-            private val ARG_DIALOG_TYPE = "DIALOG_TYPE"
-            fun newInstance(dialogType: String): MyAlertDialogFragment {
-                val frag = MyAlertDialogFragment()
-                val args = Bundle()
-                args.putString(ARG_DIALOG_TYPE, dialogType)
-                frag.arguments = args
-                frag.isCancelable = false
-                return frag
-            }
-        }
-    }
-
-    fun changePage(fragment: Fragment, addToBackStack: Boolean = true) {
-        val tx = supportFragmentManager.beginTransaction()
-                .replace(R.id.main_content, fragment)
-
-        if (addToBackStack) {
-            tx.addToBackStack(null)
-        }
-
-        tx.commit()
-    }
-
     companion object {
-
         private val TAG = MainActivity::class.java.simpleName
-
-        private val MESSAGE_TEMPLATE = "%s: %s"
     }
 }
