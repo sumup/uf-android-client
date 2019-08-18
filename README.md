@@ -7,7 +7,8 @@ Links to official documentation:
 - [configuration file](https://docs.updatefactory.io/devices/android/android-config-files/)
 - [third-party integration](https://docs.updatefactory.io/devices/android/third-party-integration/)
 
-build: ![build status status](https://travis-ci.org/Kynetics/uf-android-client.svg?branch=master)
+build: [![Build Status](https://travis-ci.org/Kynetics/uf-android-client.svg?branch=master)](https://travis-ci.org/Kynetics/uf-android-client) 
+[![Maintainability](https://api.codeclimate.com/v1/badges/3dcb8f7ce1c2a6c9f9e2/maintainability)](https://codeclimate.com/github/Kynetics/uf-android-client/maintainability)
 
 ## uf-client-service
 uf-client-service is an android service that run in background and manage the updates.
