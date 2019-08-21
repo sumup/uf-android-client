@@ -95,7 +95,7 @@ class StateDetailFragment : Fragment(), UFServiceInteractionFragment {
         when (item!!.state) {
             is UFServiceMessageV1.State.Downloading -> {
                 stateDetail = StateDetail(item!!.state as UFServiceMessageV1.State.Downloading)
-                binding?.root?.details_title?.text = "Files to donwload:"
+                binding?.root?.details_title?.text = "Files to download:"
                 binding?.root?.details_title?.visibility = View.VISIBLE
                 binding?.root?.details_list?.visibility = View.VISIBLE
                 binding?.root?.details_list?.adapter =
@@ -135,13 +135,13 @@ class StateDetailFragment : Fragment(), UFServiceInteractionFragment {
             adapter?.notifyDataSetChanged()
             val size = item?.events?.size ?: 0
             binding?.root?.events_list?.setSelection(max(0, size - 1))
-            val itemStateIsDonwloading = item?.state is UFServiceMessageV1.State.Downloading
+            val itemStateIsDownloading = item?.state is UFServiceMessageV1.State.Downloading
             when {
-                message is UFServiceMessageV1.Event.StartDownloadFile && itemStateIsDonwloading ->
+                message is UFServiceMessageV1.Event.StartDownloadFile && itemStateIsDownloading ->
                     updateDetails(message.fileName, 0.0)
-                message is UFServiceMessageV1.Event.DownloadProgress && itemStateIsDonwloading ->
+                message is UFServiceMessageV1.Event.DownloadProgress && itemStateIsDownloading ->
                     updateDetails(message.fileName, message.percentage)
-                message is UFServiceMessageV1.Event.FileDownloaded && itemStateIsDonwloading ->
+                message is UFServiceMessageV1.Event.FileDownloaded && itemStateIsDownloading ->
                     updateDetails(message.fileDownloaded, 100.0)
                 else -> {}
             }

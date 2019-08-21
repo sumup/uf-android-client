@@ -92,7 +92,7 @@ object MessageHistory {
         private fun print(infix: String, event: UFServiceMessageV1.Event.DownloadProgress): String =
             "$infix \n${event.fileName} is downloaded at ${event.percentage.format(2)}"
         private fun print(infix: String, event: UFServiceMessageV1.Event.UpdateProgress): String =
-            "$infix  \nPhase name:${event.phaseName} is at ${event.percentage.format(2)}"
+            "$infix  \nPhase name: ${event.phaseName} is at ${event.percentage.format(2)}"
     }
 
     fun appendEvent(event: UFServiceMessageV1.Event) {
