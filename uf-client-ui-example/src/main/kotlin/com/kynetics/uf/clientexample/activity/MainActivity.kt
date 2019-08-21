@@ -157,7 +157,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
         val navigationViewWrapper: NavigationView = findViewById(R.id.nav_view_wrapper)
         mNavigationView = navigationViewWrapper.findViewById(R.id.nav_view)
-        mNavigationView?.configure(this)
+        navigationViewWrapper.configure(this)
         initAccordingScreenSize()
     }
 
