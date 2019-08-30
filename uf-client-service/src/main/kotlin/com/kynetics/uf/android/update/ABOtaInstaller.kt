@@ -11,12 +11,12 @@ import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
-import java.io.File
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import kotlin.streams.toList
 
@@ -115,7 +115,6 @@ internal object ABOtaInstaller : OtaInstaller {
 
         currentUpdateState.saveSlotName()
         val updateStatus = CompletableFuture<Int>()
-        val updateDir = File(artifact.path).parentFile
         val zipFile = ZipFile(artifact.path)
 
         val payloadEntry = zipFile.getEntry(PAYLOAD_FILE)
@@ -131,13 +130,6 @@ internal object ABOtaInstaller : OtaInstaller {
             )
         }
 
-        zipFile.getInputStream(payloadEntry)
-            .use { input ->
-                File(updateDir, PAYLOAD_FILE).outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-
         val prop = zipFile.getInputStream(zipFile.getEntry(PROPERTY_FILE))
             .bufferedReader().lines().toList().toTypedArray()
 
@@ -146,9 +138,9 @@ internal object ABOtaInstaller : OtaInstaller {
         updateEngine.bind(MyUpdateEngineCallback(context, messenger, updateStatus))
         currentUpdateState.addPendingABInstallation(artifact)
         messenger.sendMessageToServer("Applying A/B ota update (${artifact.filename})...")
-        val payloadPath = "file://${File(updateDir, PAYLOAD_FILE).absolutePath}"
-        Log.d(TAG, payloadPath)
-        updateEngine.applyPayload(payloadPath, 0, 0, prop)
+        val zipPath = "file://${artifact.path}}"
+        Log.d(TAG, zipPath)
+        updateEngine.applyPayload(zipPath, zipFile.getPayloadEntryOffset(), 0, prop)
         return installationResult(updateStatus, messenger, artifact)
     }
 
@@ -200,6 +192,31 @@ internal object ABOtaInstaller : OtaInstaller {
                 }
             }
         }
+    }
+
+    private fun ZipFile.getPayloadEntryOffset(): Long {
+        val zipEntries = entries()
+        var offset: Long = 0
+        while (zipEntries.hasMoreElements()) {
+            val entry = zipEntries.nextElement()
+            offset += entry.getHeaderSize()
+            if (entry.name == PAYLOAD_FILE) {
+                return offset
+            }
+            offset += entry.compressedSize
+        }
+        Log.e(TAG, "Entry $PAYLOAD_FILE not found")
+        throw IllegalArgumentException("The given entry was not found")
+    }
+
+    private fun ZipEntry.getHeaderSize(): Long {
+        // Each entry has an header of (30 + n + m) bytes
+        // 'n' is the length of the file name
+        // 'm' is the length of the extra field
+        val fixedHeaderSize = 30L
+        val n = name.length
+        val m = extra?.size ?: 0
+        return fixedHeaderSize + n + m
     }
 
     private class MyUpdateEngineCallback(
