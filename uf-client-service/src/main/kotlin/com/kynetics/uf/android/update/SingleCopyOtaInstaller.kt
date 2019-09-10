@@ -64,7 +64,12 @@ internal object SingleCopyOtaInstaller : OtaInstaller {
         context: Context
     ): CurrentUpdateState.InstallationResult.Error {
         val packageFile = File(artifact.path)
-        currentUpdateState.addPendingOTAInstallation(artifact) // todo handle error on file creation
+        try {
+            currentUpdateState.addPendingOTAInstallation(artifact) // todo handle error on file creation
+        } catch (ioe: IOException) {
+            return CurrentUpdateState.InstallationResult.Error(listOf("Error, unable to write data in cache",
+                ioe.message ?: ""))
+        }
         messenger.sendMessageToServer("Applying ota update (${artifact.filename})...")
         return try {
             RecoverySystem.installPackage(context, packageFile)

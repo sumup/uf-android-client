@@ -100,17 +100,21 @@ class CurrentUpdateState(context: Context) {
 
     fun addPendingOTAInstallation(artifact: Updater.SwModuleWithPath.Artifact) {
         val file = getPendingInstallationFile(artifact)
-        if (!file.exists()) {
+        if (!file.parentFile.exists()) {
             file.parentFile.mkdirs()
-            file.createNewFile()
         }
+
+        if (!file.exists() && !file.createNewFile()) {
+            throw FileSystemException(file = file, reason = "Creation error")
+        }
+
         val lastInstallFile = lastInstallFile()
         if (lastInstallFile.exists() && !lastInstallFile.delete()) {
             Log.w(TAG, "cant delete ${lastInstallFile.name}")
         }
     }
 
-    private fun getPendingInstallationFile(artifact: Updater.SwModuleWithPath.Artifact):File{
+    private fun getPendingInstallationFile(artifact: Updater.SwModuleWithPath.Artifact): File {
         return File(CACHE_UF, artifact.hashes.sha1)
     }
 
