@@ -96,6 +96,12 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
                 currentUpdateState.addErrorToRepor(errorMessage)
             }
 
+            !verifySharedUserId(apk.absolutePath) -> {
+                val errorMessage = "Application was already installed with a different sharedUserId"
+                Log.w(TAG, errorMessage)
+                currentUpdateState.addErrorToRepor(errorMessage)
+            }
+
             else -> {
                 val countDownLatch = CountDownLatch(1)
                 val packageName = getPackageFromApk(context, apk.absolutePath)
@@ -131,6 +137,23 @@ class ApkUpdater(context: Context) : AndroidUpdater(context) {
             return appInfo.packageName
         }
         return null
+    }
+
+    private fun verifySharedUserId(apkPath: String): Boolean {
+        val packageInfo = context.packageManager
+            .getPackageArchiveInfo(apkPath, PackageManager.GET_ACTIVITIES)
+        val apkPackage = packageInfo.packageName
+        if (packageInfo != null && apkPackage != null) {
+            val newSharedUserId = packageInfo.sharedUserId
+            return try {
+                val oldSharedUserId = context.packageManager
+                    .getPackageInfo(apkPackage, 0).sharedUserId
+                newSharedUserId == oldSharedUserId
+            } catch (e: PackageManager.NameNotFoundException) {
+                true
+            }
+        }
+        return false
     }
 
     private fun getVersionFromApk(context: Context, apkPath: String): Long? {
