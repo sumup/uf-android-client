@@ -11,6 +11,7 @@ import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.clientexample.R
 import com.kynetics.uf.clientexample.data.MessageHistory
 import com.kynetics.uf.clientexample.data.format
+import com.kynetics.uf.clientexample.data.percentFormat
 import com.kynetics.uf.clientexample.databinding.StateDetailBinding
 import kotlin.math.max
 import kotlin.math.pow
@@ -86,7 +87,7 @@ class StateDetailFragment : Fragment(), UFServiceInteractionFragment {
 
         data class FileDownloading(val fileName: String, val size: Long, var percent: Double = 0.0) {
             override fun toString(): String {
-                return "$fileName (${(size / 2.0.pow(20.0)).format(2)} MB) - Downloaded ${percent.format(2)}%"
+                return "$fileName (${(size / 2.0.pow(20.0)).format(2)} MB) - Downloaded ${percent.percentFormat()}"
             }
         }
     }
@@ -142,7 +143,7 @@ class StateDetailFragment : Fragment(), UFServiceInteractionFragment {
                 message is UFServiceMessageV1.Event.DownloadProgress && itemStateIsDownloading ->
                     updateDetails(message.fileName, message.percentage)
                 message is UFServiceMessageV1.Event.FileDownloaded && itemStateIsDownloading ->
-                    updateDetails(message.fileDownloaded, 100.0)
+                    updateDetails(message.fileDownloaded, 1.0)
                 else -> {}
             }
         }

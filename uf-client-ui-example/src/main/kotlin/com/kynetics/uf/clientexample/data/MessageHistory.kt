@@ -25,6 +25,13 @@ fun Double.format(minFractionDigits: Int = 0): String {
     return format.format(this)
 }
 
+fun Double.percentFormat(): String {
+    val format = NumberFormat.getPercentInstance()
+    format.maximumFractionDigits = 2
+    format.minimumFractionDigits = 2
+    return format.format(this)
+}
+
 object MessageHistory {
     const val CAPACITY = 100
     /**
@@ -90,9 +97,9 @@ object MessageHistory {
         private fun print(infix: String, event: UFServiceMessageV1.Event.Error): String =
             "$infix \n${event.details.joinToString("\n")}"
         private fun print(infix: String, event: UFServiceMessageV1.Event.DownloadProgress): String =
-            "$infix \n${event.fileName} is downloaded at ${event.percentage.format(2)}"
+            "$infix \n${event.fileName} is downloaded at ${event.percentage.percentFormat()}"
         private fun print(infix: String, event: UFServiceMessageV1.Event.UpdateProgress): String =
-            "$infix  \nPhase name: ${event.phaseName} is at ${event.percentage.format(2)}"
+            "$infix  \nPhase name: ${event.phaseName} is at ${event.percentage.percentFormat()}"
     }
 
     fun appendEvent(event: UFServiceMessageV1.Event) {
