@@ -99,7 +99,7 @@ class CurrentUpdateState(context: Context) {
     }
 
     fun addPendingOTAInstallation(artifact: Updater.SwModuleWithPath.Artifact) {
-        val file = File(CACHE_UF, artifact.filename)
+        val file = getPendingInstallationFile(artifact)
         if (!file.exists()) {
             file.parentFile.mkdirs()
             file.createNewFile()
@@ -110,8 +110,12 @@ class CurrentUpdateState(context: Context) {
         }
     }
 
+    private fun getPendingInstallationFile(artifact: Updater.SwModuleWithPath.Artifact):File{
+        return File(CACHE_UF, artifact.hashes.sha1)
+    }
+
     fun getOtaInstallationState(artifact: Updater.SwModuleWithPath.Artifact): InstallationState {
-        val pendingInstallationFile = File(CACHE_UF, artifact.filename)
+        val pendingInstallationFile = getPendingInstallationFile(artifact)
         return when {
             pendingInstallationFile.exists() -> InstallationState.PENDING
             File("${pendingInstallationFile.absolutePath}.$SUCCESS_EXTENSION").exists() -> InstallationState.SUCCESS
