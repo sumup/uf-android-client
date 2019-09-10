@@ -138,7 +138,7 @@ internal object ABOtaInstaller : OtaInstaller {
         updateEngine.bind(MyUpdateEngineCallback(context, messenger, updateStatus))
         currentUpdateState.addPendingABInstallation(artifact)
         messenger.sendMessageToServer("Applying A/B ota update (${artifact.filename})...")
-        val zipPath = "file://${artifact.path}}"
+        val zipPath = "file://${artifact.path}"
         Log.d(TAG, zipPath)
         updateEngine.applyPayload(zipPath, zipFile.getPayloadEntryOffset(), 0, prop)
         return installationResult(updateStatus, messenger, artifact)
