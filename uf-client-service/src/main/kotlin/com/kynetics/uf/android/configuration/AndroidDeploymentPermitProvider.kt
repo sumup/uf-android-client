@@ -7,48 +7,63 @@ import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.ui.MainActivity
 import com.kynetics.updatefactory.ddiclient.core.api.DeploymentPermitProvider
-import java.util.concurrent.BlockingQueue
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
-class AndroidDeploymentPermitProvider(
-    private val apiMode: Boolean,
-    private val mNotificationManager: NotificationManager,
-    private val authResponse: BlockingQueue<Boolean>,
-    private val service: UpdateFactoryService
-) : DeploymentPermitProvider {
+interface AndroidDeploymentPermitProvider: DeploymentPermitProvider{
+    fun allow(isAllowed: Boolean)
 
-    private fun allowed(auth: UpdateFactoryService.Companion.AuthorizationType): Boolean {
-        if (apiMode) {
-            MessengerHandler.sendMessage(UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST, auth.name)
-        } else {
-            showAuthorizationDialog(auth)
-        }
+    companion object {
+        @ExperimentalCoroutinesApi
+        fun build(
+            apiMode: Boolean,
+            mNotificationManager: NotificationManager,
+            service: UpdateFactoryService): AndroidDeploymentPermitProvider {
+            return object : AndroidDeploymentPermitProvider{
 
-        return try {
-            val isGranted = authResponse.take()
-            if (isGranted) {
-                mNotificationManager.notify(UpdateFactoryService.NOTIFICATION_ID, service.getNotification(auth.event.toString(), true))
-                MessengerHandler.onAction(auth.toActionOnGranted)
-            } else {
-                MessengerHandler.onAction(auth.toActionOnDenied)
+                private var authResponse = CompletableDeferred<Boolean>()
+
+                private fun allowedAsync(auth: UpdateFactoryService.Companion.AuthorizationType): Deferred<Boolean> {
+                    if (apiMode) {
+                        MessengerHandler.sendMessage(UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST, auth.name)
+                    } else {
+                        showAuthorizationDialog(auth)
+                    }
+
+                    authResponse.complete(false)
+                    authResponse = CompletableDeferred()
+                    authResponse.invokeOnCompletion {
+                        if (authResponse.getCompleted()) {
+                            mNotificationManager.notify(UpdateFactoryService.NOTIFICATION_ID, service.getNotification(auth.event.toString(), true))
+                            MessengerHandler.onAction(auth.toActionOnGranted)
+                        } else {
+                            MessengerHandler.onAction(auth.toActionOnDenied)
+                        }
+                    }
+
+                    return authResponse
+                }
+
+                override fun allow(isAllowed: Boolean){
+                    authResponse.complete(isAllowed)
+                }
+
+                override fun downloadAllowed(): Deferred<Boolean> {
+                    return allowedAsync(UpdateFactoryService.Companion.AuthorizationType.DOWNLOAD)
+                }
+                override fun updateAllowed(): Deferred<Boolean> {
+                    return allowedAsync(UpdateFactoryService.Companion.AuthorizationType.UPDATE)
+                }
+
+                private fun showAuthorizationDialog(authorization: UpdateFactoryService.Companion.AuthorizationType) {
+                    val intent = Intent(service, MainActivity::class.java)
+                    intent.putExtra(MainActivity.INTENT_TYPE_EXTRA_VARIABLE, authorization.extra)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    service.startActivity(intent)
+                }
             }
-            isGranted
-        } catch (e: InterruptedException) {
-            MessengerHandler.onAction(auth.toActionOnDenied)
-            false
         }
-    }
 
-    override fun downloadAllowed(): Boolean {
-        return allowed(UpdateFactoryService.Companion.AuthorizationType.DOWNLOAD)
-    }
-    override fun updateAllowed(): Boolean {
-        return allowed(UpdateFactoryService.Companion.AuthorizationType.UPDATE)
-    }
-
-    private fun showAuthorizationDialog(authorization: UpdateFactoryService.Companion.AuthorizationType) {
-        val intent = Intent(service, MainActivity::class.java)
-        intent.putExtra(MainActivity.INTENT_TYPE_EXTRA_VARIABLE, authorization.extra)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        service.startActivity(intent)
     }
 }

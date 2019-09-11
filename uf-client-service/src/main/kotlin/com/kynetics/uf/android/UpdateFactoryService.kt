@@ -38,7 +38,6 @@ import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_UNREGISTE
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_API_VERSION_KEY
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY
 import com.kynetics.uf.android.api.UFServiceConfiguration
-import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.android.apicomptibility.ApiVersion
 import com.kynetics.uf.android.communication.MessageHandler
 import com.kynetics.uf.android.communication.MessengerHandler
@@ -49,10 +48,8 @@ import com.kynetics.uf.android.content.SharedPreferencesWithObject
 import com.kynetics.uf.android.ui.MainActivity
 import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.uf.android.update.SystemUpdateType
-import com.kynetics.updatefactory.ddiclient.core.api.DeploymentPermitProvider
 import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
 import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClient
-import java.util.concurrent.ArrayBlockingQueue
 
 /*
  * @author Daniele Sergio
@@ -60,20 +57,21 @@ import java.util.concurrent.ArrayBlockingQueue
 class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
     override fun authorizationGranted() {
-        authResponse.offer(true)
+        Log.e("authorizationGranted","1")
+        deploymentPermitProvider?.allow(true)
     }
 
     override fun authorizationDenied() {
-        authResponse.offer(false)
+        Log.e("authorizationDenied","1")
+        deploymentPermitProvider?.allow(false)
     }
 
     private val mMessenger = Messenger(IncomingHandler())
 
-    private val authResponse = ArrayBlockingQueue<Boolean>(1)
     private var mNotificationManager: NotificationManager? = null
     private var systemUpdateType: SystemUpdateType = SystemUpdateType.SINGLE_COPY
 
-    private var deploymentPermitProvider: DeploymentPermitProvider? = null
+    private var deploymentPermitProvider: AndroidDeploymentPermitProvider? = null
     private var messageListener: MessageListener? = null
 
     override fun configureService() {
@@ -94,7 +92,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         systemUpdateType = SystemUpdateType.getSystemUpdateType()
         ufServiceCommand = this
         val apiMode = configurationHandler?.apiModeIsEnabled() ?: false
-        deploymentPermitProvider = AndroidDeploymentPermitProvider(apiMode, mNotificationManager!!, authResponse, this)
+        deploymentPermitProvider = AndroidDeploymentPermitProvider.build(apiMode, mNotificationManager!!,  this)
         messageListener = AndroidMessageListener(this)
         currentUpdateState = CurrentUpdateState(this)
 
@@ -157,13 +155,6 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
                 MSG_RESUME_SUSPEND_UPGRADE, MSG_FORCE_PING -> {
                     Log.i(TAG, "receive request to resume suspend state")
-                    val message = MessengerHandler.getlastSharedMessage(ApiCommunicationVersion.V1).messageToSendOnSync as String?
-                    val messageV1 = if (message == null) UFServiceMessageV1.State.Idle else UFServiceMessageV1.fromJson(message)
-                    if (messageV1 is UFServiceMessageV1.State.WaitingDownloadAuthorization ||
-                        messageV1 is UFServiceMessageV1.State.WaitingDownloadAuthorization) {
-                        Log.i(TAG, "Reset waiting authorization")
-                        authResponse.add(false)
-                    }
                     ufService?.forcePing()
                 }
 
@@ -200,7 +191,8 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         private fun authorizationResponse(msg: Message) {
             Log.i(TAG, "receive authorization response")
             val response = msg.data.getBoolean(SERVICE_DATA_KEY)
-            authResponse.offer(response)
+            Log.e("authorizationResponse","1")
+            deploymentPermitProvider?.allow(response)
             Log.i(TAG, String.format("authorization %s", if (response) "granted" else "denied"))
         }
 
