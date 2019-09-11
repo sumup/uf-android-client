@@ -246,13 +246,12 @@ internal object ABOtaInstaller : OtaInstaller {
 
             val limit = queue.peek() ?: 1.0
             if (currentPhaseProgress > limit || currentPhaseProgress == 1.0 || newPhase) {
-                MessengerHandler.sendMessage(
-                    UFServiceCommunicationConstants.MSG_SERVICE_STATUS,
-                    UFServiceMessageV1.Event.UpdateProgress(
-                        phaseName = UPDATE_STATUS.getValue(i),
-                        percentage = currentPhaseProgress
-                    ).toJson()
-                )
+                MessengerHandler.onAndroidMessage(UFServiceMessageV1.Event.UpdateProgress(
+                    phaseName = UPDATE_STATUS.getValue(i),
+                    percentage = currentPhaseProgress
+                ))
+
+                MessengerHandler.sendMessage(UFServiceCommunicationConstants.MSG_SERVICE_STATUS)
                 while (currentPhaseProgress >= queue.peek() ?: 1.0 && queue.isNotEmpty()) {
                     queue.poll()
                 }

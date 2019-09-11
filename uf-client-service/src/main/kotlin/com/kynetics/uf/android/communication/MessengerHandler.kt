@@ -7,6 +7,7 @@ import android.os.RemoteException
 import android.util.Log
 import com.kynetics.uf.android.api.ApiCommunicationVersion
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
+import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
 import java.io.Serializable
 
@@ -39,6 +40,11 @@ object MessengerHandler {
         }
     }
 
+    fun onAndroidMessage(msg: UFServiceMessageV1){
+        lastSharedMessagesByVersion.forEach {
+            lastSharedMessagesByVersion[it.key] = it.value.onAndroidMessage(msg)
+        }
+    }
     internal fun sendMessage(messageContent: Serializable?, code: Int, messenger: Messenger?) {
         if (messenger == null) {
             Log.i(TAG, "Response isn't' sent because there isn't a receiver (replyTo is null)")

@@ -2,6 +2,7 @@ package com.kynetics.uf.android.communication
 
 import com.kynetics.uf.android.api.ApiCommunicationVersion
 import com.kynetics.uf.android.api.UFServiceMessage
+import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.android.converter.toUFMessage
 import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
 import java.io.Serializable
@@ -30,6 +31,10 @@ interface MessageHandler<out T : Serializable?> {
     fun onMessage(msg: MessageListener.Message): MessageHandler<T> {
         return this
     }
+
+    fun onAndroidMessage(msg: UFServiceMessageV1): MessageHandler<T> {
+        return this
+    }
 }
 
 data class V0(
@@ -49,6 +54,10 @@ data class V0(
     }
 
     override fun onMessage(msg: MessageListener.Message): MessageHandler<UFServiceMessage?> {
+        return copy(currentMessage = UFServiceMessage("", "", msg.toString(), suspend))
+    }
+
+    override fun onAndroidMessage(msg: UFServiceMessageV1): MessageHandler<UFServiceMessage?> {
         return copy(currentMessage = UFServiceMessage("", "", msg.toString(), suspend))
     }
 }
