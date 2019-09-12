@@ -17,13 +17,11 @@ import com.kynetics.uf.android.update.AndroidUpdater
 import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.uf.android.update.SystemUpdateType
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
-import kotlin.math.min
 
 class OtaUpdater(context: Context) : AndroidUpdater(context) {
 
     companion object {
         val TAG: String = OtaUpdater::class.java.simpleName
-        private const val MAX_MESSAGES_FOR_STATE = 49
     }
 
     private val otaInstaller = SystemUpdateType.getSystemUpdateType()
@@ -66,16 +64,10 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
     ) {
         if (otaInstaller.isFeedbackReliable(context)) {
             updateDetails.add("Final feedback message is reliable")
-            val lastLog = currentUpdateState.parseLastLogFile()
             if (installationResult is CurrentUpdateState.InstallationResult.Success) {
                 return
             }
-            for (i in 0..lastLog.size / MAX_MESSAGES_FOR_STATE) {
-                val min = min(i * MAX_MESSAGES_FOR_STATE + MAX_MESSAGES_FOR_STATE, lastLog.size)
-                val message = lastLog.subList(i * MAX_MESSAGES_FOR_STATE, min)
-                @Suppress("SpreadOperator")
-                messenger.sendMessageToServer("${CurrentUpdateState.LAST_LOG_FILE_NAME} - $i", *message.toTypedArray())
-            }
+            otaInstaller.onUpdateError(context, messenger)
         } else {
             updateDetails.add("Can't read ${CurrentUpdateState.LAST_LOG_FILE_NAME}, " +
                 "the final feedback message could be unreliable")

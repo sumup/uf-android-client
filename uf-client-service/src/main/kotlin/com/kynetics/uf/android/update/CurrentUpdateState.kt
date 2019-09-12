@@ -23,6 +23,7 @@ import java.io.FileNotFoundException
 import java.util.HashSet
 import kotlin.math.min
 
+//todo refactor
 class CurrentUpdateState(context: Context) {
 
     private val sharedPreferences: SharedPreferences
@@ -53,8 +54,6 @@ class CurrentUpdateState(context: Context) {
 
     private fun currentInstallationDir(): File = File(rootDir(), "current_installation")
 
-//    private fun previousInstallationDir():File = File(rootDir(), "last_installation")
-
     fun lastIntallationResult(artifact: Updater.SwModuleWithPath.Artifact): InstallationResult {
         return try {
             val result = lastInstallFile().readLines()[1].trim()
@@ -63,7 +62,6 @@ class CurrentUpdateState(context: Context) {
                 else -> InstallationResult.Error(listOf("last_install result code: $result"))
             }
 
-//            persistArtifactInstallationResult.Error(artifact, response)
             response
         } catch (e: Throwable) {
             Log.e(TAG, e.message, e)
@@ -82,10 +80,6 @@ class CurrentUpdateState(context: Context) {
 
     fun lastLogFile(): File {
         return File(RECOVERY_CACHE, LAST_LOG_FILE_NAME)
-    }
-
-    fun isFeebackReliable(): Boolean {
-        return lastInstallFile().canWrite() && lastLogFile().canRead()
     }
 
     fun startUpdate() {

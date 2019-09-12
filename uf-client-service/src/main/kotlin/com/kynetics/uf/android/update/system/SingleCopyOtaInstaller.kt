@@ -7,10 +7,12 @@ import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.io.IOException
+import kotlin.math.min
 
 internal object SingleCopyOtaInstaller : OtaInstaller {
 
     val TAG: String = OtaInstaller::class.java.simpleName
+    private const val MAX_MESSAGES_FOR_STATE = 49
 
     override fun install(
         artifact: Updater.SwModuleWithPath.Artifact,
@@ -48,7 +50,20 @@ internal object SingleCopyOtaInstaller : OtaInstaller {
     }
 
     override fun isFeedbackReliable(context: Context): Boolean {
-        return CurrentUpdateState(context).isFeebackReliable()
+        val currentUpdateState = CurrentUpdateState(context)
+        return currentUpdateState.lastInstallFile().canWrite() &&
+            currentUpdateState.lastLogFile().canRead()
+    }
+
+    override fun onUpdateError(context: Context, messenger:Updater.Messenger){
+        val currentUpdateState = CurrentUpdateState(context)
+        val lastLog = currentUpdateState.parseLastLogFile()
+        for (i in 0..lastLog.size / MAX_MESSAGES_FOR_STATE) {
+            val min = min(i * MAX_MESSAGES_FOR_STATE + MAX_MESSAGES_FOR_STATE, lastLog.size)
+            val message = lastLog.subList(i * MAX_MESSAGES_FOR_STATE, min)
+            @Suppress("SpreadOperator")
+            messenger.sendMessageToServer("${CurrentUpdateState.LAST_LOG_FILE_NAME} - $i", *message.toTypedArray())
+        }
     }
 
     private fun verify(artifact: Updater.SwModuleWithPath.Artifact): Boolean {
