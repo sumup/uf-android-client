@@ -31,6 +31,7 @@ import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
@@ -163,8 +164,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
         val drawer = findViewById<DrawerLayout>(R.id.drawer_layout)
+        val mToolbar = findViewById<Toolbar>(R.id.my_toolbar)
+        setSupportActionBar(mToolbar)
+
         val toggle = ActionBarDrawerToggle(
-                this, drawer, null, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+                this, drawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         drawer.addDrawerListener(toggle)
         toggle.syncState()
         val navigationViewWrapper: NavigationView = findViewById(R.id.nav_view_wrapper)
