@@ -13,9 +13,8 @@ import com.kynetics.uf.clientexample.data.MessageHistory
 import com.kynetics.uf.clientexample.data.format
 import com.kynetics.uf.clientexample.data.percentFormat
 import com.kynetics.uf.clientexample.databinding.StateDetailBinding
-import kotlin.math.max
-import kotlin.math.pow
 import kotlinx.android.synthetic.main.state_detail.view.*
+import kotlin.math.pow
 
 /**
  * A fragment representing a single State detail screen.
@@ -134,8 +133,6 @@ class StateDetailFragment : Fragment(), UFServiceInteractionFragment {
         if (message is UFServiceMessageV1.Event) {
             item?.unread = 0
             adapter?.notifyDataSetChanged()
-            val size = item?.events?.size ?: 0
-            binding?.root?.events_list?.setSelection(max(0, size - 1))
             val itemStateIsDownloading = item?.state is UFServiceMessageV1.State.Downloading
             when {
                 message is UFServiceMessageV1.Event.StartDownloadFile && itemStateIsDownloading ->
