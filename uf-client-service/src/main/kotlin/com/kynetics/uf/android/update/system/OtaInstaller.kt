@@ -7,5 +7,5 @@ import com.kynetics.updatefactory.ddiclient.core.api.Updater
 
 interface OtaInstaller : Installer<CurrentUpdateState.InstallationResult> {
     fun isFeedbackReliable(context: Context): Boolean = true
-    fun onUpdateError(context:Context, messenger: Updater.Messenger):Unit = Unit
+    fun onComplete(context: Context, messenger: Updater.Messenger, result: CurrentUpdateState.InstallationResult): Unit = Unit
 }

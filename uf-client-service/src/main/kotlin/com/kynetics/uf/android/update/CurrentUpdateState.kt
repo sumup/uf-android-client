@@ -23,7 +23,7 @@ import java.io.FileNotFoundException
 import java.util.HashSet
 import kotlin.math.min
 
-//todo refactor
+// todo refactor
 class CurrentUpdateState(context: Context) {
 
     private val sharedPreferences: SharedPreferences

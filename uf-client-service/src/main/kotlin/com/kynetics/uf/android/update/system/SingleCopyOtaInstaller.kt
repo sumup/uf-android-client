@@ -7,13 +7,14 @@ import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.io.IOException
+import java.lang.Error
 import kotlin.math.min
 
 internal object SingleCopyOtaInstaller : OtaInstaller {
 
     val TAG: String = OtaInstaller::class.java.simpleName
     private const val MAX_MESSAGES_FOR_STATE = 49
-
+    private const val WRONG_OTA_SIGNATURE_MSG = "Wrong ota signature"
     override fun install(
         artifact: Updater.SwModuleWithPath.Artifact,
         currentUpdateState: CurrentUpdateState,
@@ -55,14 +56,19 @@ internal object SingleCopyOtaInstaller : OtaInstaller {
             currentUpdateState.lastLogFile().canRead()
     }
 
-    override fun onUpdateError(context: Context, messenger:Updater.Messenger){
+    override fun onComplete(context: Context, messenger: Updater.Messenger, result: CurrentUpdateState.InstallationResult) {
         val currentUpdateState = CurrentUpdateState(context)
-        val lastLog = currentUpdateState.parseLastLogFile()
-        for (i in 0..lastLog.size / MAX_MESSAGES_FOR_STATE) {
-            val min = min(i * MAX_MESSAGES_FOR_STATE + MAX_MESSAGES_FOR_STATE, lastLog.size)
-            val message = lastLog.subList(i * MAX_MESSAGES_FOR_STATE, min)
-            @Suppress("SpreadOperator")
-            messenger.sendMessageToServer("${CurrentUpdateState.LAST_LOG_FILE_NAME} - $i", *message.toTypedArray())
+        if(result is Error && !result.details.contains(WRONG_OTA_SIGNATURE_MSG)) {
+            val lastLog = currentUpdateState.parseLastLogFile()
+            for (i in 0..lastLog.size / MAX_MESSAGES_FOR_STATE) {
+                val min = min(i * MAX_MESSAGES_FOR_STATE + MAX_MESSAGES_FOR_STATE, lastLog.size)
+                val message = lastLog.subList(i * MAX_MESSAGES_FOR_STATE, min)
+                @Suppress("SpreadOperator")
+                messenger.sendMessageToServer(
+                    "${CurrentUpdateState.LAST_LOG_FILE_NAME} - $i",
+                    *message.toTypedArray()
+                )
+            }
         }
     }
 
@@ -78,12 +84,11 @@ internal object SingleCopyOtaInstaller : OtaInstaller {
     }
 
     private fun onWrongSignature(messenger: Updater.Messenger): CurrentUpdateState.InstallationResult.Error {
-        val message = "Wrong ota signature"
-        messenger.sendMessageToServer(message)
-        Log.w(TAG, message)
+        messenger.sendMessageToServer(WRONG_OTA_SIGNATURE_MSG)
+        Log.w(TAG, WRONG_OTA_SIGNATURE_MSG)
         return CurrentUpdateState.InstallationResult.Error(
             listOf(
-                message
+                WRONG_OTA_SIGNATURE_MSG
             )
         )
     }

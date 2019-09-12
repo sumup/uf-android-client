@@ -64,10 +64,7 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
     ) {
         if (otaInstaller.isFeedbackReliable(context)) {
             updateDetails.add("Final feedback message is reliable")
-            if (installationResult is CurrentUpdateState.InstallationResult.Success) {
-                return
-            }
-            otaInstaller.onUpdateError(context, messenger)
+            otaInstaller.onComplete(context, messenger, installationResult)
         } else {
             updateDetails.add("Can't read ${CurrentUpdateState.LAST_LOG_FILE_NAME}, " +
                 "the final feedback message could be unreliable")
