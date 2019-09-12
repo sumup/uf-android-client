@@ -1,8 +1,9 @@
-package com.kynetics.uf.android.update
+package com.kynetics.uf.android.update.system
 
 import android.content.Context
 import android.os.RecoverySystem
 import android.util.Log
+import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.io.File
 import java.io.IOException
@@ -21,7 +22,11 @@ internal object SingleCopyOtaInstaller : OtaInstaller {
 
         return when {
             installationState == CurrentUpdateState.InstallationState.PENDING ->
-                onPending(currentUpdateState, artifact, messenger)
+                onPending(
+                    currentUpdateState,
+                    artifact,
+                    messenger
+                )
 
             installationState == CurrentUpdateState.InstallationState.SUCCESS ->
                 CurrentUpdateState.InstallationResult.Success()
@@ -29,9 +34,16 @@ internal object SingleCopyOtaInstaller : OtaInstaller {
             installationState == CurrentUpdateState.InstallationState.ERROR ->
                 CurrentUpdateState.InstallationResult.Error(listOf("Installation of ${artifact.filename} is failed"))
 
-            verify(artifact) -> onVerified(artifact, currentUpdateState, messenger, context)
+            verify(artifact) -> onVerified(
+                artifact,
+                currentUpdateState,
+                messenger,
+                context
+            )
 
-            else -> onWrongSignature(messenger)
+            else -> onWrongSignature(
+                messenger
+            )
         }
     }
 
@@ -54,7 +66,11 @@ internal object SingleCopyOtaInstaller : OtaInstaller {
         val message = "Wrong ota signature"
         messenger.sendMessageToServer(message)
         Log.w(TAG, message)
-        return CurrentUpdateState.InstallationResult.Error(listOf(message))
+        return CurrentUpdateState.InstallationResult.Error(
+            listOf(
+                message
+            )
+        )
     }
 
     private fun onVerified(
@@ -67,8 +83,12 @@ internal object SingleCopyOtaInstaller : OtaInstaller {
         try {
             currentUpdateState.addPendingOTAInstallation(artifact) // todo handle error on file creation
         } catch (ioe: IOException) {
-            return CurrentUpdateState.InstallationResult.Error(listOf("Error, unable to write data in cache",
-                ioe.message ?: ""))
+            return CurrentUpdateState.InstallationResult.Error(
+                listOf(
+                    "Error, unable to write data in cache",
+                    ioe.message ?: ""
+                )
+            )
         }
         messenger.sendMessageToServer("Applying ota update (${artifact.filename})...")
         return try {

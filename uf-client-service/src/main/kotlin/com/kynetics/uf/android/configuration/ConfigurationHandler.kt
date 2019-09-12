@@ -11,10 +11,10 @@ import com.kynetics.uf.android.UpdateFactoryService
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.content.SharedPreferencesWithObject
-import com.kynetics.uf.android.update.ApkUpdater
 import com.kynetics.uf.android.update.CurrentUpdateState
-import com.kynetics.uf.android.update.OtaUpdater
 import com.kynetics.uf.android.update.SystemUpdateType
+import com.kynetics.uf.android.update.application.ApkUpdater
+import com.kynetics.uf.android.update.system.OtaUpdater
 import com.kynetics.updatefactory.ddiclient.core.UpdateFactoryClientDefaultImpl
 import com.kynetics.updatefactory.ddiclient.core.api.ConfigDataProvider
 import com.kynetics.updatefactory.ddiclient.core.api.DeploymentPermitProvider
@@ -210,8 +210,8 @@ data class ConfigurationHandler(
                 buildConfigDataProvider(),
                 deploymentPermitProvider,
                 listeners,
-                OtaUpdater(context),
-                ApkUpdater(context)
+            OtaUpdater(context),
+            ApkUpdater(context)
         )
         return newUfService
     }

@@ -57,12 +57,12 @@ import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClient
 class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
     override fun authorizationGranted() {
-        Log.e("authorizationGranted","1")
+        Log.e("authorizationGranted", "1")
         deploymentPermitProvider?.allow(true)
     }
 
     override fun authorizationDenied() {
-        Log.e("authorizationDenied","1")
+        Log.e("authorizationDenied", "1")
         deploymentPermitProvider?.allow(false)
     }
 
@@ -191,7 +191,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         private fun authorizationResponse(msg: Message) {
             Log.i(TAG, "receive authorization response")
             val response = msg.data.getBoolean(SERVICE_DATA_KEY)
-            Log.e("authorizationResponse","1")
+            Log.e("authorizationResponse", "1")
             deploymentPermitProvider?.allow(response)
             Log.i(TAG, String.format("authorization %s", if (response) "granted" else "denied"))
         }

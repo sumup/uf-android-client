@@ -9,10 +9,13 @@
  *
  */
 
-package com.kynetics.uf.android.update
+package com.kynetics.uf.android.update.system
 
 import android.content.Context
 import android.util.Log
+import com.kynetics.uf.android.update.AndroidUpdater
+import com.kynetics.uf.android.update.CurrentUpdateState
+import com.kynetics.uf.android.update.SystemUpdateType
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import kotlin.math.min
 
@@ -23,7 +26,8 @@ class OtaUpdater(context: Context) : AndroidUpdater(context) {
         private const val MAX_MESSAGES_FOR_STATE = 49
     }
 
-    private val otaInstaller = SystemUpdateType.getSystemUpdateType().getInstaller(context)
+    private val otaInstaller = SystemUpdateType.getSystemUpdateType()
+        .getInstaller(context)
 
     override fun requiredSoftwareModulesAndPriority(swModules: Set<Updater.SwModule>): Updater.SwModsApplication {
         return Updater.SwModsApplication(0,

@@ -1,4 +1,4 @@
-package com.kynetics.uf.android.update
+package com.kynetics.uf.android.update.system
 
 import android.content.Context
 import android.os.Build
@@ -10,6 +10,7 @@ import android.util.Log
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.android.communication.MessengerHandler
+import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
@@ -135,13 +136,23 @@ internal object ABOtaInstaller : OtaInstaller {
 
         Log.d(TAG, prop.joinToString())
 
-        updateEngine.bind(MyUpdateEngineCallback(context, messenger, updateStatus))
+        updateEngine.bind(
+            MyUpdateEngineCallback(
+                context,
+                messenger,
+                updateStatus
+            )
+        )
         currentUpdateState.addPendingABInstallation(artifact)
         messenger.sendMessageToServer("Applying A/B ota update (${artifact.filename})...")
         val zipPath = "file://${artifact.path}"
         Log.d(TAG, zipPath)
         updateEngine.applyPayload(zipPath, zipFile.getPayloadEntryOffset(), 0, prop)
-        return installationResult(updateStatus, messenger, artifact)
+        return installationResult(
+            updateStatus,
+            messenger,
+            artifact
+        )
     }
 
     private fun installationResult(
@@ -175,7 +186,9 @@ internal object ABOtaInstaller : OtaInstaller {
 
                 UpdateEngine.ErrorCodeConstants.SUCCESS -> CurrentUpdateState.InstallationResult.Success()
 
-                else -> CurrentUpdateState.InstallationResult.Error(messages)
+                else -> CurrentUpdateState.InstallationResult.Error(
+                    messages
+                )
             }
         } catch (e: Throwable) {
             when (e) {
@@ -184,11 +197,15 @@ internal object ABOtaInstaller : OtaInstaller {
                         "Time to update exceeds the timeout",
                         "Package manager timeout expired, package installation status unknown"
                     )
-                    CurrentUpdateState.InstallationResult.Error(messages)
+                    CurrentUpdateState.InstallationResult.Error(
+                        messages
+                    )
                 }
                 else -> {
                     Log.w(TAG, "Exception on apply AB update (${artifact.filename})", e)
-                    CurrentUpdateState.InstallationResult.Error(listOf("error: ${e.message}"))
+                    CurrentUpdateState.InstallationResult.Error(
+                        listOf("error: ${e.message}")
+                    )
                 }
             }
         }

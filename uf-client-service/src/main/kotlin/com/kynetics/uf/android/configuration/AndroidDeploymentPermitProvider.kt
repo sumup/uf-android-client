@@ -11,7 +11,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
-interface AndroidDeploymentPermitProvider: DeploymentPermitProvider{
+interface AndroidDeploymentPermitProvider : DeploymentPermitProvider {
     fun allow(isAllowed: Boolean)
 
     companion object {
@@ -19,8 +19,9 @@ interface AndroidDeploymentPermitProvider: DeploymentPermitProvider{
         fun build(
             apiMode: Boolean,
             mNotificationManager: NotificationManager,
-            service: UpdateFactoryService): AndroidDeploymentPermitProvider {
-            return object : AndroidDeploymentPermitProvider{
+            service: UpdateFactoryService
+        ): AndroidDeploymentPermitProvider {
+            return object : AndroidDeploymentPermitProvider {
 
                 private var authResponse = CompletableDeferred<Boolean>()
 
@@ -45,7 +46,7 @@ interface AndroidDeploymentPermitProvider: DeploymentPermitProvider{
                     return authResponse
                 }
 
-                override fun allow(isAllowed: Boolean){
+                override fun allow(isAllowed: Boolean) {
                     authResponse.complete(isAllowed)
                 }
 
@@ -64,6 +65,5 @@ interface AndroidDeploymentPermitProvider: DeploymentPermitProvider{
                 }
             }
         }
-
     }
 }
