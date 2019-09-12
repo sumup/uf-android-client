@@ -92,7 +92,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         systemUpdateType = SystemUpdateType.getSystemUpdateType()
         ufServiceCommand = this
         val apiMode = configurationHandler?.apiModeIsEnabled() ?: false
-        deploymentPermitProvider = AndroidDeploymentPermitProvider.build(apiMode, mNotificationManager!!,  this)
+        deploymentPermitProvider = AndroidDeploymentPermitProvider.build(apiMode, mNotificationManager!!, this)
         messageListener = AndroidMessageListener(this)
         currentUpdateState = CurrentUpdateState(this)
 
@@ -216,6 +216,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
     }
 
     override fun onBind(intent: Intent): IBinder? {
+        startService(this)
         return mMessenger.binder
     }
 
@@ -263,6 +264,14 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
             abstract val extra: Int
             abstract val event: MessageListener.Message.State
+        }
+
+        @JvmStatic
+        fun startService(context: Context) {
+            if (!isRunning) {
+                val myIntent = Intent(context, UpdateFactoryService::class.java)
+                ApiVersion.fromVersionCode().startService(context, myIntent)
+            }
         }
 
         var isRunning = false

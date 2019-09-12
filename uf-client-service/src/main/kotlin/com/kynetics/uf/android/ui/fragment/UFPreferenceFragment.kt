@@ -11,7 +11,6 @@
 
 package com.kynetics.uf.android.ui.fragment
 
-import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -27,7 +26,6 @@ import com.kynetics.uf.android.R
 import com.kynetics.uf.android.UpdateFactoryService
 import com.kynetics.uf.android.api.ApiCommunicationVersion
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
-import com.kynetics.uf.android.apicomptibility.ApiVersion
 import com.kynetics.uf.android.communication.MessengerHandler
 
 /**
@@ -64,10 +62,7 @@ class UFPreferenceFragment : PreferenceFragmentCompat(), SharedPreferences.OnSha
 
     override fun onStart() {
         super.onStart()
-        if (!UpdateFactoryService.isRunning) {
-            val myIntent = Intent(context, UpdateFactoryService::class.java)
-            ApiVersion.fromVersionCode().startService(context, myIntent)
-        }
+        UpdateFactoryService.startService(context!!)
     }
 
     override fun onResume() {

@@ -102,6 +102,8 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "com.github.Kynetics.uf-ddiclient:core:master-SNAPSHOT"
     implementation "com.github.Kynetics.uf-ddiclient:core-api:master-SNAPSHOT"
+//    implementation "com.kynetics.updatefactory.uf-ddiclient:core:79b39d7be0a3a7a53fc094b744f788c02ed78b0b"
+//    implementation "com.kynetics.updatefactory.uf-ddiclient.core:core-api:79b39d7be0a3a7a53fc094b744f788c02ed78b0b"
 //    implementation "org.slf4j:slf4j-android:1.7.26"
     implementation "com.android.support:support-v4:$supportLibraryVersion"
     implementation "com.android.support:design:$supportLibraryVersion"
