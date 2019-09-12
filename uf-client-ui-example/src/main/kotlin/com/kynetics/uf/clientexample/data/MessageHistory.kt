@@ -109,6 +109,9 @@ object MessageHistory {
     }
 
     fun addState(item: StateEntry) {
+        if (ITEMS.isNotEmpty() && item.state == ITEMS[0].state) {
+            return
+        }
         if (ITEMS.size == CAPACITY) {
             val itemToRemove = ITEMS.removeAt(CAPACITY - 1)
             ITEM_MAP.remove(itemToRemove.id)
