@@ -33,7 +33,7 @@
     <string name="uf_server_url">Update Factory server url</string>
     <string name="invalid_url">Invalid url</string>
     <string name="disconnected">Disconnected</string>
-    <string name="connected">Connected</string>
+    <string name="ui_connected">UI is connected to Android Service</string>
     <string name="ui_version">UI version: %s</string>
     <string name="service_version">Service version: %s</string>
     <string name="nav_header_title">Update Factory</string>
@@ -44,5 +44,6 @@
     <string name="details">Details</string>
     <string name="states_label">States</string>
     <string name="label_back">Back</string>
+    <string name="service_disconnected">UI disconnected from service. Waiting for reconnection</string>
 
 </resources>

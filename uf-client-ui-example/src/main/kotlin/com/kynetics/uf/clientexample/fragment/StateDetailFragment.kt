@@ -13,8 +13,8 @@ import com.kynetics.uf.clientexample.data.MessageHistory
 import com.kynetics.uf.clientexample.data.format
 import com.kynetics.uf.clientexample.data.percentFormat
 import com.kynetics.uf.clientexample.databinding.StateDetailBinding
-import kotlinx.android.synthetic.main.state_detail.view.*
 import kotlin.math.pow
+import kotlinx.android.synthetic.main.state_detail.view.*
 
 /**
  * A fragment representing a single State detail screen.

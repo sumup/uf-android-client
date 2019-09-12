@@ -25,6 +25,7 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
+import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
@@ -72,10 +73,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     /** Flag indicating whether we have called bind on the service.  */
     internal var mIsBound: Boolean = false
 
+    private var mSnackbarServiceDisconnect: Snackbar? = null
     /**
      * Target we publish for clients to send messages to IncomingHandler.
      */
     internal val mMessenger = Messenger(this.IncomingHandler())
+
+    private var mServiceExist = false
 
     /**
      * Class for interacting with the main interface of the service.
@@ -87,8 +91,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         ) {
             mService = Messenger(service)
 
-            Toast.makeText(this@MainActivity, R.string.connected,
+            Toast.makeText(this@MainActivity, R.string.ui_connected,
                     Toast.LENGTH_SHORT).show()
+
             handleRemoteException {
                 var msg = Message.obtain(null, MSG_REGISTER_CLIENT)
                 msg.replyTo = mMessenger
@@ -103,13 +108,20 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             mIsBound = true
+
+            mSnackbarServiceDisconnect?.dismiss()
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
+            mSnackbarServiceDisconnect?.show()
             mService = null
-            Toast.makeText(this@MainActivity, R.string.disconnected,
-                    Toast.LENGTH_SHORT).show()
             mIsBound = false
+        }
+
+        override fun onBindingDied(name: ComponentName?) {
+            mSnackbarServiceDisconnect?.show()
+            doUnbindService()
+            doBindService()
         }
     }
 
@@ -157,6 +169,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
         val navigationViewWrapper: NavigationView = findViewById(R.id.nav_view_wrapper)
         mNavigationView = navigationViewWrapper.findViewById(R.id.nav_view)
+
+        mSnackbarServiceDisconnect = Snackbar.make(findViewById<View>(R.id.coordinatorLayout),
+            R.string.service_disconnected, Snackbar.LENGTH_INDEFINITE)
+
+        mSnackbarServiceDisconnect?.show()
+
         navigationViewWrapper.configure(this)
         initAccordingScreenSize()
     }
@@ -339,10 +357,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         intent.setPackage(SERVICE_PACKAGE_NAME)
         intent.flags = FLAG_INCLUDE_STOPPED_PACKAGES
         val serviceExist = bindService(intent, mConnection, Context.BIND_AUTO_CREATE)
-        if (!serviceExist) {
+        if (!serviceExist && !mServiceExist) {
             Toast.makeText(applicationContext, "UpdateFactoryService not found", Toast.LENGTH_LONG).show()
             unbindService(mConnection)
             this.finish()
+        } else {
+            mServiceExist = true
         }
     }
 
