@@ -13,14 +13,17 @@ import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.clientexample.R
 import com.kynetics.uf.clientexample.activity.MainActivity
 import com.kynetics.uf.clientexample.data.MessageHistory
+import com.kynetics.uf.clientexample.data.MessageHistory.CAPACITY
 import com.kynetics.uf.clientexample.data.toDate
 import kotlinx.android.synthetic.main.state_list_content.view.*
 import kotlinx.android.synthetic.main.state_list_fragment.view.*
+import kotlin.math.min
 
 class ListStateFragment : Fragment(), UFServiceInteractionFragment {
 
     var twoPane = false
     var selectedItem = -1
+    var currentSize = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -131,8 +134,12 @@ class ListStateFragment : Fragment(), UFServiceInteractionFragment {
     }
 
     override fun onMessageReceived(message: UFServiceMessageV1) {
-        if (selectedItem >= 0) {
-            MessageHistory.ITEMS[selectedItem].unread = 0
+        if(currentSize != MessageHistory.ITEMS.size) {
+            currentSize = MessageHistory.ITEMS.size
+            if (selectedItem >= 0 && selectedItem < MessageHistory.ITEMS.size) {
+                MessageHistory.ITEMS[selectedItem].unread = 0
+                selectedItem = min(CAPACITY, selectedItem + 1)
+            }
         }
         adapter?.notifyDataSetChanged()
     }
