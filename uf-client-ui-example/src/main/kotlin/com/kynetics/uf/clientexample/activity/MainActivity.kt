@@ -61,6 +61,9 @@ import com.kynetics.uf.clientexample.fragment.ListStateFragment
 import com.kynetics.uf.clientexample.fragment.MyAlertDialogFragment
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment
 import kotlinx.android.synthetic.main.state_list.*
+import java.util.Timer
+import kotlin.concurrent.timer
+import kotlin.properties.Delegates
 
 /**
  * @author Daniele Sergio
@@ -69,10 +72,35 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private var twoPane: Boolean = false
 
+    private var timer : Timer? = null
+
     /** Messenger for communicating with service.  */
     internal var mService: Messenger? = null
     /** Flag indicating whether we have called bind on the service.  */
-    internal var mIsBound: Boolean = false
+    internal var mIsBound: Boolean by Delegates.observable(false) { _, old, new ->
+        when{
+            new == old -> {}
+
+            new -> {
+                mSnackbarServiceDisconnect?.dismiss()
+                timer?.purge()
+                timer?.cancel()
+            }
+
+            !new -> {
+                mSnackbarServiceDisconnect?.show()
+                timer = timer(
+                    name = "Service Reconnection",
+                    initialDelay = 5_000,
+                    period = 30_000.toLong()
+                ) {
+                    Log.i(TAG, "Try reconnection")
+                    doBindService()
+                }
+                mService = null
+            }
+        }
+    }
 
     private var mSnackbarServiceDisconnect: Snackbar? = null
     /**
@@ -93,7 +121,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             mService = Messenger(service)
 
             Toast.makeText(this@MainActivity, R.string.ui_connected,
-                    Toast.LENGTH_SHORT).show()
+                Toast.LENGTH_SHORT).show()
 
             handleRemoteException {
                 var msg = Message.obtain(null, MSG_REGISTER_CLIENT)
@@ -107,22 +135,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 msg.data = bundleWithApiVersion
                 mService!!.send(msg)
             }
-
             mIsBound = true
-
-            mSnackbarServiceDisconnect?.dismiss()
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
-            mSnackbarServiceDisconnect?.show()
-            mService = null
-            mIsBound = false
+            Log.i(TAG, "Service is disconnected")
+            doUnbindService()
         }
 
         override fun onBindingDied(name: ComponentName?) {
-            mSnackbarServiceDisconnect?.show()
-            doUnbindService()
-            doBindService()
+            Log.i(TAG, "Service binding is died")
+            mIsBound = false
         }
     }
 
@@ -158,7 +181,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         mResumeUpdateFab = findViewById(R.id.fab_resume_update)
         mResumeUpdateFab!!.setOnClickListener { view ->
             val msg = Message.obtain(null,
-                    UFServiceCommunicationConstants.MSG_RESUME_SUSPEND_UPGRADE)
+                UFServiceCommunicationConstants.MSG_RESUME_SUSPEND_UPGRADE)
             handleRemoteException {
                 mService!!.send(msg)
             }
@@ -168,7 +191,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setSupportActionBar(mToolbar)
 
         val toggle = ActionBarDrawerToggle(
-                this, drawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+            this, drawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         drawer.addDrawerListener(toggle)
         toggle.syncState()
         val navigationViewWrapper: NavigationView = findViewById(R.id.nav_view_wrapper)
@@ -318,7 +341,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     fun changePage(fragment: Fragment, addToBackStack: Boolean = true) {
         val tx = supportFragmentManager.beginTransaction()
-                .replace(R.id.main_content, fragment)
+            .replace(R.id.main_content, fragment)
 
         if (addToBackStack) {
             tx.addToBackStack(null)

@@ -33,7 +33,8 @@ sealed class UFServiceMessageV1 {
         FILE_DOWNLOADED,
         UPDATE_FINISHED,
         POLLING,
-        ALL_FILES_DOWNLOADED
+        ALL_FILES_DOWNLOADED,
+        UPDATE_AVAILABLE
     }
 
     override fun toString(): String {
@@ -116,6 +117,14 @@ sealed class UFServiceMessageV1 {
             }
         }
 
+        @Serializable
+        data class UpdateAvailable(val id:String) : Event(MessageName.UPDATE_AVAILABLE, "An update is available on cloud") {
+            @UseExperimental(ImplicitReflectionSerializer::class)
+            override fun toJson(): String {
+                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+            }
+        }
+
         @UseExperimental(ImplicitReflectionSerializer::class)
         override fun toJson(): String {
             println(Json(JsonConfiguration.Stable).stringify(serializer(), this))
@@ -149,6 +158,7 @@ sealed class UFServiceMessageV1 {
                 MessageName.UPDATE_FINISHED.name -> json.fromJson<Event.UpdateFinished>(jsonElement)
                 MessageName.POLLING.name -> Event.Polling
                 MessageName.ALL_FILES_DOWNLOADED.name -> Event.AllFilesDownloaded
+                MessageName.UPDATE_AVAILABLE.name -> json.fromJson<Event.UpdateAvailable>(jsonElement)
 
                 else -> throw IllegalArgumentException("$jsonContent is not obtained by toJson method of ${UFServiceMessageV1::class.java.simpleName}")
             }
