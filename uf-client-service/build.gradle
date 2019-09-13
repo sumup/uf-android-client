@@ -100,11 +100,11 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "com.github.Kynetics.uf-ddiclient:core:master-SNAPSHOT"
-    implementation "com.github.Kynetics.uf-ddiclient:core-api:master-SNAPSHOT"
-//    implementation "com.kynetics.updatefactory.uf-ddiclient:core:79b39d7be0a3a7a53fc094b744f788c02ed78b0b"
-//    implementation "com.kynetics.updatefactory.uf-ddiclient.core:core-api:79b39d7be0a3a7a53fc094b744f788c02ed78b0b"
-//    implementation "org.slf4j:slf4j-android:1.7.26"
+    implementation("com.github.Kynetics.uf-ddiclient:core:449e1cff"){
+        exclude group: "org.slf4j", module: "slf4j-simple"
+    }
+    implementation "com.github.Kynetics.uf-ddiclient:core-api:449e1cff"
+    implementation "org.slf4j:slf4j-android:1.7.28"
     implementation "com.android.support:support-v4:$supportLibraryVersion"
     implementation "com.android.support:design:$supportLibraryVersion"
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'

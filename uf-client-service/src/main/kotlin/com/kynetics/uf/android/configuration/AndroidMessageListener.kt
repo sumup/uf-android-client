@@ -16,11 +16,16 @@ class AndroidMessageListener(private val service: UpdateFactoryService) : Messag
     private val mNotificationManager = service.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     override fun onMessage(message: MessageListener.Message) {
-        when (message) {
-            is MessageListener.Message.Event.UpdateFinished, is MessageListener.Message.State.CancellingUpdate -> {
+        when  {
+            message is MessageListener.Message.Event.UpdateFinished && message is MessageListener.Message.State.CancellingUpdate -> {
                 currentUpdateState.clearState()
                 MessengerHandler.onAction(MessageHandler.Action.UPDATE_FINISH)
             }
+
+            message is MessageListener.Message.Event.UpdateAvailable -> currentUpdateState.setCurrentUpdateId(message.id)
+
+            message is MessageListener.Message.Event.AllFilesDownloaded -> currentUpdateState.allFileDownloaded()
+
         }
 
         MessengerHandler.onMessageReceived(message)

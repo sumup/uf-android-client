@@ -6,6 +6,7 @@ import com.kynetics.uf.android.UpdateFactoryService
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.ui.MainActivity
+import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.updatefactory.ddiclient.core.api.DeploymentPermitProvider
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -51,8 +52,14 @@ interface AndroidDeploymentPermitProvider : DeploymentPermitProvider {
                 }
 
                 override fun downloadAllowed(): Deferred<Boolean> {
-                    return allowedAsync(UpdateFactoryService.Companion.AuthorizationType.DOWNLOAD)
+                    val currentUpdateState = CurrentUpdateState(service)
+                    return if(currentUpdateState.isAllFileDownloaded()){
+                        CompletableDeferred(true)
+                    } else {
+                        allowedAsync(UpdateFactoryService.Companion.AuthorizationType.DOWNLOAD)
+                    }
                 }
+
                 override fun updateAllowed(): Deferred<Boolean> {
                     return allowedAsync(UpdateFactoryService.Companion.AuthorizationType.UPDATE)
                 }

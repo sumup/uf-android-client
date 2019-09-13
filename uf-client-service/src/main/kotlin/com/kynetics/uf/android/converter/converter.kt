@@ -35,5 +35,6 @@ fun MessageListener.Message.toUFMessage(): UFServiceMessageV1 {
         is MessageListener.Message.Event.DownloadProgress -> UFServiceMessageV1.Event.DownloadProgress(fileName, percentage)
         is MessageListener.Message.Event.FileDownloaded -> UFServiceMessageV1.Event.FileDownloaded(fileDownloaded)
         is MessageListener.Message.Event.UpdateFinished -> UFServiceMessageV1.Event.UpdateFinished(successApply, details)
+        is MessageListener.Message.Event.UpdateAvailable -> UFServiceMessageV1.Event.UpdateAvailable(id)
     }
 }

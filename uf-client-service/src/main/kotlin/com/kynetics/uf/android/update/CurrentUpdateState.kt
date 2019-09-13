@@ -74,6 +74,23 @@ class CurrentUpdateState(context: Context) {
         }
     }
 
+    fun allFileDownloaded(){
+        val id = getCurrentUpdateId()
+        sharedPreferences.edit().run {
+            putBoolean(String.format(ALL_FILE_DOWNLOADED_TEMPLAE, id), true).apply()
+        }
+    }
+
+    private fun getCurrentUpdateId() = sharedPreferences.getString(CURRENT_UPDATE_ID_KEY, "")
+
+    fun setCurrentUpdateId(updateId:String) = sharedPreferences.edit()
+        .putString(CURRENT_UPDATE_ID_KEY, updateId)
+        .apply()
+
+    fun isAllFileDownloaded():Boolean{
+        return sharedPreferences.getBoolean(String.format(ALL_FILE_DOWNLOADED_TEMPLAE,getCurrentUpdateId()), false)
+    }
+
     fun lastInstallFile(): File {
         return File(RECOVERY_CACHE, LAST_INSTALL_FILE_NAME)
     }
@@ -168,10 +185,11 @@ class CurrentUpdateState(context: Context) {
         val editor = sharedPreferences.edit()
 
         for (key in sharedPreferences.all.keys) {
-            if (key.startsWith(APK_PACKAGE_START_KEY)) {
+            if (key.startsWith(APK_PACKAGE_START_KEY) || key.startsWith(ALL_FILE_DOWNLOADED_START_KEY)) {
                 editor.remove(key)
             }
         }
+
 
         editor
                 .remove(APK_DISTRIBUTION_REPORT_SUCCESS_KEY)
@@ -228,6 +246,9 @@ class CurrentUpdateState(context: Context) {
         private const val ERROR_EXTENSION = "KO"
         private const val APK_PACKAGE_START_KEY = "APK_PACKAGE"
         private const val APK_PACKAGE_TEMPLATE_KEY = "APK_PACKAGE_%s_KEY"
+        private const val ALL_FILE_DOWNLOADED_TEMPLAE = "ALL_FILE_DOWNLOADED_%s"
+        private const val ALL_FILE_DOWNLOADED_START_KEY = "ALL_FILE_DOWNLOADED_"
+        private const val CURRENT_UPDATE_ID_KEY = "CURRENT_UPDATE_ID"
         private val CACHE = File("cache")
         private val CACHE_UF = File(CACHE, "update_factory")
         private val RECOVERY_CACHE = File(CACHE, "recovery")

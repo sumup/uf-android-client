@@ -74,6 +74,7 @@ data class V1(
             is MessageListener.Message.Event -> {
                 copy(currentMessage = msg.toUFMessage().toJson())
             }
+
             is MessageListener.Message.State -> {
                 val currentMessage = msg.toUFMessage().toJson()
                 copy(messageToSendOnSync = currentMessage, currentMessage = currentMessage)
