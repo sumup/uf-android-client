@@ -167,8 +167,8 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         private fun sync(msg: Message) {
             Log.i(TAG, "received sync request")
 
-            if (ufService == null || msg.replyTo == null) {
-                Log.i(TAG, "command ignored because ufService is not configured or field replyTo is null")
+            if (msg.replyTo == null) {
+                Log.i(TAG, "command ignored because field replyTo is null")
                 return
             }
 

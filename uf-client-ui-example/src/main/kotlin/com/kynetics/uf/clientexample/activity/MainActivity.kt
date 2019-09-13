@@ -309,8 +309,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             when (messageContent) {
                 is UFServiceMessageV1.Event -> {
-                    MessageHistory.appendEvent(messageContent)
+                    if (!MessageHistory.appendEvent(messageContent)) {
+                        Toast.makeText(
+                            applicationContext,
+                            messageContent.name.toString(),
+                            Toast.LENGTH_LONG
+                        )
+                    }
                 }
+
                 is UFServiceMessageV1.State -> {
                     MessageHistory.addState(MessageHistory.StateEntry(state = messageContent))
                 }

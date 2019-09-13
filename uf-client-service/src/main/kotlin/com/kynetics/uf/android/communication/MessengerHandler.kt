@@ -40,6 +40,11 @@ object MessengerHandler {
         }
     }
 
+    fun onConfigurationError(details:List<String>) {
+        lastSharedMessagesByVersion.forEach {
+            lastSharedMessagesByVersion[it.key] = it.value.onConfigurationError(details)
+        }
+    }
     fun onAndroidMessage(msg: UFServiceMessageV1) {
         lastSharedMessagesByVersion.forEach {
             lastSharedMessagesByVersion[it.key] = it.value.onAndroidMessage(msg)

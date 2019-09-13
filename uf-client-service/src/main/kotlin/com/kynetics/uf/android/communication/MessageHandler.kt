@@ -35,6 +35,8 @@ interface MessageHandler<out T : Serializable?> {
     fun onAndroidMessage(msg: UFServiceMessageV1): MessageHandler<T> {
         return this
     }
+
+    fun onConfigurationError(details:List<String>): MessageHandler<T>
 }
 
 data class V0(
@@ -60,6 +62,11 @@ data class V0(
     override fun onAndroidMessage(msg: UFServiceMessageV1): MessageHandler<UFServiceMessage?> {
         return copy(currentMessage = UFServiceMessage("", "", msg.toString(), suspend))
     }
+
+    override fun onConfigurationError(details: List<String>): MessageHandler<UFServiceMessage?> {
+        val state = UFServiceMessageV1.State.ConfigurationError(details).toString()
+        return copy(currentMessage = UFServiceMessage("", "", state, suspend))
+    }
 }
 
 data class V1(
@@ -80,5 +87,10 @@ data class V1(
                 copy(messageToSendOnSync = currentMessage, currentMessage = currentMessage)
             }
         }
+    }
+
+    override fun onConfigurationError(details: List<String>): MessageHandler<String?> {
+        val state = UFServiceMessageV1.State.ConfigurationError(details).toJson()
+        return copy(messageToSendOnSync = state, currentMessage = state)
     }
 }

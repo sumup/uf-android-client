@@ -4,12 +4,12 @@ import android.content.Intent
 import android.os.Build
 import android.os.Environment
 import android.util.Log
-import android.widget.Toast
 import com.kynetics.uf.android.BuildConfig
 import com.kynetics.uf.android.R
 import com.kynetics.uf.android.UpdateFactoryService
 import com.kynetics.uf.android.api.UFServiceCommunicationConstants
 import com.kynetics.uf.android.api.UFServiceConfiguration
+import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.content.SharedPreferencesWithObject
 import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.uf.android.update.SystemUpdateType
@@ -23,7 +23,6 @@ import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
 import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClient
 import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClientData
 import java.io.File
-import java.lang.RuntimeException
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -121,9 +120,10 @@ data class ConfigurationHandler(
                 return newService
             } catch (e: RuntimeException) {
                 ufService = null
-                sharedPreferences.edit().putBoolean(sharedPreferencesServiceEnableKey, false).apply()
-                Toast.makeText(context, "Update Factory configuration error", Toast.LENGTH_LONG)
-                        .show()
+                // sharedPreferences.edit().putBoolean(sharedPreferencesServiceEnableKey, false).apply()
+                MessengerHandler.onConfigurationError(listOf(e.message ?: "Error"))
+                MessengerHandler.sendMessage(UFServiceCommunicationConstants.MSG_SERVICE_STATUS)
+                Log.e(TAG, e.message, e)
             }
         }
         return ufService

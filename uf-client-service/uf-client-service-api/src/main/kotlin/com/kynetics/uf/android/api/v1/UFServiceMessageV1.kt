@@ -34,7 +34,8 @@ sealed class UFServiceMessageV1 {
         UPDATE_FINISHED,
         POLLING,
         ALL_FILES_DOWNLOADED,
-        UPDATE_AVAILABLE
+        UPDATE_AVAILABLE,
+        CONFIGURATION_ERROR
     }
 
     override fun toString(): String {
@@ -60,6 +61,13 @@ sealed class UFServiceMessageV1 {
         object WaitingDownloadAuthorization : State(MessageName.WAITING_DOWNLOAD_AUTHORIZATION, "Waiting authorization to start download")
         object WaitingUpdateAuthorization : State(MessageName.WAITING_UPDATE_AUTHORIZATION, "Waiting authorization to start update")
         object Idle : State(MessageName.IDLE, "Client is waiting for new requests from server")
+        @Serializable
+        data class ConfigurationError(val details: List<String> = emptyList()) : State(MessageName.CONFIGURATION_ERROR, "Bad service configuration"){
+            @UseExperimental(ImplicitReflectionSerializer::class)
+            override fun toJson(): String {
+                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+            }
+        }
 
         @UseExperimental(ImplicitReflectionSerializer::class)
         override fun toJson(): String {
@@ -159,6 +167,7 @@ sealed class UFServiceMessageV1 {
                 MessageName.POLLING.name -> Event.Polling
                 MessageName.ALL_FILES_DOWNLOADED.name -> Event.AllFilesDownloaded
                 MessageName.UPDATE_AVAILABLE.name -> json.fromJson<Event.UpdateAvailable>(jsonElement)
+                MessageName.CONFIGURATION_ERROR.name -> json.fromJson<State.ConfigurationError>(jsonElement)
 
                 else -> throw IllegalArgumentException("$jsonContent is not obtained by toJson method of ${UFServiceMessageV1::class.java.simpleName}")
             }
