@@ -27,6 +27,10 @@
             android:id="@+id/force_ping"
             android:icon="@drawable/baseline_sync_problem_black_48"
             android:title="@string/label_force_ping" />
+
+        <item
+            android:id="@+id/menu_back"
+            android:visible="false"/>
     </group>
 
 </menu>
