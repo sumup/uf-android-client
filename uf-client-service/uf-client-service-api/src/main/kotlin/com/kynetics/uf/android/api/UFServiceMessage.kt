@@ -11,15 +11,7 @@
 
 package com.kynetics.uf.android.api
 
-import com.kynetics.uf.android.api.v1.UFServiceMessageV1
-
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
 import java.io.Serializable
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 
