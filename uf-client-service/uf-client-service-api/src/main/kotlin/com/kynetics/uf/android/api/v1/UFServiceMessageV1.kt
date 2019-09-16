@@ -19,7 +19,6 @@ import kotlinx.serialization.json.JsonConfiguration
 @Serializable
 @Suppress("MaxLineLength")
 sealed class UFServiceMessageV1 {
-
     enum class MessageName {
         DOWNLOADING,
         ERROR,
@@ -51,7 +50,7 @@ sealed class UFServiceMessageV1 {
         data class Downloading(val artifacts: List<Artifact>) : State(MessageName.DOWNLOADING, "Client is downloading artifacts from server") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
-                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+                return json.stringify(serializer(), this)
             }
 
             @Serializable
@@ -66,13 +65,13 @@ sealed class UFServiceMessageV1 {
         data class ConfigurationError(val details: List<String> = emptyList()) : State(MessageName.CONFIGURATION_ERROR, "Bad service configuration") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
-                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+                return json.stringify(serializer(), this)
             }
         }
 
         @UseExperimental(ImplicitReflectionSerializer::class)
         override fun toJson(): String {
-            return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+            return json.stringify(serializer(), this)
         }
     }
 
@@ -83,21 +82,21 @@ sealed class UFServiceMessageV1 {
         data class StartDownloadFile(val fileName: String) : Event(MessageName.START_DOWNLOAD_FILE, "A file downloading is started") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
-                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+                return json.stringify(serializer(), this)
             }
         }
         @Serializable
         data class FileDownloaded(val fileDownloaded: String) : Event(MessageName.FILE_DOWNLOADED, "A file is downloaded") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
-                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+                return json.stringify(serializer(), this)
             }
         }
         @Serializable
         data class DownloadProgress(val fileName: String, val percentage: Double = 0.0) : Event(MessageName.DOWNLOAD_PROGRESS, "Percent of file downloaded") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
-                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+                return json.stringify(serializer(), this)
             }
         }
 
@@ -106,7 +105,7 @@ sealed class UFServiceMessageV1 {
         data class UpdateFinished(val successApply: Boolean, val details: List<String> = emptyList()) : Event(MessageName.UPDATE_FINISHED, "The update is finished") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
-                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+                return json.stringify(serializer(), this)
             }
         }
 
@@ -114,7 +113,7 @@ sealed class UFServiceMessageV1 {
         data class Error(val details: List<String> = emptyList()) : Event(MessageName.ERROR, "An error is occurred") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
-                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+                return json.stringify(serializer(), this)
             }
         }
 
@@ -122,7 +121,7 @@ sealed class UFServiceMessageV1 {
         data class UpdateProgress(val phaseName: String, val phaseDescription: String = "", val percentage: Double = 0.0) : Event(MessageName.UPDATE_PROGRESS, "Phase of update") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
-                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+                return json.stringify(serializer(), this)
             }
         }
 
@@ -130,14 +129,14 @@ sealed class UFServiceMessageV1 {
         data class UpdateAvailable(val id: String) : Event(MessageName.UPDATE_AVAILABLE, "An update is available on cloud") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
-                return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+                return json.stringify(serializer(), this)
             }
         }
 
         @UseExperimental(ImplicitReflectionSerializer::class)
         override fun toJson(): String {
-            println(Json(JsonConfiguration.Stable).stringify(serializer(), this))
-            return Json(JsonConfiguration.Stable).stringify(serializer(), this)
+            println(json.stringify(serializer(), this))
+            return json.stringify(serializer(), this)
         }
     }
 
@@ -145,10 +144,11 @@ sealed class UFServiceMessageV1 {
 
     companion object {
 
+        private val json = Json(JsonConfiguration.Stable.copy(strictMode = false))
+
         @UseExperimental(ImplicitReflectionSerializer::class)
         @Suppress("ComplexMethod")
         fun fromJson(jsonContent: String): UFServiceMessageV1 {
-            val json = Json(JsonConfiguration.Stable.copy(strictMode = false))
             val jsonElement = json.parseJson(jsonContent)
             return when (jsonElement.jsonObject["name"]?.primitive?.content) {
 

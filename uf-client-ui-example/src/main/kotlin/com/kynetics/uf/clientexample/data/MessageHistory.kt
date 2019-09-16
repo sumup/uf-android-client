@@ -99,7 +99,7 @@ object MessageHistory {
         private fun print(infix: String, event: UFServiceMessageV1.Event.DownloadProgress): String =
             "$infix \n${event.fileName} is downloaded at ${event.percentage.percentFormat()}"
         private fun print(infix: String, event: UFServiceMessageV1.Event.UpdateProgress): String =
-            "$infix  \nPhase name: ${event.phaseName} is at ${event.percentage.percentFormat()}"
+            "$infix  \nPhase name: ${event.phaseName} ${if(event.percentage.isNaN()) "" else "is at ${event.percentage!!.percentFormat()}"}"
     }
 
     fun appendEvent(event: UFServiceMessageV1.Event): Boolean {

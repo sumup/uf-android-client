@@ -252,7 +252,7 @@ internal object ABOtaInstaller : OtaInstaller {
         override fun onStatusUpdate(i: Int, v: Float) { // i==status  v==percent
             Log.d(TAG, "status:$i")
             Log.d(TAG, "percent:$v")
-            val currentPhaseProgress = if (v.isNaN()) 0.0 else v.toDouble()
+            val currentPhaseProgress = v.toDouble()
             val newPhase = previousState != i
             if (newPhase) {
                 previousState = i

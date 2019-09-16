@@ -100,10 +100,10 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation("com.github.Kynetics.uf-ddiclient:core:449e1cff"){
+    implementation("com.github.Kynetics.uf-ddiclient:core:43dfac51adc7dfadba58bfc65df0d3ac5f227a00"){
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
-    implementation "com.github.Kynetics.uf-ddiclient:core-api:449e1cff"
+    implementation "com.github.Kynetics.uf-ddiclient:core-api:43dfac51adc7dfadba58bfc65df0d3ac5f227a00"
     implementation "org.slf4j:slf4j-android:1.7.28"
     implementation "com.android.support:support-v4:$supportLibraryVersion"
     implementation "com.android.support:design:$supportLibraryVersion"
