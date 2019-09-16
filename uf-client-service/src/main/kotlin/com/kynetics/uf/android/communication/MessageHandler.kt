@@ -36,7 +36,7 @@ interface MessageHandler<out T : Serializable?> {
         return this
     }
 
-    fun onConfigurationError(details:List<String>): MessageHandler<T>
+    fun onConfigurationError(details: List<String>): MessageHandler<T>
 }
 
 data class V0(

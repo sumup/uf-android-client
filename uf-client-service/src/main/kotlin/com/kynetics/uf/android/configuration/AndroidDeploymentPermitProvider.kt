@@ -3,7 +3,7 @@ package com.kynetics.uf.android.configuration
 import android.app.NotificationManager
 import android.content.Intent
 import com.kynetics.uf.android.UpdateFactoryService
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants
+import com.kynetics.uf.android.api.Communication
 import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.ui.MainActivity
 import com.kynetics.uf.android.update.CurrentUpdateState
@@ -28,7 +28,7 @@ interface AndroidDeploymentPermitProvider : DeploymentPermitProvider {
 
                 private fun allowedAsync(auth: UpdateFactoryService.Companion.AuthorizationType): Deferred<Boolean> {
                     if (apiMode) {
-                        MessengerHandler.sendMessage(UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST, auth.name)
+                        MessengerHandler.sendMessage(Communication.V1.Out.AuthorizationRequest.ID, auth.name)
                     } else {
                         showAuthorizationDialog(auth)
                     }
@@ -37,7 +37,8 @@ interface AndroidDeploymentPermitProvider : DeploymentPermitProvider {
                     authResponse = CompletableDeferred()
                     authResponse.invokeOnCompletion {
                         if (authResponse.getCompleted()) {
-                            mNotificationManager.notify(UpdateFactoryService.NOTIFICATION_ID, service.getNotification(auth.event.toString(), true))
+                            mNotificationManager.notify(UpdateFactoryService.NOTIFICATION_ID,
+                                service.getNotification(auth.event.toString(), true))
                             MessengerHandler.onAction(auth.toActionOnGranted)
                         } else {
                             MessengerHandler.onAction(auth.toActionOnDenied)
@@ -53,7 +54,7 @@ interface AndroidDeploymentPermitProvider : DeploymentPermitProvider {
 
                 override fun downloadAllowed(): Deferred<Boolean> {
                     val currentUpdateState = CurrentUpdateState(service)
-                    return if(currentUpdateState.isAllFileDownloaded()){
+                    return if (currentUpdateState.isAllFileDownloaded()) {
                         CompletableDeferred(true)
                     } else {
                         allowedAsync(UpdateFactoryService.Companion.AuthorizationType.DOWNLOAD)

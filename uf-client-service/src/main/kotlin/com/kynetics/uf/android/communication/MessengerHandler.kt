@@ -6,7 +6,7 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.util.Log
 import com.kynetics.uf.android.api.ApiCommunicationVersion
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants
+import com.kynetics.uf.android.api.Communication
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
 import java.io.Serializable
@@ -40,7 +40,7 @@ object MessengerHandler {
         }
     }
 
-    fun onConfigurationError(details:List<String>) {
+    fun onConfigurationError(details: List<String>) {
         lastSharedMessagesByVersion.forEach {
             lastSharedMessagesByVersion[it.key] = it.value.onConfigurationError(details)
         }
@@ -71,7 +71,9 @@ object MessengerHandler {
                         messenger.send(
                                 getMessage(
                                         message
-                                        ?: lastSharedMessagesByVersion.getValue(apiCommunicationVersion).currentMessage, messageCode)
+                                        ?: lastSharedMessagesByVersion.getValue(
+                                            apiCommunicationVersion).currentMessage,
+                                    messageCode)
                         )
                     } catch (e: RemoteException) {
                         mClients.remove(messenger)
@@ -99,7 +101,7 @@ object MessengerHandler {
     private fun getMessage(messageContent: Serializable?, messageCode: Int): Message {
         val message = Message.obtain(null, messageCode)
         val data = Bundle()
-        data.putSerializable(UFServiceCommunicationConstants.SERVICE_DATA_KEY, messageContent)
+        data.putSerializable(Communication.V1.SERVICE_DATA_KEY, messageContent)
         message.data = data
         return message
     }

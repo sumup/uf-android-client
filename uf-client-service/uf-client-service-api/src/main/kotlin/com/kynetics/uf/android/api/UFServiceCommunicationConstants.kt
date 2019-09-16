@@ -14,8 +14,11 @@ package com.kynetics.uf.android.api
 /**
  * @author Daniele Sergio
  */
-@Deprecated("")
-object UFServiceCommunicationConstants{
+@Deprecated(message = "As of release 1.0.0-rc3 replaced",
+    replaceWith = ReplaceWith(expression = "com.kynetics.uf.android.api.Communication((id)",
+        imports = ["com.kynetics.uf.android.api.Communication"]))
+
+object UFServiceCommunicationConstants {
 
     const val MSG_CONFIGURE_SERVICE = 1
 

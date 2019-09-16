@@ -74,7 +74,7 @@ class CurrentUpdateState(context: Context) {
         }
     }
 
-    fun allFileDownloaded(){
+    fun allFileDownloaded() {
         val id = getCurrentUpdateId()
         sharedPreferences.edit().run {
             putBoolean(String.format(ALL_FILE_DOWNLOADED_TEMPLAE, id), true).apply()
@@ -83,12 +83,12 @@ class CurrentUpdateState(context: Context) {
 
     private fun getCurrentUpdateId() = sharedPreferences.getString(CURRENT_UPDATE_ID_KEY, "")
 
-    fun setCurrentUpdateId(updateId:String) = sharedPreferences.edit()
+    fun setCurrentUpdateId(updateId: String) = sharedPreferences.edit()
         .putString(CURRENT_UPDATE_ID_KEY, updateId)
         .apply()
 
-    fun isAllFileDownloaded():Boolean{
-        return sharedPreferences.getBoolean(String.format(ALL_FILE_DOWNLOADED_TEMPLAE,getCurrentUpdateId()), false)
+    fun isAllFileDownloaded(): Boolean {
+        return sharedPreferences.getBoolean(String.format(ALL_FILE_DOWNLOADED_TEMPLAE, getCurrentUpdateId()), false)
     }
 
     fun lastInstallFile(): File {
@@ -189,7 +189,6 @@ class CurrentUpdateState(context: Context) {
                 editor.remove(key)
             }
         }
-
 
         editor
                 .remove(APK_DISTRIBUTION_REPORT_SUCCESS_KEY)

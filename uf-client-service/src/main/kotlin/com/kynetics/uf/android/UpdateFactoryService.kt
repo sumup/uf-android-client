@@ -26,17 +26,9 @@ import android.os.Messenger
 import android.support.v4.app.NotificationCompat
 import android.util.Log
 import com.kynetics.uf.android.api.ApiCommunicationVersion
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_RESPONSE
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_CONFIGURE_SERVICE
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_FORCE_PING
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_REGISTER_CLIENT
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_RESUME_SUSPEND_UPGRADE
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_CONFIGURATION_STATUS
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_STATUS
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNC_REQUEST
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_UNREGISTER_CLIENT
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_API_VERSION_KEY
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY
+import com.kynetics.uf.android.api.Communication
+import com.kynetics.uf.android.api.Communication.Companion.SERVICE_API_VERSION_KEY
+import com.kynetics.uf.android.api.Communication.V1.Companion.SERVICE_DATA_KEY
 import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.apicomptibility.ApiVersion
 import com.kynetics.uf.android.communication.MessageHandler
@@ -139,26 +131,26 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
     private inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                MSG_CONFIGURE_SERVICE -> configureService(msg)
+                Communication.V1.In.ConfigureService.ID -> configureService(msg)
 
-                MSG_REGISTER_CLIENT -> {
+                Communication.V1.In.RegisterClient.ID -> {
                     Log.i(TAG, "receive subscription request")
                     MessengerHandler.subscribeClient(msg.replyTo, ApiCommunicationVersion.fromVersionCode(msg.data.getInt(SERVICE_API_VERSION_KEY, 0)))
                 }
 
-                MSG_UNREGISTER_CLIENT -> {
+                Communication.V1.In.UnregisterClient.ID -> {
                     Log.i(TAG, "receive unsubscription request")
                     MessengerHandler.unsubscribeClient(msg.replyTo)
                 }
 
-                MSG_AUTHORIZATION_RESPONSE -> authorizationResponse(msg)
+                Communication.V1.In.AuthorizationResponse.ID -> authorizationResponse(msg)
 
-                MSG_RESUME_SUSPEND_UPGRADE, MSG_FORCE_PING -> {
+                Communication.V1.In.ForcePing.id -> {
                     Log.i(TAG, "receive request to resume suspend state")
                     ufService?.forcePing()
                 }
 
-                MSG_SYNC_REQUEST -> sync(msg)
+                Communication.V1.In.Sync.ID -> sync(msg)
 
                 else -> super.handleMessage(msg)
             }
@@ -174,14 +166,14 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
             MessengerHandler.sendMessage(
                 configurationHandler?.getCurrentConfiguration(),
-                MSG_SERVICE_CONFIGURATION_STATUS,
+                Communication.V1.Out.CurrentServiceConfiguration.ID,
                 msg.replyTo
             )
             val api = ApiCommunicationVersion.fromVersionCode(msg.data.getInt(SERVICE_API_VERSION_KEY, 0))
             if (MessengerHandler.hasMessage(api)) {
                 MessengerHandler.sendMessage(
                     MessengerHandler.getlastSharedMessage(api).messageToSendOnSync,
-                    MSG_SERVICE_STATUS,
+                    Communication.V1.Out.ServiceStatus.ID,
                     msg.replyTo
                 )
             }

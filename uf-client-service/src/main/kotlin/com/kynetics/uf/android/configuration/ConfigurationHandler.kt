@@ -7,7 +7,7 @@ import android.util.Log
 import com.kynetics.uf.android.BuildConfig
 import com.kynetics.uf.android.R
 import com.kynetics.uf.android.UpdateFactoryService
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants
+import com.kynetics.uf.android.api.Communication
 import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.content.SharedPreferencesWithObject
@@ -39,8 +39,8 @@ data class ConfigurationHandler(
 
     fun getServiceConfigurationFromIntent(intent: Intent): UFServiceConfiguration? {
         Log.i(TAG, "Loaded new configuration from intent")
-        val serializable = intent.getSerializableExtra(UFServiceCommunicationConstants.SERVICE_DATA_KEY)
-        val string = intent.getStringExtra(UFServiceCommunicationConstants.SERVICE_DATA_KEY)
+        val serializable = intent.getSerializableExtra(Communication.V1.SERVICE_DATA_KEY)
+        val string = intent.getStringExtra(Communication.V1.SERVICE_DATA_KEY)
         return try {
             when {
 
@@ -122,7 +122,7 @@ data class ConfigurationHandler(
                 ufService = null
                 // sharedPreferences.edit().putBoolean(sharedPreferencesServiceEnableKey, false).apply()
                 MessengerHandler.onConfigurationError(listOf(e.message ?: "Error"))
-                MessengerHandler.sendMessage(UFServiceCommunicationConstants.MSG_SERVICE_STATUS)
+                MessengerHandler.sendMessage(Communication.V1.Out.ServiceStatus.ID)
                 Log.e(TAG, e.message, e)
             }
         }

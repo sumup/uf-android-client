@@ -102,7 +102,7 @@ object MessageHistory {
             "$infix  \nPhase name: ${event.phaseName} is at ${event.percentage.percentFormat()}"
     }
 
-    fun appendEvent(event: UFServiceMessageV1.Event) : Boolean{
+    fun appendEvent(event: UFServiceMessageV1.Event): Boolean {
         return if (ITEMS.isNotEmpty()) {
             ITEMS.first().addEvent(event)
             true

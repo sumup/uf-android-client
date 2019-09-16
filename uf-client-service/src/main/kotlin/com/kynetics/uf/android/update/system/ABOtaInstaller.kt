@@ -7,7 +7,7 @@ import android.os.UpdateEngine
 import android.os.UpdateEngineCallback
 import android.support.annotation.RequiresApi
 import android.util.Log
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants
+import com.kynetics.uf.android.api.Communication
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.update.CurrentUpdateState
@@ -268,7 +268,7 @@ internal object ABOtaInstaller : OtaInstaller {
                     percentage = currentPhaseProgress
                 ))
 
-                MessengerHandler.sendMessage(UFServiceCommunicationConstants.MSG_SERVICE_STATUS)
+                MessengerHandler.sendMessage(Communication.V1.Out.ServiceStatus.ID)
                 while (currentPhaseProgress >= queue.peek() ?: 1.0 && queue.isNotEmpty()) {
                     queue.poll()
                 }

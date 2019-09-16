@@ -38,21 +38,9 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
-import com.kynetics.uf.android.api.ApiCommunicationVersion
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.ACTION_SETTINGS
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_REQUEST
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_AUTHORIZATION_RESPONSE
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_CONFIGURE_SERVICE
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_FORCE_PING
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_REGISTER_CLIENT
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_CONFIGURATION_STATUS
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SERVICE_STATUS
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.MSG_SYNC_REQUEST
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_API_VERSION_KEY
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_DATA_KEY
-import com.kynetics.uf.android.api.UFServiceCommunicationConstants.SERVICE_PACKAGE_NAME
-import com.kynetics.uf.android.api.UFServiceConfiguration
+import com.kynetics.uf.android.api.Communication
+import com.kynetics.uf.android.api.UFServiceInfo
+import com.kynetics.uf.android.api.toOutV1Message
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.clientexample.BuildConfig
 import com.kynetics.uf.clientexample.R
@@ -60,25 +48,25 @@ import com.kynetics.uf.clientexample.data.MessageHistory
 import com.kynetics.uf.clientexample.fragment.ListStateFragment
 import com.kynetics.uf.clientexample.fragment.MyAlertDialogFragment
 import com.kynetics.uf.clientexample.fragment.UFServiceInteractionFragment
-import kotlinx.android.synthetic.main.state_list.*
 import java.util.Timer
 import kotlin.concurrent.timer
 import kotlin.properties.Delegates
+import kotlinx.android.synthetic.main.state_list.*
 
 /**
  * @author Daniele Sergio
  */
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, UFActivity {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private var twoPane: Boolean = false
 
-    private var timer : Timer? = null
+    private var timer: Timer? = null
 
     /** Messenger for communicating with service.  */
     internal var mService: Messenger? = null
     /** Flag indicating whether we have called bind on the service.  */
     internal var mIsBound: Boolean by Delegates.observable(false) { _, old, new ->
-        when{
+        when {
             new == old -> {}
 
             new -> {
@@ -124,16 +112,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Toast.LENGTH_SHORT).show()
 
             handleRemoteException {
-                var msg = Message.obtain(null, MSG_REGISTER_CLIENT)
-                msg.replyTo = mMessenger
-                val bundleWithApiVersion = Bundle()
-                bundleWithApiVersion.putInt(SERVICE_API_VERSION_KEY, ApiCommunicationVersion.V1.versionCode)
-                msg.data = bundleWithApiVersion
-                mService!!.send(msg)
-                msg = Message.obtain(null, MSG_SYNC_REQUEST)
-                msg.replyTo = mMessenger
-                msg.data = bundleWithApiVersion
-                mService!!.send(msg)
+                mService!!.send(Communication.V1.In.RegisterClient(mMessenger).toMessage())
+                mService!!.send(Communication.V1.In.Sync(mMessenger).toMessage())
             }
             mIsBound = true
         }
@@ -168,7 +148,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val textViewServiceVersion = findViewById<TextView>(R.id.service_version)
         textViewUiVersion.text = String.format(getString(R.string.ui_version), BuildConfig.VERSION_NAME)
         try {
-            val info = packageManager.getPackageInfo(SERVICE_PACKAGE_NAME, 0)
+            val info = packageManager.getPackageInfo(UFServiceInfo.SERVICE_PACKAGE_NAME, 0)
             textViewServiceVersion.text = String.format(getString(R.string.service_version), info.versionName)
         } catch (e: PackageManager.NameNotFoundException) {
             textViewServiceVersion.visibility = View.GONE
@@ -180,10 +160,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setContentView(R.layout.activity_main)
         mResumeUpdateFab = findViewById(R.id.fab_resume_update)
         mResumeUpdateFab!!.setOnClickListener { view ->
-            val msg = Message.obtain(null,
-                UFServiceCommunicationConstants.MSG_RESUME_SUSPEND_UPGRADE)
             handleRemoteException {
-                mService!!.send(msg)
+                mService!!.send(Communication.V1.In.ForcePing.toMessage())
             }
         }
         val drawer = findViewById<DrawerLayout>(R.id.drawer_layout)
@@ -230,7 +208,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (id) {
 
             R.id.menu_settings -> {
-                val settingsIntent = Intent(ACTION_SETTINGS)
+                val settingsIntent = Intent(UFServiceInfo.ACTION_SETTINGS)
                 startActivity(settingsIntent)
             }
 
@@ -238,7 +216,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Log.d(TAG, "Force Ping Request")
                 handleRemoteException {
                     if (mService != null) {
-                        mService!!.send(Message.obtain(null, MSG_FORCE_PING))
+                        mService!!.send(Communication.V1.In.ForcePing.toMessage())
                     }
                 }
             }
@@ -251,23 +229,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
-    override fun registerToService(data: Bundle) {
-        handleRemoteException {
-            val msg = Message.obtain(null, MSG_CONFIGURE_SERVICE)
-            msg.replyTo = mMessenger
-            data.putInt(SERVICE_API_VERSION_KEY, ApiCommunicationVersion.V1.versionCode)
-            msg.data = data
-            mService!!.send(msg)
-        }
-    }
-
     fun sendPermissionResponse(response: Boolean) {
-        val msg = Message.obtain(null, MSG_AUTHORIZATION_RESPONSE)
-        msg.data.putBoolean(SERVICE_DATA_KEY, response)
-        try {
-            mService!!.send(msg)
-        } catch (e: RemoteException) {
-            e.printStackTrace()
+        handleRemoteException {
+            mService!!.send(Communication.V1.In.AuthorizationResponse(response).toMessage())
         }
     }
 
@@ -276,61 +240,60 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      */
     internal inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
-            when (msg.what) {
+            val v1Msg = msg.toOutV1Message()
+            when (v1Msg) {
 
-                MSG_SERVICE_STATUS -> handleServiceStatusMsg(msg)
+                is Communication.V1.Out.CurrentServiceConfiguration
+                -> handleServiceConfigurationMsg(v1Msg)
 
-                MSG_AUTHORIZATION_REQUEST -> handleAuthorizationRequestMsg(msg)
+                is Communication.V1.Out.AuthorizationRequest -> handleAuthorizationRequestMsg(v1Msg)
 
-                MSG_SERVICE_CONFIGURATION_STATUS -> handleServiceConfigurationMsg(msg)
-
-                else -> super.handleMessage(msg)
+                is Communication.V1.Out.ServiceStatus -> handleServiceStatusMsg(v1Msg)
             }
         }
 
-        private fun handleServiceConfigurationMsg(msg: Message) {
-            val serializable = msg.data.getSerializable(SERVICE_DATA_KEY)
-            if (serializable !is UFServiceConfiguration || !serializable.isEnable) {
+        private fun handleServiceConfigurationMsg(
+            currentServiceConfiguration: Communication.V1.Out.CurrentServiceConfiguration
+        ) {
+            val conf = currentServiceConfiguration.conf
+            if (conf.isEnable) {
                 mNavigationView!!.setCheckedItem(R.id.menu_settings)
-                val settingsIntent = Intent(ACTION_SETTINGS)
+                val settingsIntent = Intent(UFServiceInfo.ACTION_SETTINGS)
                 startActivity(settingsIntent)
             }
         }
 
-        private fun handleAuthorizationRequestMsg(msg: Message) {
-            val newFragment = MyAlertDialogFragment.newInstance(
-                msg.data.getString(SERVICE_DATA_KEY)
-            )
+        private fun handleAuthorizationRequestMsg(authRequest: Communication.V1.Out.AuthorizationRequest) {
+            val newFragment = MyAlertDialogFragment.newInstance(authRequest.authName)
             newFragment.show(supportFragmentManager, null)
         }
 
-        private fun handleServiceStatusMsg(msg: Message) {
-            val messageContent = UFServiceMessageV1.fromJson(msg.data.getString(SERVICE_DATA_KEY))
-
-            when (messageContent) {
+        private fun handleServiceStatusMsg(serviceStatus: Communication.V1.Out.ServiceStatus) {
+            val content = serviceStatus.content
+            when (content) {
                 is UFServiceMessageV1.Event -> {
-                    if (!MessageHistory.appendEvent(messageContent)) {
+                    if (!MessageHistory.appendEvent(content)) {
                         Toast.makeText(
                             applicationContext,
-                            messageContent.name.toString(),
+                            content.name.toString(),
                             Toast.LENGTH_LONG
                         )
                     }
                 }
 
                 is UFServiceMessageV1.State -> {
-                    MessageHistory.addState(MessageHistory.StateEntry(state = messageContent))
+                    MessageHistory.addState(MessageHistory.StateEntry(state = content))
                 }
             }
 
             this@MainActivity.supportFragmentManager.fragments
                 .filterIsInstance<UFServiceInteractionFragment>()
-                .forEach { fragment -> fragment.onMessageReceived(messageContent) }
+                .forEach { fragment -> fragment.onMessageReceived(content) }
 
-            when (messageContent) {
+            when (content) {
                 is UFServiceMessageV1.State.WaitingDownloadAuthorization,
                 UFServiceMessageV1.State.WaitingUpdateAuthorization -> {
-                    mResumeUpdateFab!!.setImageResource(iconByMessageName.getValue(messageContent.name))
+                    mResumeUpdateFab!!.setImageResource(iconByMessageName.getValue(content.name))
                     mResumeUpdateFab!!.show()
                 }
 
@@ -387,8 +350,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Establish a connection with the service.  We use an explicit
         // class name because there is no reason to be able to let other
         // applications replace our component.
-        val intent = Intent(UFServiceCommunicationConstants.SERVICE_ACTION)
-        intent.setPackage(SERVICE_PACKAGE_NAME)
+        val intent = Intent(UFServiceInfo.SERVICE_ACTION)
+        intent.setPackage(UFServiceInfo.SERVICE_PACKAGE_NAME)
         intent.flags = FLAG_INCLUDE_STOPPED_PACKAGES
         val serviceExist = bindService(intent, mConnection, Context.BIND_AUTO_CREATE)
         if (!serviceExist && !mServiceExist) {
@@ -406,10 +369,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             // it, then now is the time to unregister.
             if (mService != null) {
                 try {
-                    val msg = Message.obtain(null,
-                        UFServiceCommunicationConstants.MSG_UNREGISTER_CLIENT)
-                    msg.replyTo = mMessenger
-                    mService!!.send(msg)
+                    mService!!.send(Communication.V1.In.UnregisterClient(mMessenger).toMessage())
                 } catch (e: RemoteException) {
                     // There is nothing special we need to do if the service
                     // has crashed.

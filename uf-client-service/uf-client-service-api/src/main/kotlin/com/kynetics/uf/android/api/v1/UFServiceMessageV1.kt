@@ -17,6 +17,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 
 @Serializable
+@Suppress("MaxLineLength")
 sealed class UFServiceMessageV1 {
 
     enum class MessageName {
@@ -62,7 +63,7 @@ sealed class UFServiceMessageV1 {
         object WaitingUpdateAuthorization : State(MessageName.WAITING_UPDATE_AUTHORIZATION, "Waiting authorization to start update")
         object Idle : State(MessageName.IDLE, "Client is waiting for new requests from server")
         @Serializable
-        data class ConfigurationError(val details: List<String> = emptyList()) : State(MessageName.CONFIGURATION_ERROR, "Bad service configuration"){
+        data class ConfigurationError(val details: List<String> = emptyList()) : State(MessageName.CONFIGURATION_ERROR, "Bad service configuration") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
                 return Json(JsonConfiguration.Stable).stringify(serializer(), this)
@@ -126,7 +127,7 @@ sealed class UFServiceMessageV1 {
         }
 
         @Serializable
-        data class UpdateAvailable(val id:String) : Event(MessageName.UPDATE_AVAILABLE, "An update is available on cloud") {
+        data class UpdateAvailable(val id: String) : Event(MessageName.UPDATE_AVAILABLE, "An update is available on cloud") {
             @UseExperimental(ImplicitReflectionSerializer::class)
             override fun toJson(): String {
                 return Json(JsonConfiguration.Stable).stringify(serializer(), this)
@@ -160,7 +161,7 @@ sealed class UFServiceMessageV1 {
 
                 MessageName.ERROR.name -> json.fromJson<Event.Error>(jsonElement)
                 MessageName.START_DOWNLOAD_FILE.name -> json.fromJson<Event.StartDownloadFile>(jsonElement)
-                MessageName.UPDATE_PROGRESS.name -> json.fromJson<Event.UpdateProgress>(jsonElement)
+                MessageName.UPDATE_PROGRESS.name -> json.fromJson<Event.UpdateProgress>(jsonElement)/**/
                 MessageName.DOWNLOAD_PROGRESS.name -> json.fromJson<Event.DownloadProgress>(jsonElement)
                 MessageName.FILE_DOWNLOADED.name -> json.fromJson<Event.FileDownloaded>(jsonElement)
                 MessageName.UPDATE_FINISHED.name -> json.fromJson<Event.UpdateFinished>(jsonElement)

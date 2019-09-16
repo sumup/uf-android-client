@@ -107,7 +107,9 @@ class StateDetailFragment : Fragment(), UFServiceInteractionFragment {
             }
 
             else -> {
-                binding?.root?.details_list?.adapter = ArrayAdapter(activity, android.R.layout.simple_list_item_1, listOf<String>())
+                binding?.root?.details_list?.adapter =
+                    ArrayAdapter(activity, android.R.layout.simple_list_item_1,
+                        listOf<String>())
             }
         }
     }
