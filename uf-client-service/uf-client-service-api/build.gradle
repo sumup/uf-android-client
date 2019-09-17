@@ -14,7 +14,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlinx-serialization'
 
-group 'com.kynetics.uf.android'
 version versionFromGit(project)
 
 dependencies {
@@ -29,7 +28,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 28
         versionCode 22
-        versionName versionFromGit(project)
+        versionName version
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -45,11 +44,4 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-}
-
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"
-
-sourceSets {
-    main.java.srcDirs += 'src/main/kotlin'
 }

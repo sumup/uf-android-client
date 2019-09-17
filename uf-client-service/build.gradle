@@ -115,7 +115,7 @@ dependencies {
     implementation "com.android.support:preference-v7:$supportLibraryVersion"
     testImplementation 'junit:junit:4.12'
 //    implementation 'com.github.Kynetics.uf-ddiclient:ddiclient-core:v0.4.7'
-    implementation project(path: ':uf-client-service:uf-client-service-api', configuration: 'default')
+    implementation project(':uf-client-service:uf-client-service-api')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     implementation 'com.google.code.gson:gson:2.8.1'
