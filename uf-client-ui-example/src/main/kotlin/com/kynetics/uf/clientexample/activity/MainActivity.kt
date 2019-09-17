@@ -270,8 +270,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         Toast.makeText(
                             applicationContext,
                             content.name.toString(),
-                            Toast.LENGTH_LONG
-                        )
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
 
