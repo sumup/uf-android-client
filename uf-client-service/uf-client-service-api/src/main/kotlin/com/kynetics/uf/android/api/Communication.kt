@@ -79,7 +79,7 @@ sealed class Communication(val id: Int) {
                     const val ID = 3
                 }
             }
-            class AuthorizationResponse(val granted: Boolean) : In(6) {
+            class AuthorizationResponse(val granted: Boolean) : In(ID) {
                 companion object {
                     const val ID = 6
                 }
