@@ -81,12 +81,14 @@ android {
                 signingConfig signingConfigs.nxp_platform
                 minifyEnabled false
                 proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                matchingFallbacks = ['release', 'debug']
             }
 
             aosp_platform_key {
                 signingConfig signingConfigs.aosp_platform
                 minifyEnabled false
                 proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                matchingFallbacks = ['release', 'debug']
             }
         } else {
             debug{
