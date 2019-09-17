@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import kotlin.math.min
 import kotlin.streams.toList
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -252,7 +253,7 @@ internal object ABOtaInstaller : OtaInstaller {
         override fun onStatusUpdate(i: Int, v: Float) { // i==status  v==percent
             Log.d(TAG, "status:$i")
             Log.d(TAG, "percent:$v")
-            val currentPhaseProgress = v.toDouble()
+            val currentPhaseProgress = min(v.toDouble(),100.0)
             val newPhase = previousState != i
             if (newPhase) {
                 previousState = i

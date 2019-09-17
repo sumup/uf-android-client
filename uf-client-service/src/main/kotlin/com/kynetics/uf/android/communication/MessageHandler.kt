@@ -77,20 +77,24 @@ data class V1(
     override val apiCommunicationVersion = ApiCommunicationVersion.V1
 
     override fun onMessage(msg: MessageListener.Message): MessageHandler<String?> {
-        return when (msg) {
-            is MessageListener.Message.Event -> {
-                copy(currentMessage = msg.toUFMessage().toJson())
-            }
-
-            is MessageListener.Message.State -> {
-                val currentMessage = msg.toUFMessage().toJson()
-                copy(messageToSendOnSync = currentMessage, currentMessage = currentMessage)
-            }
-        }
+        return onAndroidMessage(msg.toUFMessage())
     }
 
     override fun onConfigurationError(details: List<String>): MessageHandler<String?> {
         val state = UFServiceMessageV1.State.ConfigurationError(details).toJson()
         return copy(messageToSendOnSync = state, currentMessage = state)
+    }
+
+    override fun onAndroidMessage(msg: UFServiceMessageV1): MessageHandler<String?> {
+        return when (msg) {
+            is UFServiceMessageV1.Event -> {
+                copy(currentMessage = msg.toJson())
+            }
+
+            is UFServiceMessageV1.State -> {
+                val currentMessage = msg.toJson()
+                copy(messageToSendOnSync = currentMessage, currentMessage = currentMessage)
+            }
+        }
     }
 }
