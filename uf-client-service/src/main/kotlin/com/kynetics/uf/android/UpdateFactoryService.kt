@@ -49,12 +49,10 @@ import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClient
 class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
     override fun authorizationGranted() {
-        Log.e("authorizationGranted", "1")
         deploymentPermitProvider?.allow(true)
     }
 
     override fun authorizationDenied() {
-        Log.e("authorizationDenied", "1")
         deploymentPermitProvider?.allow(false)
     }
 
