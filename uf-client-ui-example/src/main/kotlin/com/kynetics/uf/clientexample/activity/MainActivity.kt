@@ -255,19 +255,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         private fun handleServiceConfigurationMsg(
             currentServiceConfiguration: Communication.V1.Out.CurrentServiceConfiguration
         ) {
-            val conf = currentServiceConfiguration.conf
-            if (conf.isEnable) {
-                mNavigationView!!.setCheckedItem(R.id.menu_settings)
-                val settingsIntent = Intent(UFServiceInfo.ACTION_SETTINGS)
-                startActivity(settingsIntent)
-            }
+           Log.i(TAG, currentServiceConfiguration.conf.toString())
         }
 
         private fun handleAuthorizationRequestMsg(authRequest: Communication.V1.Out.AuthorizationRequest) {
             val newFragment = MyAlertDialogFragment.newInstance(authRequest.authName)
             newFragment.show(supportFragmentManager, null)
         }
-
         private fun handleServiceStatusMsg(serviceStatus: Communication.V1.Out.ServiceStatus) {
             val content = serviceStatus.content
             when (content) {
