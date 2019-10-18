@@ -62,7 +62,12 @@ interface AndroidDeploymentPermitProvider : DeploymentPermitProvider {
                 }
 
                 override fun updateAllowed(): Deferred<Boolean> {
-                    return allowedAsync(UpdateFactoryService.Companion.AuthorizationType.UPDATE)
+                    val currentUpdateState = CurrentUpdateState(service)
+                    return if(currentUpdateState.isUpdateStart()){
+                        CompletableDeferred(true)
+                    } else {
+                        allowedAsync(UpdateFactoryService.Companion.AuthorizationType.UPDATE)
+                    }
                 }
 
                 private fun showAuthorizationDialog(authorization: UpdateFactoryService.Companion.AuthorizationType) {

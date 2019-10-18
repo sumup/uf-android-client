@@ -245,8 +245,8 @@ class CurrentUpdateState(context: Context) {
         private const val ERROR_EXTENSION = "KO"
         private const val APK_PACKAGE_START_KEY = "APK_PACKAGE"
         private const val APK_PACKAGE_TEMPLATE_KEY = "APK_PACKAGE_%s_KEY"
-        private const val ALL_FILE_DOWNLOADED_TEMPLAE = "ALL_FILE_DOWNLOADED_%s"
         private const val ALL_FILE_DOWNLOADED_START_KEY = "ALL_FILE_DOWNLOADED_"
+        private const val ALL_FILE_DOWNLOADED_TEMPLAE = "$ALL_FILE_DOWNLOADED_START_KEY%s"
         private const val CURRENT_UPDATE_ID_KEY = "CURRENT_UPDATE_ID"
         private val CACHE = File("cache")
         private val CACHE_UF = File(CACHE, "update_factory")
