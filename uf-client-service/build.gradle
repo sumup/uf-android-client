@@ -20,7 +20,7 @@ android {
         applicationId "com.kynetics.uf.service"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 21
+        versionCode 22
         versionName versionFromGit(project)
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -52,7 +52,7 @@ android {
                 v1SigningEnabled true
             }
         }
-    } else {
+    } else if(project.properties.containsKey("uf-android-client-service.storePath")){
         signingConfigs {
             debug {
                 keyAlias project.properties['uf-android-client-service.keyAlias']
