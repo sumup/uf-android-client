@@ -13,13 +13,12 @@ received from an
 Links to official documentation:
 - [installation](https://docs.updatefactory.io/devices/android/android-client-packages/)
 - [configuration file](https://docs.updatefactory.io/devices/android/android-config-files/)
-- [third-party integration](https://docs.updatefactory.io/devices/android/third-party-integration/)
+- [third-party integration](https://docs.updatefactory.io/devices/android/third-party-integration-v1/)
 
 ## uf-client-service
 uf-client-service is an android service that run in background and manage the updates.
 
-uf-client-service must be install as **SYSTEM** application. [Android hidden api](https://github.com/anggrayudi/android-hidden-api).
-are used from the version 1.0 to support update of sytems with double partitions
+uf-client-service must be install as **SYSTEM** application. [Android hidden api](https://github.com/anggrayudi/android-hidden-api) are used from the version 1.0 to support update of systems with double partitions.
 
 ### State diagrams
 #### Main
