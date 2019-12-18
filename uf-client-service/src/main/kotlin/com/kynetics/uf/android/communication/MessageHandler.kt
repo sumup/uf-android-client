@@ -56,11 +56,21 @@ data class V0(
     }
 
     override fun onMessage(msg: MessageListener.Message): MessageHandler<UFServiceMessage?> {
-        return copy(currentMessage = UFServiceMessage("", "", msg.toString(), suspend))
+        val newSuspendValue = when(msg){
+            is MessageListener.Message.State.WaitingDownloadAuthorization -> UFServiceMessage.Suspend.DOWNLOAD
+            is MessageListener.Message.State.WaitingUpdateAuthorization -> UFServiceMessage.Suspend.UPDATE
+            else -> suspend
+        }
+        return copy(currentMessage = UFServiceMessage("", "", msg.toString(), newSuspendValue))
     }
 
     override fun onAndroidMessage(msg: UFServiceMessageV1): MessageHandler<UFServiceMessage?> {
-        return copy(currentMessage = UFServiceMessage("", "", msg.toString(), suspend))
+        val newSuspendValue = when(msg){
+            is UFServiceMessageV1.State.WaitingDownloadAuthorization -> UFServiceMessage.Suspend.DOWNLOAD
+            is UFServiceMessageV1.State.WaitingUpdateAuthorization -> UFServiceMessage.Suspend.UPDATE
+            else -> suspend
+        }
+        return copy(currentMessage = UFServiceMessage("", "", msg.toString(), newSuspendValue))
     }
 
     override fun onConfigurationError(details: List<String>): MessageHandler<UFServiceMessage?> {
