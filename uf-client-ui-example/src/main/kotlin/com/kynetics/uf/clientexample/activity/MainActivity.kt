@@ -259,8 +259,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         private fun handleAuthorizationRequestMsg(authRequest: Communication.V1.Out.AuthorizationRequest) {
-            val newFragment = MyAlertDialogFragment.newInstance(authRequest.authName)
-            newFragment.show(supportFragmentManager, null)
+            try{
+                val newFragment = MyAlertDialogFragment.newInstance(authRequest.authName)
+                newFragment.show(supportFragmentManager, null)
+            } catch (e:IllegalStateException){
+                Log.w(TAG, "Error on show alert dialog", e)
+            }
+
         }
         private fun handleServiceStatusMsg(serviceStatus: Communication.V1.Out.ServiceStatus) {
             val content = serviceStatus.content
