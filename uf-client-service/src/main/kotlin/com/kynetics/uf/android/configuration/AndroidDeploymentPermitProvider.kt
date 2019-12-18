@@ -18,7 +18,7 @@ interface AndroidDeploymentPermitProvider : DeploymentPermitProvider {
     companion object {
         @ExperimentalCoroutinesApi
         fun build(
-            apiMode: Boolean,
+            configurationHandler: ConfigurationHandler,
             mNotificationManager: NotificationManager,
             service: UpdateFactoryService
         ): AndroidDeploymentPermitProvider {
@@ -27,7 +27,7 @@ interface AndroidDeploymentPermitProvider : DeploymentPermitProvider {
                 private var authResponse = CompletableDeferred<Boolean>()
 
                 private fun allowedAsync(auth: UpdateFactoryService.Companion.AuthorizationType): Deferred<Boolean> {
-                    if (apiMode) {
+                    if (configurationHandler.apiModeIsEnabled()) {
                         MessengerHandler.sendMessage(Communication.V1.Out.AuthorizationRequest.ID, auth.name)
                     } else {
                         showAuthorizationDialog(auth)

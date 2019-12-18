@@ -81,8 +81,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         configurationHandler = ConfigurationHandler(null, this, getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE))
         systemUpdateType = SystemUpdateType.getSystemUpdateType()
         ufServiceCommand = this
-        val apiMode = configurationHandler?.apiModeIsEnabled() ?: false
-        deploymentPermitProvider = AndroidDeploymentPermitProvider.build(apiMode, mNotificationManager!!, this)
+        deploymentPermitProvider = AndroidDeploymentPermitProvider.build(configurationHandler!!, mNotificationManager!!, this)
         messageListener = AndroidMessageListener(this)
         currentUpdateState = CurrentUpdateState(this)
 
