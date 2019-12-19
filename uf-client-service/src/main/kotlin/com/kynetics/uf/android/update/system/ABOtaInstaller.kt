@@ -11,13 +11,13 @@ import com.kynetics.uf.android.api.Communication
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1
 import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.update.CurrentUpdateState
+import com.kynetics.uf.android.util.zip.getEntryOffset
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import kotlin.math.min
 import kotlin.streams.toList
@@ -148,7 +148,7 @@ internal object ABOtaInstaller : OtaInstaller {
         messenger.sendMessageToServer("Applying A/B ota update (${artifact.filename})...")
         val zipPath = "file://${artifact.path}"
         Log.d(TAG, zipPath)
-        updateEngine.applyPayload(zipPath, zipFile.getPayloadEntryOffset(), 0, prop)
+        updateEngine.applyPayload(zipPath, zipFile.getEntryOffset(PAYLOAD_FILE), 0, prop)
         return installationResult(
             updateStatus,
             messenger,
@@ -210,31 +210,6 @@ internal object ABOtaInstaller : OtaInstaller {
                 }
             }
         }
-    }
-
-    private fun ZipFile.getPayloadEntryOffset(): Long {
-        val zipEntries = entries()
-        var offset: Long = 0
-        while (zipEntries.hasMoreElements()) {
-            val entry = zipEntries.nextElement()
-            offset += entry.getHeaderSize()
-            if (entry.name == PAYLOAD_FILE) {
-                return offset
-            }
-            offset += entry.compressedSize
-        }
-        Log.e(TAG, "Entry $PAYLOAD_FILE not found")
-        throw IllegalArgumentException("The given entry was not found")
-    }
-
-    private fun ZipEntry.getHeaderSize(): Long {
-        // Each entry has an header of (30 + n + m) bytes
-        // 'n' is the length of the file name
-        // 'm' is the length of the extra field
-        val fixedHeaderSize = 30L
-        val n = name.length
-        val m = extra?.size ?: 0
-        return fixedHeaderSize + n + m
     }
 
     private class MyUpdateEngineCallback(
