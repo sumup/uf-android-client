@@ -15,10 +15,10 @@ enum class ApiCommunicationVersion(val versionCode: Int, val versionName: String
 
     companion object {
         fun fromVersionCode(versionCode: Int): ApiCommunicationVersion {
-            return when (versionCode) {
-                1 -> V1
-                else -> V0_1
-            }
+            return values()
+                .first {
+                    it.versionCode == versionCode
+                }
         }
     }
 }
