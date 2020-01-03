@@ -1,3 +1,5 @@
+import java.util.function.BinaryOperator
+
 /*
  * Copyright © 2017-2020  Kynetics  LLC
  *
@@ -101,4 +103,56 @@ task installClientSideGitHooks(type: Exec, group: "git-hooks") {
     doLast {
         println('Git hook installed successfully.')
     }
+}
+
+String getBody(url) {
+    def connection = new URL(url).openConnection()
+    connection.requestMethod = 'GET'
+    try {
+        println "connection code ${connection.responseCode}"
+        if(connection.responseCode == 200 ){
+            println connection.inputStream.available()
+            new BufferedReader(new InputStreamReader(connection.getInputStream()))
+                    .lines().reduce(new BinaryOperator<String>() {
+                @Override
+                String apply(String s, String s2) {
+                    println "${s} \n${s2}"
+                    return "${s} \n${s2}"
+                }
+            }).orElse("{}")
+        } else if(connection.responseCode == 404 ){
+            "\"status\":\"Error\""
+        } else {
+            "{}"
+        }
+    } catch (IOException error) {
+        ""
+    }
+}
+
+task checkJitpackBuild(){
+    group 'Jitpack'
+
+    doLast {
+        def url = "https://jitpack.io/api/builds/com.github.kynetics/uf-android-client/${versionFromGit(project)}"
+        def attempts = 10
+        def body = "{}"
+        while (attempts > 0 && !(body.length() > 5)){
+            body = getBody(url)
+            if(body.length() < 5){
+                println "Waiting for ${url}, attempts remaning ${--attempts} ..."
+                sleep(3000)
+            }
+        }
+
+        if(body.contains("\"status\":\"Error\"")){
+            throw new IllegalStateException("jitpack build fails!")
+        } else if(body.contains("\"status\":\"ok\"")){
+            println "jitpack build works!"
+        } else {
+            throw new IllegalStateException("jitpack build timeout!")
+        }
+
+    }
+
 }
