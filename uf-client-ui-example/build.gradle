@@ -45,7 +45,7 @@ android {
                 v1SigningEnabled true
             }
 
-        } else {
+        } else if(project.properties.containsKey("uf-android-client-ui.storePath")){
             debug {
                 keyAlias project.properties['uf-android-client-ui.keyAlias']
                 keyPassword project.properties['uf-android-client-ui.keyPassword']
