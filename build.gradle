@@ -141,7 +141,7 @@ task checkJitpackBuild(){
             body = getBody(url)
             if(body.length() < 5){
                 println "Waiting for ${url}, attempts remaning ${--attempts} ..."
-                sleep(3000)
+                sleep(30000)
             }
         }
 
