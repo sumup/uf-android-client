@@ -168,7 +168,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
             if (MessengerHandler.hasMessage(api)) {
                 MessengerHandler.sendMessage(
                     MessengerHandler.getlastSharedMessage(api).messageToSendOnSync,
-                    Communication.V1.Out.ServiceStatus.ID,
+                    Communication.V1.Out.ServiceNotification.ID,
                     msg.replyTo
                 )
             }

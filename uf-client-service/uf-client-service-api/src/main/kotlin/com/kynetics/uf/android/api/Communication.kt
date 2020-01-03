@@ -109,7 +109,7 @@ sealed class Communication(val id: Int) {
         }
         // receive from service
         sealed class Out(id: Int) : V1(id) {
-            class ServiceStatus(val content: UFServiceMessageV1) : Out(ID) {
+            class ServiceNotification(val content: UFServiceMessageV1) : Out(ID) {
                 companion object {
                     const val ID = 4
                 }

@@ -131,7 +131,7 @@ data class ConfigurationHandler(
                 ufService = null
                 // sharedPreferences.edit().putBoolean(sharedPreferencesServiceEnableKey, false).apply()
                 MessengerHandler.onConfigurationError(listOf(e.message ?: "Error"))
-                MessengerHandler.sendMessage(Communication.V1.Out.ServiceStatus.ID)
+                MessengerHandler.sendMessage(Communication.V1.Out.ServiceNotification.ID)
                 Log.e(TAG, e.message, e)
             }
         }

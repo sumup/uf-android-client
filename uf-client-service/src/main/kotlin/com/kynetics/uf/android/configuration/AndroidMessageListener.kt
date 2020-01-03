@@ -36,7 +36,7 @@ class AndroidMessageListener(private val service: UpdateFactoryService) : Messag
         }
 
         MessengerHandler.onMessageReceived(message)
-        MessengerHandler.sendMessage(Communication.V1.Out.ServiceStatus.ID)
+        MessengerHandler.sendMessage(Communication.V1.Out.ServiceNotification.ID)
 
         mNotificationManager.notify(UpdateFactoryService.NOTIFICATION_ID, service.getNotification(message.toString()))
         Log.i(TAG, message.toString())

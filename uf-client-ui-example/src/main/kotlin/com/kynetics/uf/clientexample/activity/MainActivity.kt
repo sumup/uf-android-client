@@ -246,7 +246,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 is Communication.V1.Out.AuthorizationRequest -> handleAuthorizationRequestMsg(v1Msg)
 
-                is Communication.V1.Out.ServiceStatus -> handleServiceStatusMsg(v1Msg)
+                is Communication.V1.Out.ServiceNotification -> handleServiceNotificationMsg(v1Msg)
             }
         }
 
@@ -265,8 +265,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
         }
-        private fun handleServiceStatusMsg(serviceStatus: Communication.V1.Out.ServiceStatus) {
-            val content = serviceStatus.content
+        private fun handleServiceNotificationMsg(serviceNotification: Communication.V1.Out.ServiceNotification) {
+            val content = serviceNotification.content
             when (content) {
                 is UFServiceMessageV1.Event -> {
                     if (!MessageHistory.appendEvent(content)) {
