@@ -109,9 +109,7 @@ String getBody(url) {
     def connection = new URL(url).openConnection()
     connection.requestMethod = 'GET'
     try {
-        println "connection code ${connection.responseCode}"
         if(connection.responseCode == 200 ){
-            println connection.inputStream.available()
             new BufferedReader(new InputStreamReader(connection.getInputStream()))
                     .lines().reduce(new BinaryOperator<String>() {
                 @Override
