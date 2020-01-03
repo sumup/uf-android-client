@@ -9,11 +9,22 @@
 
 package com.kynetics.uf.android.api
 
+/**
+ * Enum class that represents all supported api communication versions.
+ *
+ * @property versionCode the ApiCommunicationVersion's version code number
+ * @property versionName the ApiCommunicationVersion's version name
+ */
 enum class ApiCommunicationVersion(val versionCode: Int, val versionName: String) {
     V0_1(0, "0.1"),
     V1(1, "1.0");
 
     companion object {
+
+        /**
+         * @return the ApiCommunicationVersion object matching the given [versionCode].
+         * @throws [NoSuchElementException] if no such element is found.
+         */
         fun fromVersionCode(versionCode: Int): ApiCommunicationVersion {
             return values()
                 .first {

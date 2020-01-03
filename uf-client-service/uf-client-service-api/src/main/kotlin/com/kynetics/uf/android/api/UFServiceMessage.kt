@@ -14,11 +14,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 /**
- * @author Daniele Sergio
+ * This class represents the service's state (api version 0.1)
+ *
+ * @see ApiCommunicationVersion.V0_1
+ * @see com.kynetics.uf.android.api.v1.UFServiceMessageV1
  */
-@Deprecated(
-    "As of release 1.0.0 replaced by {@link UFServiceMessageV1}"
-)
+@Deprecated("As of release 1.0.0 replaced by com.kynetics.uf.android.api.v1.UFServiceMessageV1")
 class UFServiceMessage(
     val eventName: String,
     val oldState: String,

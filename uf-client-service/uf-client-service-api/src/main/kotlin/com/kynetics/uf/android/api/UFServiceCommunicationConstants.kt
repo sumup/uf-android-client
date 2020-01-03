@@ -10,12 +10,12 @@
 package com.kynetics.uf.android.api
 
 /**
- * @author Daniele Sergio
+ * This class contains all communication constants
+ *
+ * @see com.kynetics.uf.android.api.Communication
+ * @see com.kynetics.uf.android.api.UFServiceInfo
  */
-@Deprecated(message = "As of release 1.0.0-rc3 replaced",
-    replaceWith = ReplaceWith(expression = "com.kynetics.uf.android.api.Communication((id)",
-        imports = ["com.kynetics.uf.android.api.Communication"]))
-
+@Deprecated(message = "As of release 1.0.0-rc3 replaced by com.kynetics.uf.android.api.Communication and com.kynetics.uf.android.api.UFServiceInfo")
 object UFServiceCommunicationConstants {
 
     const val MSG_CONFIGURE_SERVICE = 1

@@ -11,6 +11,7 @@ apply plugin: 'maven'
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlinx-serialization'
+apply plugin: 'org.jetbrains.dokka-android'
 
 version versionFromGit(project)
 
@@ -41,5 +42,10 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    dokka {
+        outputFormat = 'gfm'
+        outputDirectory = "$buildDir/documentation"
     }
 }

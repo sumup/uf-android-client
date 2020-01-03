@@ -10,13 +10,31 @@
 package com.kynetics.uf.android.api
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.json.JsonException
 
 @Serializable
+/**
+ * This class represent the [com.kynetics.uf.android.UpdateFactoryService]'s configuration
+ *
+ * @property tenant the tenant
+ * @property controllerId id of the controller
+ * @property retryDelay time to wait between poll after a connection error
+ * @property url of update server
+ * @property targetToken target token
+ * @property gatewayToken gateway token
+ * @property isApiMode true to ask user authorization sending message to client, false to use dialog
+ * @property isEnable true to enable the service, false to disable it
+ * @property isUpdateFactoryServe true when the server is an UpdateServer, false when the server is an
+ *  Hawkbit server
+ * @property targetAttributes target's tags
+ */
 data class UFServiceConfiguration(
     val tenant: String,
     val controllerId: String,
+    @Deprecated("As of release 1.0.0-RC repalced by exponential backoff")
     val retryDelay: Long,
     val url: String,
     val targetToken: String,
@@ -27,10 +45,28 @@ data class UFServiceConfiguration(
     val targetAttributes: Map<String, String>
 ) : java.io.Serializable {
 
+    /**
+     * Json serialization
+     */
     fun toJson(): String {
         return json.stringify(serializer(), this)
     }
 
+    /**
+     * [UFServiceConfiguration]'s builder class
+     *
+     * @property tenant the tenant
+     * @property controllerId id of the controller
+     * @property retryDelay time to wait between poll after a connection error, default value is 900_000
+     * @property url of update server
+     * @property targetToken target token
+     * @property gatewayToken gateway token
+     * @property isApiMode true to ask user authorization sending message to client, false to use dialog, default value is true
+     * @property isEnable true to enable the service, false to disable it, default value is true
+     * @property isUpdateFactoryServe true when the server is an UpdateServer, false when the server is an default value is true
+     *  Hawkbit server
+     * @property targetAttributes target's tags
+     */
     class Builder internal constructor() {
 
         private var tenant: String? = ""
@@ -43,56 +79,95 @@ data class UFServiceConfiguration(
         private var targetToken: String? = ""
         private var gatewayToken: String? = ""
         private var targetAttributes: Map<String, String> = mutableMapOf()
+        /**
+         * Configure the tenant parameter
+         */
         fun withTenant(tenant: String?): Builder {
             this.tenant = tenant
             return this
         }
 
+        /**
+         * Configure the controller id  parameter
+         */
         fun withControllerId(controllerId: String?): Builder {
             this.controllerId = controllerId
             return this
         }
 
+        /**
+         * Configure the gateway token  parameter
+         */
         fun withGetawayToken(gatewayToken: String?): Builder {
             this.gatewayToken = gatewayToken
             return this
         }
 
+        /**
+         * Configure the target token parameter
+         */
         fun withTargetToken(targetToken: String?): Builder {
             this.targetToken = targetToken
             return this
         }
 
+        /**
+         * Configure the retryDelay parameter
+         */
+        @Deprecated("As of release 1.0.0-RC removed")
         fun withRetryDelay(retryDelay: Long): Builder {
             this.retryDelay = retryDelay
             return this
         }
 
+        /**
+         * Configure the url parameter
+         */
         fun withUrl(url: String?): Builder {
             this.url = url
             return this
         }
 
+        /**
+         * Configure the api mode parameter
+         */
         fun withApiMode(apiMode: Boolean): Builder {
             this.apiMode = apiMode
             return this
         }
 
-        @Deprecated("As of release 0.3.4, replaced by {@link #withEnable(boolean)}")
+        /**
+         * Configure the enable parameter
+         * @see withEnable
+         */
+        @Deprecated("As of release 0.3.4 replaced by withEnable(boolean)",
+                replaceWith = ReplaceWith(""))
         fun witEnable(enable: Boolean): Builder {
             return withEnable(enable)
         }
 
-        @Deprecated("As of release 0.3.4, replaced by {@link #withTargetAttributes(Map<String,String>)}")
+        /**
+         * Configure the target attributes parameter
+         *
+         * @see withTargetAttributes
+         */
+        @Deprecated("As of release 0.3.4 replaced by withTargetAttributes(Map<String,String>",
+                replaceWith = ReplaceWith(""))
         fun witArgs(args: Map<String, String>): Builder {
             return withTargetAttributes(args)
         }
 
+        /**
+         * Configure the enable parameter
+         */
         fun withEnable(enable: Boolean): Builder {
             this.enable = enable
             return this
         }
 
+        /**
+         * Configure the target attributes parameter
+         */
         fun withTargetAttributes(targetAttribute: Map<String, String>?): Builder {
             if (targetAttribute != null && targetAttribute.size > 0) {
                 this.targetAttributes = targetAttribute
@@ -100,11 +175,20 @@ data class UFServiceConfiguration(
             return this
         }
 
+        /**
+         * Configure the UpdateFactoryServer parameter
+         */
         fun withIsUpdateFactoryServer(isUpdateFactoryServer: Boolean): Builder {
             this.isUpdateFactoryServer = isUpdateFactoryServer
             return this
         }
 
+        /**
+         * Build an instance of UFServiceConfigure with the configured parameters
+         *
+         * @throws IllegalStateException when the retryDelay parameter is lower then 0
+         *
+         */
         fun build(): UFServiceConfiguration {
             if (retryDelay < 0) {
                 throw IllegalStateException("retryDelay must be grater than 0")
@@ -116,6 +200,9 @@ data class UFServiceConfiguration(
                     targetAttributes)
         }
 
+        /**
+         * Validate the [UFServiceConfiguration] that is built using the [build] method
+         */
         fun configurationIsValid(): Boolean {
             return (notEmptyString(tenant) &&
                     notEmptyString(controllerId) &&
@@ -132,18 +219,32 @@ data class UFServiceConfiguration(
         private val json = Json(JsonConfiguration.Stable.copy(strictMode = false))
         private const val serialVersionUID = -6025361892414738765L
 
+        /**
+         * Instantiate a builder
+         */
         @JvmStatic
         fun builder(): Builder {
             return Builder()
         }
 
+        /**
+         * Deserializes given json [data] into a corresponding object of type [UFServiceConfiguration].
+         * @throws [JsonException] in case of malformed json
+         * @throws [SerializationException] if given input can not be deserialized
+         */
         @JvmStatic
         fun fromJson(data: String): UFServiceConfiguration {
             return json.parse(serializer(), data)
         }
     }
 
-    @Deprecated("As of release 0.3.4, replaced by {@link #getTargetAttributes()}")
+    /**
+     *  get target's tags
+     *
+     *  @see targetAttributes
+     */
+    @Deprecated("As of release 0.3.4 replaced by targetAttributes",
+            replaceWith = ReplaceWith(""))
     fun getArgs(): Map<String, String> {
         return this.targetAttributes
     }
