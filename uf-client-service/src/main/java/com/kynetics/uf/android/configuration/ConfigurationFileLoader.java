@@ -61,7 +61,7 @@ public class ConfigurationFileLoader {
                 .withEnable(getBooleanConfiguration(ENABLE_CONFIGURATION_KEY))
                 .withApiMode(getApiModeConfiguration())
                 .withIsUpdateFactoryServer(getBooleanConfiguration(IS_UPDATE_FACTORY_SERVER_KEY))
-                .withGetawayToken(map.get(GATEWAY_TOKEN_CONFIGURATION_KEY))
+                .withGatewayToken(map.get(GATEWAY_TOKEN_CONFIGURATION_KEY))
                 .withTenant(map.get(TENANT_CONFIGURATION_KEY))
                 .withTargetToken(map.get(TARGET_TOKEN_CONFIGURATION_KEY))
                 .withRetryDelay(30_000)

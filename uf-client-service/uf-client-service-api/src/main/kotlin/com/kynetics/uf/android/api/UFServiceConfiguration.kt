@@ -97,8 +97,19 @@ data class UFServiceConfiguration(
 
         /**
          * Configure the gateway token  parameter
+         *
+         * @see withGatewayToken
          */
+        @Deprecated("As of release 1.0.0-RC4 replaced by",
+                replaceWith = ReplaceWith("withGatewayToken"))
         fun withGetawayToken(gatewayToken: String?): Builder {
+            return withGatewayToken(gatewayToken)
+        }
+
+        /**
+         * Configure the gateway token  parameter
+         */
+        fun withGatewayToken(gatewayToken: String?): Builder {
             this.gatewayToken = gatewayToken
             return this
         }

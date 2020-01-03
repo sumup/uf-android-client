@@ -103,7 +103,7 @@ data class ConfigurationHandler(
                 .withEnable(serviceIsEnable)
                 .withApiMode(apiMode)
                 .withControllerId(controllerId)
-                .withGetawayToken(gatewayToken)
+                .withGatewayToken(gatewayToken)
                 .withRetryDelay(delay)
                 .withTargetToken(targetToken)
                 .withTenant(tenant)
