@@ -134,7 +134,7 @@ task checkJitpackBuild(){
     group 'Jitpack'
 
     doLast {
-        def url = "https://jitpack.io/api/builds/com.github.kynetics/uf-android-client/${versionFromGit(project)}"
+        def url = "https://jitpack.io/api/builds/com.github.Kynetics/uf-android-client/${versionFromGit(project)}"
         def attempts = 10
         def body = "{}"
         while (attempts > 0 && !(body.length() > 5)){
