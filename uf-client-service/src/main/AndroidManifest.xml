@@ -63,7 +63,8 @@
         <activity
             android:name="com.kynetics.uf.android.ui.MainActivity"
             android:label="@string/title_activity_main"
-            android:theme="@style/AppTransparentTheme" >
+            android:theme="@style/AppTransparentTheme"
+            android:autoRemoveFromRecents="true">
             <intent-filter>
                 <action android:name="com.kynetics.action.SETTINGS"/>
                 <category android:name="android.intent.category.DEFAULT"/>
