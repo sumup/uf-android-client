@@ -119,7 +119,7 @@ String getBody(url) {
                 }
             }).orElse("{}")
         } else if(connection.responseCode == 404 ){
-            "\"status\":\"Error\""
+            "\"status\":\"NotFound\""
         } else {
             "{}"
         }
@@ -137,6 +137,9 @@ task checkJitpackBuild(){
         def body = "{}"
         while (attempts > 0 && !(body.length() > 5)){
             body = getBody(url)
+            if(body.contains("\"status\":\"NotFound\"")){
+                body = getBody(url.toLowerCase())
+            }
             if(body.length() < 5){
                 println "Waiting for ${url}, attempts remaning ${--attempts} ..."
                 sleep(30000)
@@ -145,6 +148,8 @@ task checkJitpackBuild(){
 
         if(body.contains("\"status\":\"Error\"")){
             throw new IllegalStateException("jitpack build fails!")
+        } else if(body.contains("\"status\":\"NotFound\"")){
+            throw new IllegalStateException("jitpack build fails! Tag not found")
         } else if(body.contains("\"status\":\"ok\"")){
             println "jitpack build works!"
         } else {
