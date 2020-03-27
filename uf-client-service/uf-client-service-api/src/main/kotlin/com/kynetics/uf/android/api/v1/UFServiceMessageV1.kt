@@ -248,7 +248,6 @@ sealed class UFServiceMessageV1 {
 
         @UseExperimental(ImplicitReflectionSerializer::class)
         override fun toJson(): String {
-            println(json.stringify(serializer(), this))
             return json.stringify(serializer(), this)
         }
     }

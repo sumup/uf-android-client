@@ -126,7 +126,6 @@ class StateDetailFragment : Fragment(), UFServiceInteractionFragment {
     private fun updateDetails(key: String, percent: Double) {
         if (stateDetail?.containsKey(key) == true) {
             stateDetail?.updateDetail(key, percent)
-            println(stateDetail?.details)
             (binding?.root?.details_list?.adapter as ArrayAdapter<*>).notifyDataSetChanged()
         }
     }
