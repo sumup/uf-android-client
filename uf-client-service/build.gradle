@@ -19,7 +19,7 @@ android {
         applicationId "com.kynetics.uf.service"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 23
+        versionCode 24
         versionName versionFromGit(project)
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -101,11 +101,10 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation("com.github.Kynetics.uf-ddiclient:core:43dfac51adc7dfadba58bfc65df0d3ac5f227a00"){
+    implementation("com.github.kynetics:uf-ddiclient:v1.0.0"){
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
-    implementation "com.github.Kynetics.uf-ddiclient:core-api:43dfac51adc7dfadba58bfc65df0d3ac5f227a00"
-    implementation "org.slf4j:slf4j-android:1.7.28"
+    implementation 'de.psdev.slf4j-android-logger:slf4j-android-logger:1.0.5'
     implementation "com.android.support:support-v4:$supportLibraryVersion"
     implementation "com.android.support:design:$supportLibraryVersion"
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'

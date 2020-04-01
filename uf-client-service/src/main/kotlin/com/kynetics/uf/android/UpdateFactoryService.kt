@@ -74,6 +74,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
     override fun onCreate() {
         super.onCreate()
+//        AndroidLoggerAdapter.setLogLevel(LogLevel.TRACE)
         mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         sharedPreferencesFile = getString(R.string.shared_preferences_file)
         configurationHandler = ConfigurationHandler(null, this, getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE))
