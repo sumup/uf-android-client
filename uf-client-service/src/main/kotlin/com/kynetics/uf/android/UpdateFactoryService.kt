@@ -40,6 +40,8 @@ import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.uf.android.update.SystemUpdateType
 import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
 import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClient
+import de.psdev.slf4j.android.logger.AndroidLoggerAdapter
+import de.psdev.slf4j.android.logger.LogLevel
 
 /*
  * @author Daniele Sergio
@@ -74,7 +76,10 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
     override fun onCreate() {
         super.onCreate()
-//        AndroidLoggerAdapter.setLogLevel(LogLevel.TRACE)
+        AndroidLoggerAdapter.setLogTag("Update Factory Client")
+        if(BuildConfig.DEBUG){
+            AndroidLoggerAdapter.setLogLevel(LogLevel.TRACE)
+        }
         mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         sharedPreferencesFile = getString(R.string.shared_preferences_file)
         configurationHandler = ConfigurationHandler(null, this, getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE))
