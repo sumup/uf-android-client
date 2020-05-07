@@ -15,7 +15,7 @@ import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageInstaller.EXTRA_PACKAGE_NAME
 import android.os.Build
-import android.support.annotation.RequiresApi
+import androidx.annotation.RequiresApi
 import android.util.Log
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.util.concurrent.CountDownLatch

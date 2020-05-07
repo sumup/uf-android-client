@@ -25,12 +25,7 @@ import com.kynetics.uf.android.update.SystemUpdateType
 import com.kynetics.uf.android.update.application.ApkUpdater
 import com.kynetics.uf.android.update.system.OtaUpdater
 import com.kynetics.updatefactory.ddiclient.core.UpdateFactoryClientDefaultImpl
-import com.kynetics.updatefactory.ddiclient.core.api.ConfigDataProvider
-import com.kynetics.updatefactory.ddiclient.core.api.DeploymentPermitProvider
-import com.kynetics.updatefactory.ddiclient.core.api.DirectoryForArtifactsProvider
-import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
-import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClient
-import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClientData
+import com.kynetics.updatefactory.ddiclient.core.api.*
 import java.io.File
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
@@ -236,7 +231,12 @@ data class ConfigurationHandler(
                     UpdateFactoryClientData.ServerType.HAWKBIT
                 },
                 gatewayToken,
-                targetToken
+                targetToken,
+                object:TargetTokenFoundListener{
+                    override fun onFound(targetToken: String): () -> Unit {
+                        return super.onFound(targetToken)
+                    }
+                }
         )
     }
 

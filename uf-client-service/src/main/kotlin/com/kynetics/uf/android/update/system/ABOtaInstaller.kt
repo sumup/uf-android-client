@@ -14,7 +14,7 @@ import android.os.Build
 import android.os.PowerManager
 import android.os.UpdateEngine
 import android.os.UpdateEngineCallback
-import android.support.annotation.RequiresApi
+import androidx.annotation.RequiresApi
 import android.util.Log
 import com.kynetics.uf.android.api.Communication
 import com.kynetics.uf.android.api.v1.UFServiceMessageV1

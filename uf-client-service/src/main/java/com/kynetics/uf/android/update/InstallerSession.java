@@ -16,7 +16,7 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageInstaller;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.util.Log;
 import com.kynetics.updatefactory.ddiclient.core.api.Updater;
 

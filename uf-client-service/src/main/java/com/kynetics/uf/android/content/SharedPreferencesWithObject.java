@@ -10,7 +10,7 @@
 package com.kynetics.uf.android.content;
 
 import android.content.SharedPreferences;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Base64;
 import android.util.Base64InputStream;
 import android.util.Base64OutputStream;

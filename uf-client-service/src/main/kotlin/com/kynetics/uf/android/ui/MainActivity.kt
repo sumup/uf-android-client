@@ -11,8 +11,8 @@ package com.kynetics.uf.android.ui
 
 import android.os.Bundle
 import android.os.Handler
-import android.support.v4.app.Fragment
-import android.support.v7.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.appcompat.app.AppCompatActivity
 import android.view.MenuItem
 import com.kynetics.uf.android.R
 import com.kynetics.uf.android.UpdateFactoryService
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity(), OnAuthorization {
         newFragment.show(supportFragmentManager, "authorization")
     }
 
-    private fun changePage(fragment: Fragment) {
+    private fun changePage(fragment: androidx.fragment.app.Fragment) {
         val tx = supportFragmentManager.beginTransaction()
         tx.replace(R.id.frame_layout, fragment)
         tx.commit()

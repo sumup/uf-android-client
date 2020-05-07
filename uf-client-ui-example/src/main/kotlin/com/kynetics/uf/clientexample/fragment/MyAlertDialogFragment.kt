@@ -11,11 +11,11 @@ package com.kynetics.uf.clientexample.fragment
 
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
-import android.support.v7.app.AlertDialog
+import androidx.fragment.app.DialogFragment
+import androidx.appcompat.app.AlertDialog
 import com.kynetics.uf.clientexample.activity.MainActivity
 
-class MyAlertDialogFragment : DialogFragment() {
+class MyAlertDialogFragment : androidx.fragment.app.DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialogType = arguments!!.getString(ARG_DIALOG_TYPE)

@@ -11,9 +11,9 @@ package com.kynetics.uf.clientexample.fragment
 
 import android.graphics.Color
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
-import android.support.v7.widget.RecyclerView
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,7 +28,7 @@ import kotlin.math.min
 import kotlinx.android.synthetic.main.state_list_content.view.*
 import kotlinx.android.synthetic.main.state_list_fragment.view.*
 
-class ListStateFragment : Fragment(), UFServiceInteractionFragment {
+class ListStateFragment : androidx.fragment.app.Fragment(), UFServiceInteractionFragment {
 
     var twoPane = false
     var selectedItem = -1
@@ -58,24 +58,24 @@ class ListStateFragment : Fragment(), UFServiceInteractionFragment {
         return rootView
     }
 
-    override fun onAttachFragment(childFragment: Fragment?) {
+    override fun onAttachFragment(childFragment: androidx.fragment.app.Fragment?) {
         super.onAttachFragment(childFragment)
         adapter?.notifyDataSetChanged()
     }
 
     var adapter: SimpleItemRecyclerViewAdapter? = null
 
-    private fun setupRecyclerView(recyclerView: RecyclerView) {
+    private fun setupRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         adapter = SimpleItemRecyclerViewAdapter(this.activity!!, MessageHistory.ITEMS, twoPane)
         recyclerView.adapter = adapter
     }
 
     inner class SimpleItemRecyclerViewAdapter(
-        private val parentActivity: FragmentActivity,
-        private val values: List<MessageHistory.StateEntry>,
-        private val twoPane: Boolean
+            private val parentActivity: androidx.fragment.app.FragmentActivity,
+            private val values: List<MessageHistory.StateEntry>,
+            private val twoPane: Boolean
     ) :
-            RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
+            androidx.recyclerview.widget.RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
         private val onClickListener: View.OnClickListener
 
@@ -135,7 +135,7 @@ class ListStateFragment : Fragment(), UFServiceInteractionFragment {
 
         override fun getItemCount() = values.size
 
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        inner class ViewHolder(view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view) {
             val idView: TextView = view.date_text
             val contentView: TextView = view.state_name
             val badge: TextView = view.unread_event

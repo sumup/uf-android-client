@@ -12,7 +12,7 @@ package com.kynetics.uf.android.update
 import android.content.Context
 import android.os.Build
 import android.os.SystemProperties
-import android.support.annotation.RequiresApi
+import androidx.annotation.RequiresApi
 import com.kynetics.uf.android.R
 import com.kynetics.uf.android.update.system.ABOtaInstaller
 import com.kynetics.uf.android.update.system.OtaInstaller
