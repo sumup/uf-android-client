@@ -237,7 +237,11 @@ data class ConfigurationHandler(
                 targetToken,
                 object:TargetTokenFoundListener{
                     override fun onFound(targetToken: String): () -> Unit {
-                        return super.onFound(targetToken)
+                        Log.d(TAG, "New target token received")
+                        sharedPreferences.edit()
+                                .putString(sharedPreferencesTargetToken, targetToken)
+                                .apply()
+                        return {}
                     }
                 }
         )
