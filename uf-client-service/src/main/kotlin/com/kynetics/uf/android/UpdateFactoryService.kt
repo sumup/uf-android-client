@@ -34,7 +34,9 @@ import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.configuration.AndroidDeploymentPermitProvider
 import com.kynetics.uf.android.configuration.AndroidMessageListener
 import com.kynetics.uf.android.configuration.ConfigurationHandler
+import com.kynetics.uf.android.content.EncryptedSharedPreferences
 import com.kynetics.uf.android.content.SharedPreferencesWithObject
+import com.kynetics.uf.android.content.UFSharedPreferences
 import com.kynetics.uf.android.ui.MainActivity
 import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.uf.android.update.SystemUpdateType
@@ -213,8 +215,15 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         return mMessenger.binder
     }
 
-    override fun getSharedPreferences(name: String?, mode: Int): SharedPreferencesWithObject {
-        return SharedPreferencesWithObject(super.getSharedPreferences(name, mode))
+    override fun getSharedPreferences(name: String?, mode: Int): UFSharedPreferences {
+        return UFSharedPreferences(
+                SharedPreferencesWithObject(super.getSharedPreferences(name, mode)),
+                EncryptedSharedPreferences.get(applicationContext),
+                arrayOf(
+                        applicationContext.getString(R.string.shared_preferences_gateway_token_key),
+                        applicationContext.getString(R.string.shared_preferences_target_token_key)
+                )
+        )
     }
 
     private fun startForeground() {

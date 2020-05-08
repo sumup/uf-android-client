@@ -20,6 +20,7 @@ import com.kynetics.uf.android.api.Communication
 import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.content.SharedPreferencesWithObject
+import com.kynetics.uf.android.content.UFSharedPreferences
 import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.uf.android.update.SystemUpdateType
 import com.kynetics.uf.android.update.application.ApkUpdater
@@ -36,7 +37,7 @@ import java.util.Locale
 data class ConfigurationHandler(
     private var ufService: UpdateFactoryClient?,
     private val context: UpdateFactoryService,
-    private val sharedPreferences: SharedPreferencesWithObject
+    private val sharedPreferences: UFSharedPreferences
 ) {
 
     fun getConfigurationFromFile(): UFServiceConfiguration? = configurationFile.newFileConfiguration
@@ -68,17 +69,19 @@ data class ConfigurationHandler(
         if (configuration == null) {
             return
         }
-        val editor = sharedPreferences.edit()
-        editor.putString(sharedPreferencesControllerIdKey, configuration.controllerId)
-        editor.putString(sharedPreferencesTenantKey, configuration.tenant)
-        editor.putString(sharedPreferencesServerUrlKey, configuration.url)
-        editor.putString(sharedPreferencesGatewayToken, configuration.gatewayToken)
-        editor.putString(sharedPreferencesTargetToken, configuration.targetToken)
-        editor.putLong(sharedPreferencesRetryDelayKey, configuration.retryDelay)
-        editor.putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode)
-        editor.putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnable)
-        editor.putBoolean(sharedPreferencesIsUpdateFactoryServerType, configuration.isUpdateFactoryServe)
-        editor.apply()
+        sharedPreferences.edit().apply {
+            putString(sharedPreferencesControllerIdKey, configuration.controllerId)
+            putString(sharedPreferencesTenantKey, configuration.tenant)
+            putString(sharedPreferencesServerUrlKey, configuration.url)
+            putString(sharedPreferencesGatewayToken, configuration.gatewayToken)
+            putString(sharedPreferencesTargetToken, configuration.targetToken)
+            putLong(sharedPreferencesRetryDelayKey, configuration.retryDelay)
+            putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode)
+            putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnable)
+            putBoolean(sharedPreferencesIsUpdateFactoryServerType, configuration.isUpdateFactoryServe)
+            apply()
+        }
+
         sharedPreferences.putAndCommitObject(sharedPreferencesTargetAttributes, configuration.targetAttributes)
     }
 

@@ -9,6 +9,8 @@
 
 package com.kynetics.uf.android.ui
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import androidx.fragment.app.Fragment
@@ -16,6 +18,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.MenuItem
 import com.kynetics.uf.android.R
 import com.kynetics.uf.android.UpdateFactoryService
+import com.kynetics.uf.android.content.EncryptedSharedPreferences
+import com.kynetics.uf.android.content.SharedPreferencesWithObject
+import com.kynetics.uf.android.content.UFSharedPreferences
 import com.kynetics.uf.android.ui.fragment.AuthorizationDialogFragment
 import com.kynetics.uf.android.ui.fragment.AuthorizationDialogFragment.OnAuthorization
 import com.kynetics.uf.android.ui.fragment.UFPreferenceFragment
@@ -55,20 +60,20 @@ class MainActivity : AppCompatActivity(), OnAuthorization {
 
     private fun showAuthorizationDialog(type: Int) {
         val newFragment = AuthorizationDialogFragment.newInstance(
-            getString(
-                if (type == INTENT_TYPE_EXTRA_VALUE_DOWNLOAD)
-                    R.string.update_download_title
-                else
-                    R.string.update_started_title
-            ),
-            getString(
-                if (type == INTENT_TYPE_EXTRA_VALUE_DOWNLOAD)
-                    R.string.update_download_content
-                else
-                    R.string.update_started_content
-            ),
-            getString(android.R.string.ok),
-            getString(android.R.string.cancel)
+                getString(
+                        if (type == INTENT_TYPE_EXTRA_VALUE_DOWNLOAD)
+                            R.string.update_download_title
+                        else
+                            R.string.update_started_title
+                ),
+                getString(
+                        if (type == INTENT_TYPE_EXTRA_VALUE_DOWNLOAD)
+                            R.string.update_download_content
+                        else
+                            R.string.update_started_content
+                ),
+                getString(android.R.string.ok),
+                getString(android.R.string.cancel)
         )
         newFragment.show(supportFragmentManager, "authorization")
     }
@@ -96,6 +101,17 @@ class MainActivity : AppCompatActivity(), OnAuthorization {
 
     private fun finishActivity() {
         Handler().postDelayed({ finish() }, 500)
+    }
+
+    override fun getSharedPreferences(name: String?, mode: Int): UFSharedPreferences {
+        return UFSharedPreferences(
+                SharedPreferencesWithObject(super.getSharedPreferences(name, mode)),
+                EncryptedSharedPreferences.get(applicationContext),
+                arrayOf(
+                        applicationContext.getString(R.string.shared_preferences_gateway_token_key),
+                        applicationContext.getString(R.string.shared_preferences_target_token_key)
+                )
+        )
     }
 
     companion object {
