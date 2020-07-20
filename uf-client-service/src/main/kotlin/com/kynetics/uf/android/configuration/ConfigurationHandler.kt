@@ -76,8 +76,8 @@ data class ConfigurationHandler(
             putString(sharedPreferencesGatewayToken, configuration.gatewayToken)
             putString(sharedPreferencesTargetToken, configuration.targetToken)
             putLong(sharedPreferencesRetryDelayKey, configuration.retryDelay)
-            putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode)
-            putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnable)
+            putBoolean(sharedPreferencesApiModeKey, configuration.isApiMode())
+            putBoolean(sharedPreferencesServiceEnableKey, configuration.isEnable())
             putBoolean(sharedPreferencesIsUpdateFactoryServerType, configuration.isUpdateFactoryServe)
             apply()
         }

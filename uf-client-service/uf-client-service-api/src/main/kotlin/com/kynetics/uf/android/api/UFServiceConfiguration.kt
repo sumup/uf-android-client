@@ -32,18 +32,25 @@ import kotlinx.serialization.json.JsonException
  * @property targetAttributes target's tags
  */
 data class UFServiceConfiguration(
-    val tenant: String,
-    val controllerId: String,
-    @Deprecated("As of release 1.0.0-RC repalced by exponential backoff")
-    val retryDelay: Long,
-    val url: String,
-    val targetToken: String,
-    val gatewayToken: String,
-    val isApiMode: Boolean,
-    val isEnable: Boolean,
-    val isUpdateFactoryServe: Boolean,
-    val targetAttributes: Map<String, String>
+        val tenant: String,
+        val controllerId: String,
+        @Deprecated("As of release 1.0.0-RC repalced by exponential backoff")
+        val retryDelay: Long,
+        val url: String,
+        val targetToken: String,
+        val gatewayToken: String,
+        private val isApiMode: Boolean,
+        private val isEnable: Boolean,
+        val isUpdateFactoryServe: Boolean,
+        val targetAttributes: Map<String, String>
 ) : java.io.Serializable {
+
+    private val apiMode: Boolean = false
+    private val enable: Boolean  = false
+
+    fun isEnable():Boolean =  enable || isEnable
+
+    fun isApiMode():Boolean = apiMode || isApiMode
 
     /**
      * Json serialization
@@ -258,5 +265,38 @@ data class UFServiceConfiguration(
             replaceWith = ReplaceWith(""))
     fun getArgs(): Map<String, String> {
         return this.targetAttributes
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as UFServiceConfiguration
+
+        if (tenant != other.tenant) return false
+        if (controllerId != other.controllerId) return false
+        if (retryDelay != other.retryDelay) return false
+        if (url != other.url) return false
+        if (targetToken != other.targetToken) return false
+        if (gatewayToken != other.gatewayToken) return false
+        if (isApiMode() != other.isApiMode()) return false
+        if (isEnable() != other.isEnable()) return false
+        if (isUpdateFactoryServe != other.isUpdateFactoryServe) return false
+        if (targetAttributes != other.targetAttributes) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = tenant.hashCode()
+        result = 31 * result + controllerId.hashCode()
+        result = 31 * result + retryDelay.hashCode()
+        result = 31 * result + url.hashCode()
+        result = 31 * result + targetToken.hashCode()
+        result = 31 * result + gatewayToken.hashCode()
+        result = 31 * result + isApiMode().hashCode()
+        result = 31 * result + isEnable().hashCode()
+        result = 31 * result + isUpdateFactoryServe.hashCode()
+        result = 31 * result + targetAttributes.hashCode()
+        return result
     }
 }
