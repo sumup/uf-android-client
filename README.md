@@ -17,10 +17,17 @@ Links to official documentation:
 - [third-party integration](https://docs.updatefactory.io/devices/android/third-party-integration-v1/)
 - [kdocs](https://kynetics.github.io/uf-android-client/)
 
+## Build
+To build the project you must replace the android.jar file as describe in [Android hidden api](https://github.com/anggrayudi/android-hidden-api).
+
+**This is the [android.jar](https://github.com/anggrayudi/android-hidden-api/files/2709802/android.zip) 
+to use because of this [issue](https://github.com/anggrayudi/android-hidden-api/issues/46)**
+
 ## uf-client-service
 uf-client-service is an android service that run in background and manage the updates.
 
-uf-client-service must be install as **SYSTEM** application. [Android hidden api](https://github.com/anggrayudi/android-hidden-api) are used from the version 1.0 to support update of systems with double partitions.
+uf-client-service must be install as **SYSTEM** application. [Android hidden api](https://github.com/anggrayudi/android-hidden-api) 
+are used from the version 1.0 to support update of systems with double partitions.
 
 ### State diagrams
 #### Main
