@@ -40,6 +40,7 @@ public class InstallerSession {
         final PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
                 PackageInstaller.SessionParams.MODE_FULL_INSTALL);
         params.setAppPackageName(packageName);
+        params.setGrantedRuntimePermissions(null);
         final int sessionId = packageInstaller.createSession(params);
         context.registerReceiver(new PackageInstallerBroadcastReceiver(
                         sessionId,
