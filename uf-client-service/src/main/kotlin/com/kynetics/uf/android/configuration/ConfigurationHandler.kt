@@ -127,18 +127,12 @@ data class ConfigurationHandler(
                 return newService
             } catch (e: RuntimeException) {
                 ufService = null
-                // sharedPreferences.edit().putBoolean(sharedPreferencesServiceEnableKey, false).apply()
                 MessengerHandler.onConfigurationError(listOf(e.message ?: "Error"))
                 MessengerHandler.sendMessage(Communication.V1.Out.ServiceNotification.ID)
                 Log.e(TAG, e.message, e)
             }
         }
         return ufService
-    }
-
-    fun needReboot(newConf: UFServiceConfiguration): Boolean {
-        val currentConf = getCurrentConfiguration()
-        return currentConf.copy(targetAttributes = emptyMap()) != newConf.copy(targetAttributes = emptyMap())
     }
 
     private fun buildConfigDataProvider(): ConfigDataProvider {

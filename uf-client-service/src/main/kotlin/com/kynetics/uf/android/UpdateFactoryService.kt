@@ -203,11 +203,17 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
                 Log.i(TAG, "new configuration equals to current configuration")
             }
 
-            if (configurationHandler?.needReboot(configuration) == true) {
+            if (needReboot(configuration, currentConf)) {
                 configurationHandler?.buildServiceFromPreferences(deploymentPermitProvider!!, listOf(messageListener!!), ufService)
                 Log.i(TAG, "configuration updated - restarting service")
+            } else {
+                Log.i(TAG, "configuration updated - service not restarted")
             }
         }
+    }
+
+    private fun needReboot(newConf: UFServiceConfiguration, oldConf: UFServiceConfiguration?): Boolean {
+        return newConf.copy(targetAttributes = emptyMap()) != oldConf?.copy(targetAttributes = emptyMap())
     }
 
     override fun onBind(intent: Intent): IBinder? {
