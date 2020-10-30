@@ -19,7 +19,6 @@ import com.kynetics.uf.android.UpdateFactoryService
 import com.kynetics.uf.android.api.Communication
 import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.communication.MessengerHandler
-import com.kynetics.uf.android.content.SharedPreferencesWithObject
 import com.kynetics.uf.android.content.UFSharedPreferences
 import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.uf.android.update.SystemUpdateType
@@ -30,12 +29,9 @@ import com.kynetics.updatefactory.ddiclient.core.api.*
 import java.io.File
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.HashMap
-import java.util.Locale
+import java.util.*
 
 data class ConfigurationHandler(
-    private var ufService: UpdateFactoryClient?,
     private val context: UpdateFactoryService,
     private val sharedPreferences: UFSharedPreferences
 ) {
@@ -86,28 +82,21 @@ data class ConfigurationHandler(
     }
 
     fun getCurrentConfiguration(): UFServiceConfiguration {
-        val serviceIsEnable = ufService != null && sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false)
-        val url = sharedPreferences.getString(sharedPreferencesServerUrlKey, "")
-        val controllerId = sharedPreferences.getString(sharedPreferencesControllerIdKey, "")
-        val gatewayToken = sharedPreferences.getString(sharedPreferencesGatewayToken, "")
-        val targetToken = sharedPreferences.getString(sharedPreferencesTargetToken, "")
-        val tenant = sharedPreferences.getString(sharedPreferencesTenantKey, "")
-        val delay = sharedPreferences.getLong(sharedPreferencesRetryDelayKey, 900000)
-        val apiMode = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, true)
-        val targetAttributes: MutableMap<String, String>? = getTargetAttributes()
-        val serverType = getServerType()
-        return UFServiceConfiguration.builder()
-                .withTargetAttributes(targetAttributes)
-                .withEnable(serviceIsEnable)
-                .withApiMode(apiMode)
-                .withControllerId(controllerId)
-                .withGatewayToken(gatewayToken)
-                .withRetryDelay(delay)
-                .withTargetToken(targetToken)
-                .withTenant(tenant)
-                .withIsUpdateFactoryServer(serverType == UpdateFactoryClientData.ServerType.UPDATE_FACTORY)
-                .withUrl(url)
-                .build()
+        return with(sharedPreferences){
+            UFServiceConfiguration.builder()
+                    .withTargetAttributes(getTargetAttributes())
+                    .withEnable(getBoolean(sharedPreferencesServiceEnableKey, false))
+                    .withApiMode(getBoolean(sharedPreferencesApiModeKey, true))
+                    .withControllerId(getString(sharedPreferencesControllerIdKey, ""))
+                    .withGatewayToken(getString(sharedPreferencesGatewayToken, ""))
+                    .withRetryDelay(getLong(sharedPreferencesRetryDelayKey, 900000))
+                    .withTargetToken(getString(sharedPreferencesTargetToken, ""))
+                    .withTenant(getString(sharedPreferencesTenantKey, ""))
+                    .withIsUpdateFactoryServer(getServerType() == UpdateFactoryClientData.ServerType.UPDATE_FACTORY)
+                    .withUrl(getString(sharedPreferencesServerUrlKey, ""))
+                    .build()
+
+        }
     }
 
     fun apiModeIsEnabled() = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, false)
@@ -119,20 +108,19 @@ data class ConfigurationHandler(
     ): UpdateFactoryClient? {
         currentService?.stop()
         val serviceConfiguration = getCurrentConfiguration()
-        if (sharedPreferences.getBoolean(sharedPreferencesServiceEnableKey, false)) {
+        var newService:UpdateFactoryClient? = null
+        if (serviceConfiguration.isEnable()) {
             try {
-                val newService = serviceConfiguration.toService(deploymentPermitProvider, listeners)
+                newService = serviceConfiguration.toService(deploymentPermitProvider, listeners)
                 newService.startAsync()
-                ufService = newService
-                return newService
             } catch (e: RuntimeException) {
-                ufService = null
+                newService = null
                 MessengerHandler.onConfigurationError(listOf(e.message ?: "Error"))
                 MessengerHandler.sendMessage(Communication.V1.Out.ServiceNotification.ID)
                 Log.e(TAG, e.message, e)
             }
         }
-        return ufService
+        return newService
     }
 
     private fun buildConfigDataProvider(): ConfigDataProvider {
@@ -164,7 +152,7 @@ data class ConfigurationHandler(
 
     private fun getTargetAttributes(): MutableMap<String, String> {
         val targetAttributes: MutableMap<String, String>? = sharedPreferences
-                .getObject<HashMap<String, String>>(
+                .getObject(
                         sharedPreferencesTargetAttributes,
                         HashMap<String, String>().javaClass
                 )

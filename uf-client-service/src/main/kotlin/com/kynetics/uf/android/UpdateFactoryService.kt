@@ -84,7 +84,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         }
         mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         sharedPreferencesFile = getString(R.string.shared_preferences_file)
-        configurationHandler = ConfigurationHandler(null, this, getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE))
+        configurationHandler = ConfigurationHandler( this, getSharedPreferences(sharedPreferencesFile, Context.MODE_PRIVATE))
         systemUpdateType = SystemUpdateType.getSystemUpdateType()
         ufServiceCommand = this
         deploymentPermitProvider = AndroidDeploymentPermitProvider.build(configurationHandler!!, mNotificationManager!!, this)
