@@ -233,8 +233,10 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
     }
 
     private fun startForeground() {
-        ApiVersion.fromVersionCode().configureChannel(CHANNEL_ID, getString(R.string.app_name), mNotificationManager)
-        startForeground(NOTIFICATION_ID, getNotification(""))
+        if(mNotificationManager != null) {
+            ApiVersion.fromVersionCode().configureChannel(CHANNEL_ID, getString(R.string.app_name), mNotificationManager!!)
+            startForeground(NOTIFICATION_ID, getNotification(""))
+        }
     }
 
     fun getNotification(notificationContent: String, forcePingAction: Boolean = false): Notification {

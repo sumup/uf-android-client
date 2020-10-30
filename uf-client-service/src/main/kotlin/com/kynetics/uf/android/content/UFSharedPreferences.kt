@@ -25,8 +25,10 @@ class UFSharedPreferences(
     override fun getBoolean(key: String?, defValue: Boolean): Boolean = selectSP(key).getBoolean(key, defValue)
 
     override fun unregisterOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) {
-        secureSharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
-        sharedPreferencesWithObject.unregisterOnSharedPreferenceChangeListener(listener)
+        if(listener != null){
+            secureSharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+            sharedPreferencesWithObject.unregisterOnSharedPreferenceChangeListener(listener)
+        }
     }
 
     override fun getInt(key: String?, defValue: Int): Int  = selectSP(key).getInt(key, defValue)
@@ -48,15 +50,17 @@ class UFSharedPreferences(
     override fun getStringSet(key: String?, defValues: MutableSet<String>?): MutableSet<String>? = selectSP(key).getStringSet(key, defValues)
 
     override fun registerOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) {
-        secureSharedPreferences.registerOnSharedPreferenceChangeListener(listener)
-        sharedPreferencesWithObject.registerOnSharedPreferenceChangeListener(listener)
+        if(listener != null){
+            secureSharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+            sharedPreferencesWithObject.registerOnSharedPreferenceChangeListener(listener)
+        }
     }
 
     override fun getString(key: String?, defValue: String?): String? {
         return selectSP(key).getString(key, defValue)
     }
 
-    fun <T : Serializable?> getObject(objKey: String?, clazz: Class<T>?): T =
+    fun <T : Serializable?> getObject(objKey: String?, clazz: Class<T>?): T? =
             sharedPreferencesWithObject.getObject(objKey, clazz)
 
     fun <T : Serializable?> getObject(objKey: String?, clazz: Class<T>?, defaultObj: T?): T? =

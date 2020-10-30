@@ -6,15 +6,13 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-
-package com.kynetics.uf.android;
+package com.kynetics.uf.android
 
 /**
  * @author Daniele Sergio
  */
-
-public interface UpdateFactoryServiceCommand {
-    void authorizationGranted();
-    void authorizationDenied();
-    void configureService();
+interface UpdateFactoryServiceCommand {
+    fun authorizationGranted()
+    fun authorizationDenied()
+    fun configureService()
 }
