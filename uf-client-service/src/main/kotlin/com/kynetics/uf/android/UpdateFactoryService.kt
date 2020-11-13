@@ -126,7 +126,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         if (configurationHandler?.getCurrentConfiguration() != serviceConfiguration) {
             configurationHandler?.saveServiceConfigurationToSharedPreferences(serviceConfiguration)
         }
-        ufService = configurationHandler?.buildServiceFromPreferences(deploymentPermitProvider!!, listOf(messageListener!!), ufService)
+        configureService()
         return START_STICKY
     }
 
@@ -134,7 +134,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
     private inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                Communication.V1.In.ConfigureService.ID -> configureService(msg)
+                Communication.V1.In.ConfigureService.ID -> configureServiceFromMsg(msg)
 
                 Communication.V1.In.RegisterClient.ID -> {
                     Log.i(TAG, "receive subscription request")
@@ -191,7 +191,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
             Log.i(TAG, String.format("authorization %s", if (response) "granted" else "denied"))
         }
 
-        private fun configureService(msg: Message) {
+        private fun configureServiceFromMsg(msg: Message) {
             Log.i(TAG, "receive configuration update request")
             val configuration = msg.data.getSerializable(SERVICE_DATA_KEY) as UFServiceConfiguration
             val currentConf = configurationHandler?.getCurrentConfiguration()
@@ -204,7 +204,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
             }
 
             if (needReboot(configuration, currentConf)) {
-                configurationHandler?.buildServiceFromPreferences(deploymentPermitProvider!!, listOf(messageListener!!), ufService)
+                configureService()
                 Log.i(TAG, "configuration updated - restarting service")
             } else {
                 Log.i(TAG, "configuration updated - service not restarted")
