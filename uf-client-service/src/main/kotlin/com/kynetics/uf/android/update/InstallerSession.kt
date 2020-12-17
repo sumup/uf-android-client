@@ -83,7 +83,6 @@ class InstallerSession private constructor(private val context: Context,
             val params = SessionParams(
                     SessionParams.MODE_FULL_INSTALL)
             params.setAppPackageName(packageName)
-            params.setGrantedRuntimePermissions(null)
             val sessionId = packageInstaller.createSession(params)
             context.registerReceiver(PackageInstallerBroadcastReceiver(
                     sessionId,
