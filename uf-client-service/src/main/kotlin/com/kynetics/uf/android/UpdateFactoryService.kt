@@ -213,7 +213,13 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
     }
 
     private fun needReboot(newConf: UFServiceConfiguration, oldConf: UFServiceConfiguration?): Boolean {
-        return newConf.copy(targetAttributes = emptyMap()) != oldConf?.copy(targetAttributes = emptyMap())
+        return if(newConf.targetToken == ""){
+            newConf.copy(targetAttributes = emptyMap(), isApiMode = newConf.isApiMode(), isEnable = newConf.isEnable()) !=
+                    oldConf?.copy(targetAttributes = emptyMap(), targetToken = "", isApiMode = oldConf.isApiMode(), isEnable = oldConf.isEnable())
+        } else {
+            newConf.copy(targetAttributes = emptyMap(), isApiMode = newConf.isApiMode(), isEnable = newConf.isEnable()) !=
+                    oldConf?.copy(targetAttributes = emptyMap(), isApiMode = oldConf.isApiMode(), isEnable = oldConf.isEnable())
+        }
     }
 
     override fun onBind(intent: Intent): IBinder? {
