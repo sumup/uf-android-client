@@ -8,11 +8,7 @@
  */
 package com.kynetics.uf.android.update
 
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.IntentSender
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageInstaller.SessionParams
 import android.os.Build
@@ -52,23 +48,14 @@ class InstallerSession private constructor(private val context: Context,
 
     fun commitSession() {
         try {
-            packageInstaller.openSession(sessionId).use { session -> session.commit(createIntentSender()) }
+            packageInstaller.openSession(sessionId).use { session -> session.commit(
+                    PackageInstallerBRHandler.createIntentSender(context, sessionId)) }
         } catch (e: IOException) {
             Log.d(TAG, e.message, e)
         }
     }
 
-    private fun createIntentSender(): IntentSender {
-        val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                sessionId,
-                Intent(ACTION_INSTALL_COMPLETE),
-                PendingIntent.FLAG_UPDATE_CURRENT)
-        return pendingIntent.intentSender
-    }
-
     companion object {
-        const val ACTION_INSTALL_COMPLETE = "com.kynetics.action.INSTALL_COMPLETED"
 
         @Throws(IOException::class)
         fun newInstance(context: Context,
@@ -84,15 +71,15 @@ class InstallerSession private constructor(private val context: Context,
                     SessionParams.MODE_FULL_INSTALL)
             params.setAppPackageName(packageName)
             val sessionId = packageInstaller.createSession(params)
-            context.registerReceiver(PackageInstallerBroadcastReceiver(
-                    sessionId,
-                    countDownLatch!!,
-                    artifact!!,
-                    currentUpdateState!!,
-                    messenger!!,
-                    packageName!!,
-                    packageVersion),
-                    IntentFilter(ACTION_INSTALL_COMPLETE))
+            PackageInstallerBRHandler.registerReceiver(context,
+                    PackageInstallerBroadcastReceiver(
+                            sessionId,
+                            countDownLatch!!,
+                            artifact!!,
+                            currentUpdateState!!,
+                            messenger!!,
+                            packageName!!,
+                            packageVersion))
             return InstallerSession(context, packageInstaller, sessionId)
         }
 

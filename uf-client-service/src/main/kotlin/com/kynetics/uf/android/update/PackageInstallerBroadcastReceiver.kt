@@ -17,6 +17,7 @@ import android.content.pm.PackageInstaller.EXTRA_PACKAGE_NAME
 import android.os.Build
 import androidx.annotation.RequiresApi
 import android.util.Log
+import com.kynetics.uf.android.update.PackageInstallerBRHandler
 import com.kynetics.updatefactory.ddiclient.core.api.Updater
 import java.util.concurrent.CountDownLatch
 
@@ -32,7 +33,7 @@ class PackageInstallerBroadcastReceiver internal constructor(
 ) : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (InstallerSession.ACTION_INSTALL_COMPLETE != intent.action) {
+        if (PackageInstallerBRHandler.ACTION_INSTALL_COMPLETE != intent.action) {
             return
         }
 

@@ -29,6 +29,7 @@ import com.kynetics.uf.android.api.Communication.Companion.SERVICE_API_VERSION_K
 import com.kynetics.uf.android.api.Communication.V1.Companion.SERVICE_DATA_KEY
 import com.kynetics.uf.android.api.UFServiceConfiguration
 import com.kynetics.uf.android.apicomptibility.ApiVersion
+import com.kynetics.uf.android.client.RestartableClientService
 import com.kynetics.uf.android.communication.MessageHandler
 import com.kynetics.uf.android.communication.MessengerHandler
 import com.kynetics.uf.android.configuration.AndroidDeploymentPermitProvider
@@ -41,7 +42,6 @@ import com.kynetics.uf.android.ui.MainActivity
 import com.kynetics.uf.android.update.CurrentUpdateState
 import com.kynetics.uf.android.update.SystemUpdateType
 import com.kynetics.updatefactory.ddiclient.core.api.MessageListener
-import com.kynetics.updatefactory.ddiclient.core.api.UpdateFactoryClient
 import de.psdev.slf4j.android.logger.AndroidLoggerAdapter
 import de.psdev.slf4j.android.logger.LogLevel
 
@@ -67,10 +67,17 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
     private var messageListener: MessageListener? = null
 
     override fun configureService() {
-        ufService = configurationHandler?.buildServiceFromPreferences(
-            deploymentPermitProvider!!,
-            listOf(messageListener!!),
-            ufService)
+        if(ufService == null){
+            ufService = RestartableClientService.newInstance(deploymentPermitProvider!!,listOf(messageListener!!))
+        }
+        when {
+            configurationHandler!=null -> {
+                ufService?.restartService(configurationHandler!!)
+            }
+            else -> {
+                Log.w(TAG, "Service cant be configured because configuration handler is null")
+            }
+        }
     }
 
     private lateinit var forcePingPendingIntent: PendingIntent
@@ -130,7 +137,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         return START_STICKY
     }
 
-    // todo add api to configure targetAttibutes (separeted from serviceConfiguration)
+    // todo add api to configure targetAttibutes (separete  d from serviceConfiguration)
     private inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
@@ -297,7 +304,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
         private const val FORCE_PING_ACTION = "ForcePing"
         private var sharedPreferencesFile: String? = null
         private var configurationHandler: ConfigurationHandler? = null
-        private var ufService: UpdateFactoryClient? = null
+        private var ufService: RestartableClientService? = null
         private const val CHANNEL_ID = "UPDATE_FACTORY_NOTIFICATION_CHANNEL_ID"
         const val NOTIFICATION_ID = 1
         private val TAG = UpdateFactoryService::class.java.simpleName

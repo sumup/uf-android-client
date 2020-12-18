@@ -103,16 +103,13 @@ data class ConfigurationHandler(
 
     fun buildServiceFromPreferences(
         deploymentPermitProvider: DeploymentPermitProvider,
-        listeners: List<MessageListener>,
-        currentService: UpdateFactoryClient?
+        listeners: List<MessageListener>
     ): UpdateFactoryClient? {
-        currentService?.stop()
         val serviceConfiguration = getCurrentConfiguration()
         var newService:UpdateFactoryClient? = null
         if (serviceConfiguration.isEnable()) {
             try {
                 newService = serviceConfiguration.toService(deploymentPermitProvider, listeners)
-                newService.startAsync()
             } catch (e: RuntimeException) {
                 newService = null
                 MessengerHandler.onConfigurationError(listOf(e.message ?: "Error"))
