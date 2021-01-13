@@ -6,16 +6,13 @@
 <a href="https://jitpack.io/#kynetics/uf-android-client"><img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/kynetics/uf-android-client"></a>
 </p>
 
-UFAndroidClient is an Android application that apply software update
-received from an
-[UpdateFactory](https://www.kynetics.com/iot-platform-update-factory) or
-[Hawkbit](https://eclipse.org/hawkbit/) servers.
+UFAndroidClient is an Android application that applies app (apk) and system (OTA) software updates received from an [UpdateFactory](https://www.kynetics.com/iot-platform-update-factory) or [Hawkbit](https://eclipse.org/hawkbit/) server.
 
 Links to official documentation:
 - [installation](https://docs.updatefactory.io/devices/android/android-client-packages/)
 - [configuration file](https://docs.updatefactory.io/devices/android/android-config-files/)
 - [third-party integration](https://docs.updatefactory.io/devices/android/third-party-integration-v1/)
-- [kdocs](https://kynetics.github.io/uf-android-client/)
+- [kdocs API](https://kynetics.github.io/uf-android-client/)
 
 ## Build
 To build the project you must replace the android.jar file as describe in [Android hidden api](https://github.com/anggrayudi/android-hidden-api).
