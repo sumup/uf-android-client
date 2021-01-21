@@ -162,7 +162,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
                 Communication.V1.In.Sync.ID -> sync(msg)
 
-                else -> super.handleMessage(msg)
+                else -> Log.i(TAG, "Invalid message receive (what == ${msg.what})")
             }
         }
 
@@ -175,16 +175,16 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
             }
 
             MessengerHandler.sendMessage(
-                configurationHandler?.getCurrentConfiguration(),
-                Communication.V1.Out.CurrentServiceConfiguration.ID,
-                msg.replyTo
+                    configurationHandler?.getCurrentConfiguration(),
+                    Communication.V1.Out.CurrentServiceConfiguration.ID,
+                    msg.replyTo
             )
             val api = ApiCommunicationVersion.fromVersionCode(msg.data.getInt(SERVICE_API_VERSION_KEY, 0))
             if (MessengerHandler.hasMessage(api)) {
                 MessengerHandler.sendMessage(
-                    MessengerHandler.getlastSharedMessage(api).messageToSendOnSync,
-                    Communication.V1.Out.ServiceNotification.ID,
-                    msg.replyTo
+                        MessengerHandler.getlastSharedMessage(api).messageToSendOnSync,
+                        Communication.V1.Out.ServiceNotification.ID,
+                        msg.replyTo
                 )
             }
             Log.i(TAG, "client synced")
@@ -192,6 +192,10 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
         private fun authorizationResponse(msg: Message) {
             Log.i(TAG, "receive authorization response")
+            if(!msg.data.containsKey(SERVICE_DATA_KEY)){
+                Log.i(TAG, "Invalid authorization response message received")
+                return;
+            }
             val response = msg.data.getBoolean(SERVICE_DATA_KEY)
             Log.e("authorizationResponse", "1")
             deploymentPermitProvider?.allow(response)
@@ -200,7 +204,16 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
         private fun configureServiceFromMsg(msg: Message) {
             Log.i(TAG, "receive configuration update request")
-            val configuration = msg.data.getSerializable(SERVICE_DATA_KEY) as UFServiceConfiguration
+            val configuration =  try{
+                if(!msg.data.containsKey(SERVICE_DATA_KEY)){
+                    Log.i(TAG, "Invalid configuration message received (no configuration found)")
+                    return;
+                }
+                msg.data.getSerializable(SERVICE_DATA_KEY) as UFServiceConfiguration
+            } catch (e:Throwable){
+                Log.i(TAG, "Invalid configuration message received; Error on configuration deserialize.")
+                return;
+            }
             val currentConf = configurationHandler?.getCurrentConfiguration()
 
             if (currentConf != configuration) {
@@ -246,11 +259,11 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
     fun getNotification(notificationContent: String, forcePingAction: Boolean = false): Notification {
 
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.uf_logo)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(notificationContent))
-            .setContentTitle(getString(R.string.update_factory_notification_title))
-            .setContentText(notificationContent)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setSmallIcon(R.drawable.uf_logo)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(notificationContent))
+                .setContentTitle(getString(R.string.update_factory_notification_title))
+                .setContentText(notificationContent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         if (forcePingAction) {
             notificationBuilder.addAction(android.R.drawable.ic_popup_sync, "Grant Authorization", forcePingPendingIntent)
         }
@@ -259,19 +272,19 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
 
     companion object {
         enum class AuthorizationType(
-            val toActionOnGranted: MessageHandler.Action,
-            val toActionOnDenied: MessageHandler.Action
+                val toActionOnGranted: MessageHandler.Action,
+                val toActionOnDenied: MessageHandler.Action
         ) {
             DOWNLOAD(
-                MessageHandler.Action.AUTH_DOWNLOAD_GRANTED,
-                MessageHandler.Action.AUTH_DOWNLOAD_DENIED
+                    MessageHandler.Action.AUTH_DOWNLOAD_GRANTED,
+                    MessageHandler.Action.AUTH_DOWNLOAD_DENIED
             ) {
                 override val extra = MainActivity.INTENT_TYPE_EXTRA_VALUE_DOWNLOAD
                 override val event = MessageListener.Message.State.WaitingDownloadAuthorization
             },
 
             UPDATE(MessageHandler.Action.AUTH_UPDATE_GRANTED,
-                MessageHandler.Action.AUTH_UPDATE_DENIED) {
+                    MessageHandler.Action.AUTH_UPDATE_DENIED) {
                 override val extra: Int = MainActivity.INTENT_TYPE_EXTRA_VALUE_REBOOT
                 override val event = MessageListener.Message.State.WaitingUpdateAuthorization
             };
