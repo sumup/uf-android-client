@@ -152,7 +152,16 @@ class UFPreferenceFragment : PreferenceFragmentCompat(), SharedPreferences.OnSha
 
     override fun onPause() {
         super.onPause()
-        preferenceScreen.sharedPreferences.edit().apply()
+        val sp = preferenceManager.sharedPreferences
+        sp.edit().apply()
+
+        if(startingSharedPreferences[getString(R.string.shared_preferences_server_url_key)] != sp.getString(getString(R.string.shared_preferences_server_url_key), null)
+                || startingSharedPreferences[getString(R.string.shared_preferences_tenant_key)] != sp.getString(getString(R.string.shared_preferences_tenant_key), null)
+                || startingSharedPreferences[getString(R.string.shared_preferences_controller_id_key)] != sp.getString(getString(R.string.shared_preferences_controller_id_key), null)
+                ){
+            sp.edit().remove(getString(R.string.shared_preferences_target_token_received_from_server_key)).apply()
+        }
+
         val currentSharedPreferences = preferenceScreen.sharedPreferences.all
         if (currentSharedPreferences != startingSharedPreferences) {
             UpdateFactoryService.ufServiceCommand!!.configureService()

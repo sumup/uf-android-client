@@ -66,6 +66,9 @@ data class ConfigurationHandler(
             return
         }
         sharedPreferences.edit().apply {
+            if(isTargetTokenReceivedFromServerOld(configuration)){
+                remove(sharedPreferencesTargetTokenReceivedFromServer)
+            }
             putString(sharedPreferencesControllerIdKey, configuration.controllerId)
             putString(sharedPreferencesTenantKey, configuration.tenant)
             putString(sharedPreferencesServerUrlKey, configuration.url)
@@ -90,13 +93,28 @@ data class ConfigurationHandler(
                     .withControllerId(getString(sharedPreferencesControllerIdKey, ""))
                     .withGatewayToken(getString(sharedPreferencesGatewayToken, ""))
                     .withRetryDelay(getLong(sharedPreferencesRetryDelayKey, 900000))
-                    .withTargetToken(getString(sharedPreferencesTargetToken, ""))
+                    .withTargetToken(getTargetToken())
                     .withTenant(getString(sharedPreferencesTenantKey, ""))
                     .withIsUpdateFactoryServer(getServerType() == UpdateFactoryClientData.ServerType.UPDATE_FACTORY)
                     .withUrl(getString(sharedPreferencesServerUrlKey, ""))
                     .build()
-
         }
+    }
+
+    private fun getTargetToken():String{
+        val targetToken = sharedPreferences.getString(sharedPreferencesTargetToken,"")
+        return if(targetToken == null || targetToken == ""){
+            sharedPreferences.getString(sharedPreferencesTargetTokenReceivedFromServer, "")!!
+        } else {
+            targetToken
+        }
+    }
+
+    private fun isTargetTokenReceivedFromServerOld(newConf: UFServiceConfiguration):Boolean{
+        val currentConf = getCurrentConfiguration()
+        return currentConf.controllerId != newConf.controllerId
+                || currentConf.tenant != newConf.tenant
+                || currentConf.url != newConf.url
     }
 
     fun apiModeIsEnabled() = sharedPreferences.getBoolean(sharedPreferencesApiModeKey, false)
@@ -118,6 +136,12 @@ data class ConfigurationHandler(
             }
         }
         return newService
+    }
+
+    fun needReboot(oldConf:UFServiceConfiguration?): Boolean {
+        val newConf = getCurrentConfiguration()
+        return newConf.copy(targetAttributes = emptyMap(), isApiMode = newConf.isApiMode(), isEnable = newConf.isEnable()) !=
+                oldConf?.copy(targetAttributes = emptyMap(), isApiMode = oldConf.isApiMode(), isEnable = oldConf.isEnable())
     }
 
     private fun buildConfigDataProvider(): ConfigDataProvider {
@@ -144,6 +168,22 @@ data class ConfigurationHandler(
             UpdateFactoryClientData.ServerType.UPDATE_FACTORY
         } else {
             UpdateFactoryClientData.ServerType.HAWKBIT
+        }
+    }
+
+    private fun getTargetTokenListener():TargetTokenFoundListener? {
+        return if (sharedPreferences.getBoolean(sharedPreferencesIsUpdateFactoryServerType, true)) {
+            object : TargetTokenFoundListener {
+                override fun onFound(targetToken: String): () -> Unit {
+                    Log.d(TAG, "New target token received")
+                    sharedPreferences.edit()
+                            .putString(sharedPreferencesTargetTokenReceivedFromServer, targetToken)
+                            .apply()
+                    return {}
+                }
+            }
+        } else {
+            null
         }
     }
 
@@ -207,22 +247,10 @@ data class ConfigurationHandler(
                 tenant,
                 controllerId,
                 url,
-                if (isUpdateFactoryServe) {
-                    UpdateFactoryClientData.ServerType.UPDATE_FACTORY
-                } else {
-                    UpdateFactoryClientData.ServerType.HAWKBIT
-                },
+                getServerType(),
                 gatewayToken,
                 targetToken,
-                object:TargetTokenFoundListener{
-                    override fun onFound(targetToken: String): () -> Unit {
-                        Log.d(TAG, "New target token received")
-                        sharedPreferences.edit()
-                                .putString(sharedPreferencesTargetToken, targetToken)
-                                .apply()
-                        return {}
-                    }
-                }
+                getTargetTokenListener()
         )
     }
 
@@ -237,6 +265,7 @@ data class ConfigurationHandler(
     private val sharedPreferencesServiceEnableKey = context.getString(R.string.shared_preferences_is_enable_key)
     private val sharedPreferencesGatewayToken = context.getString(R.string.shared_preferences_gateway_token_key)
     private val sharedPreferencesTargetToken = context.getString(R.string.shared_preferences_target_token_key)
+    private val sharedPreferencesTargetTokenReceivedFromServer = context.getString(R.string.shared_preferences_target_token_received_from_server_key)
     private val sharedPreferencesTargetAttributes = context.getString(R.string.shared_preferences_args_key)
     private val sharedPreferencesIsUpdateFactoryServerType = context.getString(R.string.shared_preferences_is_update_factory_server_type_key)
     private val currentUpdateState: CurrentUpdateState = CurrentUpdateState(context)

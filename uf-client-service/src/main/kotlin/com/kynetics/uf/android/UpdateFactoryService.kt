@@ -210,22 +210,12 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
                 Log.i(TAG, "new configuration equals to current configuration")
             }
 
-            if (needReboot(configuration, currentConf)) {
+            if (configurationHandler?.needReboot(currentConf) == true) {
                 configureService()
                 Log.i(TAG, "configuration updated - restarting service")
             } else {
                 Log.i(TAG, "configuration updated - service not restarted")
             }
-        }
-    }
-
-    private fun needReboot(newConf: UFServiceConfiguration, oldConf: UFServiceConfiguration?): Boolean {
-        return if(newConf.targetToken == ""){
-            newConf.copy(targetAttributes = emptyMap(), isApiMode = newConf.isApiMode(), isEnable = newConf.isEnable()) !=
-                    oldConf?.copy(targetAttributes = emptyMap(), targetToken = "", isApiMode = oldConf.isApiMode(), isEnable = oldConf.isEnable())
-        } else {
-            newConf.copy(targetAttributes = emptyMap(), isApiMode = newConf.isApiMode(), isEnable = newConf.isEnable()) !=
-                    oldConf?.copy(targetAttributes = emptyMap(), isApiMode = oldConf.isApiMode(), isEnable = oldConf.isEnable())
         }
     }
 
@@ -240,7 +230,8 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
                 EncryptedSharedPreferences.get(applicationContext),
                 arrayOf(
                         applicationContext.getString(R.string.shared_preferences_gateway_token_key),
-                        applicationContext.getString(R.string.shared_preferences_target_token_key)
+                        applicationContext.getString(R.string.shared_preferences_target_token_key),
+                        applicationContext.getString(R.string.shared_preferences_target_token_received_from_server_key)
                 )
         )
     }
