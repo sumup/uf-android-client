@@ -104,14 +104,7 @@ class MainActivity : AppCompatActivity(), OnAuthorization {
     }
 
     override fun getSharedPreferences(name: String?, mode: Int): UFSharedPreferences {
-        return UFSharedPreferences(
-                SharedPreferencesWithObject(super.getSharedPreferences(name, mode)),
-                EncryptedSharedPreferences.get(applicationContext),
-                arrayOf(
-                        applicationContext.getString(R.string.shared_preferences_gateway_token_key),
-                        applicationContext.getString(R.string.shared_preferences_target_token_key)
-                )
-        )
+        return UFSharedPreferences.get(applicationContext, name, mode)
     }
 
     companion object {

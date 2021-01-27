@@ -9,17 +9,26 @@
 
 package com.kynetics.uf.android.content
 
+import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.kynetics.uf.android.R
 import java.io.Serializable
 
-class UFSharedPreferences(
+class UFSharedPreferences private constructor(
         private val sharedPreferencesWithObject: SharedPreferencesWithObject,
         private val secureSharedPreferences: SharedPreferences,
         private val secureKeys: Array<String>): SharedPreferences by sharedPreferencesWithObject {
 
     companion object{
         private val TAG = UFSharedPreferences::class.java.simpleName
+
+        fun get(context: Context, name:String?, mode:Int):UFSharedPreferences = UFSharedPreferences(
+                SharedPreferencesWithObject(context.getSharedPreferences(name, mode)),
+                EncryptedSharedPreferences.get(context),
+                arrayOf(context.getString(R.string.shared_preferences_gateway_token_key),
+                        context.getString(R.string.shared_preferences_target_token_key),
+                        context.getString(R.string.shared_preferences_target_token_received_from_server_key)))
     }
 
     init {

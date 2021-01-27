@@ -17,10 +17,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Handler
-import android.os.IBinder
-import android.os.Message
-import android.os.Messenger
+import android.os.*
 import androidx.core.app.NotificationCompat
 import android.util.Log
 import com.kynetics.uf.android.api.ApiCommunicationVersion
@@ -197,7 +194,6 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
                 return;
             }
             val response = msg.data.getBoolean(SERVICE_DATA_KEY)
-            Log.e("authorizationResponse", "1")
             deploymentPermitProvider?.allow(response)
             Log.i(TAG, String.format("authorization %s", if (response) "granted" else "denied"))
         }
@@ -238,15 +234,7 @@ class UpdateFactoryService : Service(), UpdateFactoryServiceCommand {
     }
 
     override fun getSharedPreferences(name: String?, mode: Int): UFSharedPreferences {
-        return UFSharedPreferences(
-                SharedPreferencesWithObject(super.getSharedPreferences(name, mode)),
-                EncryptedSharedPreferences.get(applicationContext),
-                arrayOf(
-                        applicationContext.getString(R.string.shared_preferences_gateway_token_key),
-                        applicationContext.getString(R.string.shared_preferences_target_token_key),
-                        applicationContext.getString(R.string.shared_preferences_target_token_received_from_server_key)
-                )
-        )
+        return UFSharedPreferences.get(applicationContext, name, mode)
     }
 
     private fun startForeground() {
