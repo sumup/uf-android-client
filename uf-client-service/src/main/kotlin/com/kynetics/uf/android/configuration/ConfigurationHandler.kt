@@ -39,7 +39,7 @@ data class ConfigurationHandler(
     fun getConfigurationFromFile(): UFServiceConfiguration? = configurationFile.newFileConfiguration
 
     fun getServiceConfigurationFromIntent(intent: Intent): UFServiceConfiguration? {
-        Log.i(TAG, "Loaded new configuration from intent")
+        Log.i(TAG, "Loading new configuration from intent")
         val serializable = intent.getSerializableExtra(Communication.V1.SERVICE_DATA_KEY)
         val string = intent.getStringExtra(Communication.V1.SERVICE_DATA_KEY)
         return try {
@@ -56,6 +56,12 @@ data class ConfigurationHandler(
         } catch (e: Throwable) {
             Log.w(TAG, "Deserialization error", e)
             null
+        }.apply {
+            if(this != null){
+                Log.i(TAG, "No configuration found in intent")
+            } else {
+                Log.i(TAG, "Loaded new configuration from intent")
+            }
         }
     }
 
