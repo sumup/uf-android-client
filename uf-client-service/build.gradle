@@ -101,7 +101,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation("com.github.kynetics:uf-ddiclient:v1.0.0"){
+    implementation("com.github.kynetics:uf-ddiclient:v1.0.1"){
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
     implementation 'de.psdev.slf4j-android-logger:slf4j-android-logger:1.0.5'
@@ -114,7 +114,6 @@ dependencies {
     implementation "androidx.appcompat:appcompat:1.0.0"
     implementation "androidx.preference:preference:1.0.0"
     testImplementation 'junit:junit:4.12'
-//    implementation 'com.github.Kynetics.uf-ddiclient:ddiclient-core:v0.4.7'
     implementation project(':uf-client-service:uf-client-service-api')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
