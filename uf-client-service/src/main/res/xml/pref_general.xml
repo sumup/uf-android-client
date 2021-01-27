@@ -49,6 +49,14 @@
         android:selectAllOnFocus="true"
         android:singleLine="true" />
 
+    <Preference
+        android:inputType="textCapWords"
+        android:key="@string/shared_preferences_target_token_received_from_server_key"
+        android:title="@string/shared_preferences_target_token_received_from_server_title"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true" />
+
     <EditTextPreference
         android:inputType="textCapWords"
         android:key="@string/shared_preferences_gateway_token_key"
